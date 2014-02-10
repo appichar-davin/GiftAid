@@ -1,0 +1,328 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360a                                      *
+  *      File: RegularGivingManagement.page                       *
+  *   Version: 1.0                                                *
+  * Copyright: ©2013 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page id="page" standardController="s360a__RegularGiving__c"  extensions="s360a.RegularGivingManagementOverride2" action="{!init}" tabStyle="s360a__RegularGiving__c" >
+        <style type="text/css">
+             body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+        </style>
+            <script type="text/javascript">
+                function updateValue(id, value, lookupId)
+                {
+                
+                if (lookupId != null)
+                        {       value = '';
+                                if (document.getElementById(lookupId).value != '')
+                                {       value = document.getElementById(lookupId + '_lkid').value;
+                                }
+                        }                        
+                        if (typeof value === 'boolean')                        
+                        {       document.getElementById('page:hiddenForm:' + id).checked = value;
+                        }
+                        else
+                        {       document.getElementById('page:hiddenForm:' + id).value = value;
+                        }
+                        if (typeof window[id + 'ActionFunction'] === 'function')
+                        {      
+                         eval(id + 'ActionFunction();');
+                        }
+                }
+                function onComplete()
+                {                       
+                        document.getElementById('page:hiddenForm:' + 'product').value = document.getElementById('page:form:pageBlock:regularGivingDetailsSection:productSectionItem:product_lkid').value;
+                        document.getElementById('page:hiddenForm:' + 'upgradeProduct').value = document.getElementById('page:form:pageBlock:upgradeDetailsSection:product_lkid').value;
+                }   
+            
+            </script>   
+            <script>
+                function updateUpgradeDownGradeAmount(RevisedAmount)
+                {
+                    var originalAmount={!originalAmount};
+                    var upgradeDowngradeAmount=RevisedAmount-originalAmount;
+                    document.getElementById('page:form:pageBlock:revisedAmountSection:upgradedowngradeSectionItem:upgradeDowngradeAmount').innerHTML=upgradeDowngradeAmount;                   
+                   if(upgradeDowngradeAmount<0){
+                    document.getElementById('page:form:pageBlock:revisedAmountSection:upgradedowngradeSectionItem:upgradeDowngradeAmount').style.color='red';                       
+                    document.getElementById('page:form:pageBlock:revisedAmountSection:upgradedowngradeSectionItem:upgradeDowngradeLabel').innerHTML='Amount of downgrade'; 
+                    document.getElementById('page:form:pageBlock:upgradeDowngradeDetailsSection:upgradeDowngradeCampaignSectionItem:upgradeCampaignLabel').innerHTML='Downgrade Campaign';
+                    document.getElementById('page:form:pageBlock:upgradeDowngradeDetailsSection:upgradeDowngradeProductSectionItem:upgradeProductLabel').innerHTML='Downgrade Product';                    
+                   }else{
+                    document.getElementById('page:form:pageBlock:revisedAmountSection:upgradedowngradeSectionItem:upgradeDowngradeAmount').style.color='black';                       
+                    document.getElementById('page:form:pageBlock:revisedAmountSection:upgradedowngradeSectionItem:upgradeDowngradeLabel').innerHTML='Amount of upgrade'; 
+                    document.getElementById('page:form:pageBlock:upgradeDowngradeDetailsSection:upgradeDowngradeCampaignSectionItem:upgradeCampaignLabel').innerHTML='Upgrade Campaign';
+                    document.getElementById('page:form:pageBlock:upgradeDowngradeDetailsSection:upgradeDowngradeProductSectionItem:upgradeProductLabel').innerHTML='Upgrade Product';                   
+                   }
+                }             
+                 
+            </script>
+        <apex:form id="hiddenForm" style="display:none;" >
+
+            <apex:actionFunction name="campaignActionFunction" rerender="productRequiredPanel" status="topstatus" action="{!campaignChanged}" oncomplete="onComplete();" />
+            <apex:actionFunction name="upgradeCampaignActionFunction" rerender="upgradeProduct" status="topstatus" action="{!upgradeCampaignChanged}" oncomplete="onComplete();" />            
+            <apex:actionFunction name="paymentMethodActionFunction" status="topstatus"  rerender="pageBlockButtonsTop, paymentMethodDetails, regularGivingScheduleSection, pageBlockButtonsBottom"  />
+            <apex:actionFunction name="preferredDayActionFunction" status="topstatus" rerender="scheduleStartDate" action="{!updateDefaultStartDate}"  />            
+            <apex:actionFunction name="paymentGatewayProcessTypeActionFunction" status="topstatus" rerender="paymentMethodDetails" />
+            <apex:actionFunction name="transactionsPerYearActionFunction" status="topstatus" rerender="regularGivingScheduleSection" />          
+            <apex:actionFunction name="isUpgradeDowngradeActionFunction" status="topstatus" rerender="regularGivingDetailsSection, upgradeAmount, upgradeDetails" />
+            <apex:selectList size="1" value="{!automatedTransaction.s360a__PaymentMethod__c}" id="paymentMethod">
+                <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+            </apex:selectList>
+            <apex:selectList value="{!paymentGatewayProcessType}" size="1" id="paymentGatewayProcessType">
+            <apex:inputText value="{!campaignId}" id="campaign" rendered="{!AND($ObjectType.s360a__RegularGiving__c.fields.s360a__Campaign__c.Createable,$ObjectType.s360a__RegularGiving__c.fields.s360a__Campaign__c.Updateable)}" /> <!-- //CRUD/FLS -->
+            <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" /> 
+                <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" />
+            </apex:selectList>
+            <apex:inputText value="{!RG_PreferredDay}" id="preferredDay" rendered="{!AND($ObjectType.s360a__Schedule__c.fields.s360a__StartsOn__c.Createable,$ObjectType.s360a__Schedule__c.fields.s360a__StartsOn__c.Updateable)}"/> <!-- //CRUD/FLS -->
+            <apex:inputText value="{!paymentFrequency}" id="transactionsPerYear" rendered="{!AND($ObjectType.s360a__RegularGiving__c.fields.s360a__TransactionsPerYear__c.Createable,$ObjectType.s360a__RegularGiving__c.fields.s360a__TransactionsPerYear__c.Updateable)}"/> <!-- //CRUD/FLS -->
+            <apex:inputCheckbox id="isUpgradeDowngrade" value="{!isUpgradeDowngrade}" />
+            <apex:inputText value="{!upgradeCampaignId}" id="upgradeCampaign" rendered="{!AND($ObjectType.s360a__RegularGivingLineItem__c.fields.s360a__Campaign__c.Createable,$ObjectType.s360a__RegularGivingLineItem__c.fields.s360a__Campaign__c.Updateable)}" /><!-- //CRUD/FLS -->           
+            <apex:inputText value="{!NewRGLI.s360a__Product__c}" id="upgradeProduct" rendered="{!AND($ObjectType.s360a__RegularGivingLineItem__c.fields.s360a__Product__c.Createable,$ObjectType.s360a__RegularGivingLineItem__c.fields.s360a__Product__c.Updateable)}" /><!-- //CRUD/FLS -->           
+            
+            
+        </apex:form>  
+        <apex:sectionHeader rendered="{!renderMode == 'New'}" title="Regular Giving" subtitle="New Regular Giving" />
+        <apex:sectionHeader rendered="{!renderMode == 'Edit' || renderMode=='Detail'}" title="Regular Giving Edit" subtitle="Regular Giving: {!s360a__RegularGiving__c.Name}" />
+        <apex:sectionHeader rendered="{!renderMode == 'Error'}" title="Regular Giving " subtitle="Regular Giving" />
+                  
+        <apex:form id="form" >
+                <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+                <apex:outputPanel rendered="{!userHasAccess}">
+                    <apex:pageBlock mode="edit" id="pageBlock">
+                            <apex:pageBlockButtons location="top">
+                                    <apex:outputPanel id="pageBlockButtonsTop">
+                                            <apex:commandButton styleClass="cssbutton" action="{!saveAction}"  status="topstatus" value="Save" />
+                                            <apex:commandButton styleClass="cssbutton" action="{!cancelAction}" status="topstatus" value="Cancel" immediate="true" />
+                                            <apex:actionStatus id="topstatus">
+                                                <apex:facet name="start">
+                                                   <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                                                </apex:facet>
+                                            </apex:actionStatus>                               
+                                    </apex:outputPanel>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockButtons location="bottom">
+                                    <apex:outputPanel id="pageBlockButtonsBottom">
+                                            <apex:commandButton styleClass="cssbutton" action="{!saveAction}" status="botstatus" value="Save"  />
+                                            <apex:commandButton styleClass="cssbutton" action="{!cancel}" status="botstatus" value="Cancel" immediate="true" />
+                                            <apex:actionStatus id="botstatus">
+                                                <apex:facet name="start">
+                                                   <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                                                </apex:facet>
+                                            </apex:actionStatus>                                                                          
+                                    </apex:outputPanel>
+                            </apex:pageBlockButtons>
+                            <apex:pageBlockSection columns="1" title="Regular Giving Details" id="regularGivingDetailsSection">
+                            <!--Details-->                               
+                                 <apex:pageBlockSectionItem rendered="{!RGDetailsAvailable}" >
+                                        <apex:outputLabel value="Supporter" />
+                                        <apex:outputPanel styleClass="requiredInput" layout="block">  
+                                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                                <input type="text" value="{!account.Name}" style="width: 300px;" disabled="disabled" />
+                                        </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:outputField value="{!account.name}" rendered="{!!RGDetailsAvailable}"/>
+                                <apex:inputField required="true"  value="{!regularGiving.s360a__Amount__c}" rendered="{!AmountInputAvailable}" />
+                                <apex:outputField value="{!regularGiving.s360a__Amount__c}" rendered="{!!AmountInputAvailable}" />                                                                                                                                        
+                                <apex:inputField value="{!regularGiving.s360a__Campaign__c}"  onchange="updateValue('campaign', this.value, this.id);" rendered="{!RGDetailsAvailable}" />
+                                <apex:outputField label="Original Campaign"  value="{!regularGiving.s360a__Campaign__c}" rendered="{!!RGDetailsAvailable}"/>                                
+                                <apex:pageBlockSectionItem id="productSectionItem" rendered="{!RGDetailsAvailable}" >
+                                        <apex:outputPanel >Product / Fund </apex:outputPanel>
+                                        <apex:outputPanel styleClass="requiredInput" layout="block" id="productRequiredPanel">  
+                                                <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                                                <apex:inputField required="true" id="rgproduct" value="{!s360a__RegularGiving__c.s360a__Product__c}" style="width: 300px;"   />                                                                                                
+                                        </apex:outputPanel>
+                                </apex:pageBlockSectionItem>
+                                <apex:outputField label="Original Product" value="{!s360a__RegularGiving__c.s360a__Product__c}" style="width: 300px;" rendered="{!!RGDetailsAvailable}"  />                                
+                                <apex:pageBlockSectionItem >
+                                        <apex:outputPanel >Payment Method</apex:outputPanel> 
+                                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                <apex:outputPanel styleClass="requiredBlock" layout="block" />  
+                                                <apex:selectList size="1" required="true"   value="{!automatedTransaction.s360a__PaymentMethod__c}" onchange="updateValue('paymentMethod', this.value);"  style="width: 300px;">
+                                                        <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+                                                </apex:selectList>
+                                        </apex:outputPanel>
+                                </apex:pageBlockSectionItem>                         
+                                <apex:inputField required="true" label="Regular Giving Status"  value="{!regularGiving.s360a__RGStatus__c}" style="width: 300px;" />                             
+                                <apex:inputCheckbox value="{!isUpgradeDowngrade}" label="Do you wish to upgrade/downgrade the regular giving?" rendered="{!isRGLIMode&&RenderMode=='Edit'}" onchange=" updateValue('isUpgradeDowngrade', this.checked)"/>
+                                <apex:inputCheckbox value="{!isRGLIMode}" label="Use Regular Giving Line Items?" rendered="{!RenderMode=='New'&&isRGLIOptionAvailable}" />
+                                <!-- Custom fields -->
+                                <apex:repeat value="{!RegularGivingDetailsSectionCustomFields}" var="rgField" > 
+                                    <apex:inputField value="{!regularGiving[rgField.customFieldName]}" required="{!rgField.displayAsRequired}" /> 
+                                </apex:repeat> 
+                                <!-- Custom fields -->   
+                            <!--Details end-->                            
+                            </apex:pageBlockSection>      
+                            <!--Upgrades -->  
+                            <apex:outputPanel id="upgradeAmount"  >
+                            <apex:pageBlockSection id="revisedAmountSection" title="Revised Amount" columns="1" rendered="{!isUpgradeDowngrade}"  >                            
+                               <apex:pageBlockSectionItem helpText="Please enter the revised amount for regular giving"> 
+                                    <apex:outputlabel value="Revised amount"/>
+                                    <apex:inputField value="{!RegularGiving.s360a__Amount__c}" id="revisedAmount" label="Revised amount" onchange="updateUpgradeDownGradeAmount(this.value);" />
+                               </apex:pageBlocksectionItem>  
+                               <apex:pageBlockSectionItem id="upgradedowngradeSectionItem">
+                                    <apex:outputLabel value="Amount of upgrade" id="upgradeDowngradeLabel" />
+                                    <apex:outputPanel id="udAmountPanel" layout="none">
+                                        <apex:outputText value="{!currencySymbol}" />
+                                        <apex:outputText id="upgradeDowngradeAmount" label="The amount of upgrade" value="{!RegularGiving.s360a__Amount__c-originalAmount}" />
+                                    </apex:outputPanel>
+                               </apex:pageBlockSectionItem>
+                            </apex:pageblockSection>  
+                            </apex:outputPanel>
+                            <apex:outputPanel id="upgradeDetails">
+                            <apex:pageBlockSection title="Upgrade/Downgrade campaign and product" id="upgradeDowngradeDetailsSection"  columns="1" rendered="{!isUpgradeDowngrade}" >                       
+                                <apex:pageBlockSectionItem id="upgradeDowngradeCampaignSectionItem" >
+                                    <apex:outputlabel value="Upgrade campaign" id="upgradeCampaignLabel" />
+                                    <apex:inputField value="{!NewRGLI.s360a__Campaign__c}" onchange="updateValue('upgradeCampaign', this.value, this.id);"  />
+                                </apex:pagebLockSectionItem>
+                                <apex:pagebLockSectionItem id="upgradeDowngradeProductSectionItem" >                                    
+                                        <apex:outputlabel value="Upgrade Product" id="upgradeProductLabel" />
+                                        <apex:outputPanel id="upgradeProduct">
+                                            <apex:inputField required="true" value="{!NewRGLI.s360a__Product__c}"  />                                                                                               
+                                        </apex:outputPanel>                                        
+                                </apex:pagebLockSectionItem>                               
+                            </apex:pageBlockSection>
+                            </apex:outputPanel>                    
+                            <!--Upgrades end -->
+                            <apex:outputPanel id="paymentMethodDetails">                       
+                            <!-- payment methods -->
+                                <apex:pageBlockSection title="Credit Card To Be Processed" collapsible="false" columns="1" rendered="{!automatedtransaction.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                                        <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Process" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:selectList value="{!PaymentGatewayProcessType}" size="1" style="width: 300px;" onchange="updateValue('paymentGatewayProcessType', this.value);">
+                                                                <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+                                                                <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" rendered="{!hasCreditCards}" />
+                                                        </apex:selectList>
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'New Credit Card'}">
+                                                <apex:outputLabel value="Card Type" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:inputField value="{!NewCreditCard.s360a__CardType__c}" style="width: 300px;" />
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'New Credit Card'}">
+                                                <apex:outputLabel value="Name On Card" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:inputField value="{!NewCreditCard.s360a__CardHolderName__c}" style="width: 300px;" />
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'New Credit Card'}">
+                                                <apex:outputLabel value="Credit Card Number" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:inputField value="{!NewCreditCard.s360a__CreditCardNumber__c}" style="width: 300px;" />
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'New Credit Card'}">
+                                                <apex:outputLabel value="Expiry Month" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:inputField value="{!NewCreditCard.s360a__ExpiryMonth__c}" style="width: 300px;" />
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'New Credit Card' && paymentGatewayExpiryYearError == false}">
+                                                <apex:outputLabel value="Expiry Year" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                        <apex:selectList size="1" value="{!NewCreditCard.s360a__ExpiryYear__c}" style="width: 300px;">
+                                                                <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                                        </apex:selectList>
+                                                </apex:outputPanel>
+                                        </apex:pageBlockSectionItem>
+                                        <!-- Custom fields -->
+                                        <apex:repeat value="{!RegularGivingCreditCardSectionCustomFields}" var="rgField" > 
+                                            <apex:inputField value="{!regularGiving[rgField.customFieldName]}" required="{!rgField.displayAsRequired}" rendered="{!PaymentGatewayProcessType == 'New Credit Card'}" /> 
+                                        </apex:repeat> 
+                                        <!-- Custom fields -->                                           
+                                        <apex:pageBlockSectionItem rendered="{!PaymentGatewayProcessType == 'Existing Credit Card'}">
+                                                <apex:outputLabel value="Credit Card" />
+                                                <apex:outputPanel >
+                                                        <apex:inputText value="{!automatedTransaction.s360a__CreditCard__c}" id="selectedCreditCard" style="display:none"/> <!-- //CRUD/FLS -->
+                                                        <apex:pageBlockTable id="table" value="{!displayCreditCardList}" var="creditCard" rowClasses="odd, even" styleClass="tableClass" style="width: auto;" >
+                                                                <apex:column width="20" headerValue="" rendered="{!creditCard.selectedCard}">
+                                                                        <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" checked="checked" />                                                                        
+                                                                </apex:column> 
+                                                                <apex:column width="20" headerValue="" rendered="{!creditCard.selectedCard==false}">
+                                                                        <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" />
+                                                                </apex:column>                                                                                                                                       
+                                                                <apex:column width="180" headerValue="Card Type" >
+                                                                        <apex:outputText value="{!creditCard.CardType}" />
+                                                                </apex:column>
+                                                                <apex:column width="250" headerValue="Name On Card" >
+                                                                        <apex:outputText value="{!creditCard.CardHolderName}" />
+                                                                </apex:column> 
+                                                                <apex:column width="200" headerValue="Credit Card Number" >
+                                                                        <apex:outputText value="{!creditCard.CreditCardNumber}" />
+                                                                </apex:column> 
+                                                                <apex:column width="100" headerValue="Currency" rendered="{!isMultiCurrency}">
+                                                                        <apex:outputText value="{!creditCard.CurrencyCode}" />                                                                        
+                                                                </apex:column>                                                                                                                                                                                                     
+                                                                <apex:column width="100" headerValue="Expiry Date" >
+                                                                        <apex:outputText value="{!creditCard.ExpiryDate}" />
+                                                                </apex:column>  
+                                                                <apex:column width="100" headerValue="Status" >
+                                                                        <apex:outputText value="{!creditCard.ExpiryStatus}" />
+                                                                </apex:column>     
+                                                                                                                                                                                         
+                                                        </apex:pageBlockTable>                                                  
+                                                </apex:outputPanel>                                             
+                                        </apex:pageBlockSectionItem>                                        
+                                </apex:pageBlockSection>        
+                                <apex:pageBlockSection title="Direct Debit Details" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Direct Debit'}">
+                                  <apex:repeat value="{!DirectDebitFields}" var="f">
+                                   <apex:pageBlockSectionItem >
+                                      <apex:outputLabel value="{!f.Label}" /> 
+                                      <apex:inputField value="{!automatedTransaction[f.fieldPath]}"  required="{!OR(f.required, f.dbrequired)}"/>
+                                    </apex:pageBlockSectionItem>   
+                                  </apex:repeat>
+                                <!-- Custom fields -->
+                                <apex:repeat value="{!RegularGivingDirectDebitSectionCustomFields}" var="rgField" > 
+                                    <apex:inputField value="{!regularGiving[rgField.customFieldName]}" required="{!rgField.displayAsRequired}" /> 
+                                </apex:repeat> 
+                                <!-- Custom fields -->                                    
+                                </apex:pageBlockSection>
+                             </apex:outputPanel>
+                            
+                               
+                            <apex:pageBlockSection columns="1" title="Schedule" id="regularGivingScheduleSection" rendered="{!AND($ObjectType.s360a__Schedule__c.Updateable)}">
+                            <!-- Regular Giving Schedule -->
+                                <apex:pageBlockSectionItem >
+                                    <apex:outputLabel value="Transactions per year"/>
+                                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                                            <apex:outputPanel styleClass="requiredBlock" layout="block" />                                    
+                                            <apex:selectList size="1" style="width: 50px;" value="{!paymentFrequency}" onchange="updateValue('transactionsPerYear', this.value);">
+                                                <apex:selectOption itemLabel="12" itemValue="12"  />
+                                                <apex:selectOption itemLabel="2" itemValue="2"  />                                        
+                                                <apex:selectOption itemLabel="1" itemValue="1" />                                        
+                                            </apex:selectList>
+                                </apex:outputPanel>   
+                                </apex:pageBlockSectionItem>                            
+                                 <apex:pageblockSectionItem >
+                                    <apex:outputLabel value="Preferred Day" />
+                                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                                            <apex:outputPanel styleClass="requiredBlock" layout="block" />                                                  
+                                           <apex:selectList size="1" style="width: 50px;" value="{!RG_PreferredDay}" onchange="updateValue('preferredDay', this.value);" >
+                                              <apex:selectOptions value="{!RG_PreferredDays}"/>
+                                            </apex:selectList>                                                 
+                                  </apex:outputPanel>           
+                                </apex:pageblockSectionItem>
+                                
+                                <apex:inputField label="Process From" required="true" value="{!activeSchedule.s360a__StartsOn__c}" id="scheduleStartDate" />
+                              
+                                <apex:inputField value="{!activeSchedule.s360a__UntilThe__c}"/>                                 
+                                              
+                            <!-- Regular Giving Schedule -->                
+                            </apex:pageBlockSection>
+                 </apex:pageBlock>
+            </apex:outputPanel>
+        </apex:form>
+</apex:page>

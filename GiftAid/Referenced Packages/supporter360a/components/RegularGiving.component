@@ -1,0 +1,212 @@
+<apex:component controller="s360a.RegularGivingControlCentre" allowDML="true">
+    <style>
+        .rich-tab-inactive {
+            background-color: #CCCCCC;
+            font-weight: bold;
+            background: url("/img/alohaSkin/grid_headerbg.gif") repeat-x scroll 0 bottom #FFFFFF;
+        }
+        .rich-tab-active {
+            background-color: #F1F1F1;
+            background-image: none;
+            font-weight: bold;
+        }
+.cssbutton {
+    -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ededed), color-stop(1, #dfdfdf) );
+    background:-moz-linear-gradient( center top, #ededed 5%, #dfdfdf 100% );
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ededed', endColorstr='#dfdfdf');
+    background-color:#ededed;
+    -moz-border-radius:6px;
+    -webkit-border-radius:6px;
+    border-radius:6px;
+    border:1px solid #dcdcdc;
+    display:inline-block;
+    color:#777777;
+    font-family:arial;
+    font-size:15px;
+    font-weight:bold;
+    padding:6px 24px;
+    text-decoration:none;
+    text-shadow:1px 1px 0px #ffffff;
+}.cssbutton:hover {
+    background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #dfdfdf), color-stop(1, #ededed) );
+    background:-moz-linear-gradient( center top, #dfdfdf 5%, #ededed 100% );
+    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dfdfdf', endColorstr='#ededed');
+    background-color:#dfdfdf;
+}.cssbutton:active {
+    position:relative;
+    top:1px;
+}           
+    </style>
+    <apex:attribute name="record" description="Passing RG record to the controller" assignTo="{!record}" type="s360a__RegularGiving__c" />
+    <apex:form id="form"> 
+    <table>   
+        <td><apex:commandButton styleClass="cssbutton" title="Click to refresh the opportunities on this record" action="{!refreshOpps}" value="Refresh Opportunities" id="theButton" status="loading" rerender="pageBlock" />
+            <apex:actionStatus id="loading">
+                <apex:facet name="start">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                </apex:facet>
+            </apex:actionStatus></td>                    
+        <apex:outputLink target="_blank" value="http://www.supporter360.net/how-to-regular-giving-control-centre" style="float:right;"><apex:image value="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>    <!-- Updated by shail -->
+    </table>    
+        <apex:pageBlock id="pageBlock"  >
+            <apex:tabPanel switchType="client" value="{!selectedTab}" id="rgcontrol" inactiveTabClass="inactiveTab" >
+                <apex:tab label="Regular Giving Control Centre" name="rgmain" id="rgmain" style="background: white;">               
+                   
+                <table width="90%">
+                    <tr>
+                        <td width="15%" align="left"><apex:outputText escape="false" value="<u><b>Cancel Giving:</u></b>"/></td>  
+                    </tr><tr></tr>                   
+                    <tr>
+                        <td width="10%" align="right"><apex:outputText escape="false" value="<b>Reason / note:</b>" /></td>                                 
+                        <td width="120px" align="left"><apex:inputField style="width:120px" value="{!inputrecord.s360a__StatusReason__c}"/></td>  
+                        <td width="10%" align="right"><apex:outputText escape="false" value="<b>Pick reason:</b>" /></td>                          
+                        <td width="120px" align="left"><apex:inputField style="width:120px" value="{!inputrecord.s360a__CancellationReason__c}" >   
+                            <apex:actionSupport reRender="cancelbutton" event="onchange"/>
+                            </apex:inputField></td>                                                
+                        <td width="15%" align="right"><apex:outputText escape="false" value="<b>Tick to confirm:</b>" /></td>                                
+                        <td width="5%" align="left"><apex:inputCheckbox value="{!confirmCancel}" >                       
+                            <apex:actionSupport reRender="cancelbutton" event="onclick"/>
+                            </apex:inputCheckbox></td>         
+                        <td width="15%" align="left"><apex:commandButton styleClass="cssbutton" rerender="msgpanel" id="cancelbutton" disabled="{!confirmCancel == false || inputrecord.CancellationReason__c == 'N/A' }" value="Cancel Regular Giving" action="{!cancelRG}"/></td>   
+                    </tr><tr></tr>
+                    </table> 
+                    <hr/>
+                    <table width="100%">                     
+                    <tr>
+                    <td width="15%" align="left"><apex:outputText escape="false" value="<b><u>Quick-Add Schedule:</b></u>"/></td>                     
+                    </tr><tr></tr>
+                    <tr>
+                        <td width="20%" align="right"><apex:outputText escape="false" value="<b>Start date:</b>" /></td>                                 
+                        <td width="120px" align="left"><apex:inputField value="{!inputDates.s360a__StartsOn__c}" /></td>       
+                        <td width="15%" align="right"><apex:outputText escape="false" value="<b>Frequency per year:</b>" /></td>                                 
+                        <td width="5%"><apex:selectList size="1" value="{!rgFrequency}" title="12 = monthly, 6 = bi-monthly, 4 = quarterly, 2 = bi-annual, 1 = annual">
+                                <apex:selectOption itemLabel="12" itemValue="12" />
+                                <apex:selectOption itemLabel="6" itemValue="6" />
+                                <apex:selectOption itemLabel="4" itemValue="4" />
+                                <apex:selectOption itemLabel="2" itemValue="2" />
+                                <apex:selectOption itemLabel="1" itemValue="1" />    
+                            </apex:selectList></td> 
+                         <td width="20%" align="right"><apex:outputText escape="false" value="<b>Date of month:</b>" /></td>                             
+                         <td width="50px" align="left"><apex:inputText style="width:50px" value="{!dateofMonth}" title="What date of the selected months should this schedule run? 1 - 28 only" /></td>                                               
+                         <td width="15%" align="left"><apex:commandButton styleClass="cssbutton"  id="Addbutton" value="Add" rerender="msgpanel" status="loading" action="{!quickAddSchedule}"/>
+                         <apex:actionStatus id="loading">
+                         <apex:facet name="start">
+                             <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                        </apex:facet>
+                        </apex:actionStatus></td> 
+                    </tr>  
+                    </table>
+                                     
+                    <table width="100%">
+                    <tr>                    
+                    <td width="15%" align="left"><apex:outputText escape="false" value="<b><u>Pause Giving:</b></u>"/></td>                    
+                    </tr><tr></tr>
+                    </table> 
+                    <table width="90%">                     
+                    <tr>
+                        <td width="20%" align="right"><apex:outputText escape="false" value="<b>Reason / note:</b>" /></td>                      
+                        <td width="120px" align="left"><apex:inputField style="width:120px" value="{!inputrecord2.s360a__StatusReason__c}" >
+                            <apex:actionSupport reRender="pausebutton" event="onchange"/>
+                            </apex:inputField></td>                          
+                        <td width="20%" align="right"><apex:outputText escape="false" value="<b>From:</b>" /></td>                                 
+                        <td width="80px" align="left"><apex:inputField value="{!inputDates2.s360a__StartsOn__c}" /></td>    
+                        <td width="15%" align="right"><apex:outputText escape="false" value="<b>To:</b>" /></td>                                
+                        <td width="80px" align="left"><apex:inputField value="{!inputDates2.s360a__UntilThe__c}" /></td>                   
+                        <td width="8%" align="left"><apex:commandButton styleClass="cssbutton"  id="pausebutton" status="loading1" rerender="msgpanel" disabled="{!inputrecord2.s360a__StatusReason__c == '-- Give reason --'}" value="Pause" action="{!pauseRG}"/>
+                         <apex:actionStatus id="loading1">
+                         <apex:facet name="start">
+                              <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                        </apex:facet>
+                        </apex:actionStatus></td>   
+                    </tr><tr></tr>                                                                         
+                </table>                    
+                    <apex:outputPanel id="msgpanel">
+                    <apex:outputText id="errorMsg" rendered="{!showErrorMsg}" style="font-weight: bold; color:RED;" escape="false" value="{!errorMsg}<br/>"/>                    
+                    <apex:outputText id="canceltext" rendered="{!showCancelled}" style="font-weight: bold; color:ORANGE;" escape="false" value="Regular giving record cancelled. Refresh entire page to confirm.<br/>"/>
+                    <apex:outputText id="addedtext" rendered="{!showAdded}" style="font-weight: bold; color:ORANGE;"  escape="false" value="Regular giving schedule added. Refresh entire page to review updates.<br/>"/>
+                    <apex:outputText id="pausetext" rendered="{!showPaused}" style="font-weight: bold; color:ORANGE;" escape="false" value="Regular giving paused. Refresh entire page to confirm.<br/>"/>
+                    <apex:outputText id="refreshtext" rendered="{!showRefreshed}" style="font-weight: bold; color:ORANGE;" escape="false" value="Opportunities refreshed - please reload the page to view.<br/>"/>                    
+                    <apex:outputText id="converttext" rendered="{!showConverted}" style="font-weight: bold; color:ORANGE;" escape="false" value="Record converted to a RGLI record. Refresh entire page to see new data.<br/>"/>                                        
+                    <apex:outputText id="createtext" rendered="{!showCreated}" style="font-weight: bold; color:ORANGE;" escape="false" value="RGLI record created. Refresh entire page to see new record details.<br/>"/>                      
+                    </apex:outputPanel>                                                           
+          </apex:tab>
+          <apex:tab label="Regular Giving Line Items" name="rgli" id="rglis" style="background: white;"> 
+             
+              <apex:outputPanel rendered="{!!record.s360a__RGLIMode__c}">
+                  <apex:outputText style="font-size:13px" value="<b>What are Regular Giving Line Items?</b><br/><br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="'RGLI's (we call them '<b>wrigglies</b>') let supporter360 manage more complex and more powerful regular giving records. With the standard model<br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="in supporter360 you add a product or fund to the regular giving record. You then add an amount and maybe a campaign. This works perfectly<br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="well in simple of situations but when you want to upgrade or add a second fund or product you would need a whole separate regular<br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="giving record.<br/><br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="<b>With wrigglies you can track as many funds, amounts and upgrade processes as you need all summarised on the regular giving record.</b><br/><br/>" escape="false" />
+                  <apex:outputText style="font-size:11px" value="And even better you can use either option for different records - only use wrigglies where you need a more complex history or multiple products.<br/><br/>" escape="false" />                                    
+                  <apex:outputText style="font-size:11px" value="To convert this record just click the Convert button." escape="false" />&nbsp;&nbsp;&nbsp;&nbsp;
+                  <apex:commandButton styleClass="cssbutton"  title="Click to convert this record to use Regular Giving Line Items" value="Convert to RGLI"  action="{!converToRGLI}" id="theotherButton" status="converting" rerender="pageBlock" />            
+                  <apex:actionStatus id="converting">
+                      <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                      </apex:facet>
+                  </apex:actionStatus>
+              </apex:outputPanel>
+              <apex:outputPanel rendered="{!record.s360a__RGLIMode__c}">
+             
+                     <table width="40%">
+                    <tr>
+                        <td width="15%" align="left"><apex:outputText escape="false" value="<u><b>Create New RGLI:</u></b>"/></td>  
+                    </tr>
+                    </table>
+                     <table width="100%">
+                    <tr></tr>                   
+                    <tr>
+                        <td width="15%" align="right"><apex:outputText escape="false" value="<b>Upgrade Status:</b>" /></td>                                 
+                        <td width="100px" align="left"><apex:inputField style="width:120px" value="{!wriggly.s360a__UpgradeStatus__c}"/></td> 
+                        <td width="15%" align="right"><apex:outputText escape="false" value="<b>Amount:</b>" /></td>                                
+                        <td width="10%" align="left"><apex:inputField style="width:35px" value="{!wriggly.s360a__Amount__c}" /></td>                                               
+                        <td width="120px" align="right"><apex:outputText style="width:120px" escape="false" value="<b>Use Product From Campaign:</b>"/></td>                          
+                        <td width="20px" align="left"><apex:inputField value="{!wriggly.s360a__UseCampaignProduct__c}">
+                        <apex:actionSupport reRender="pageBlock" event="onchange"/>
+                        </apex:inputField></td>                                                
+                                     
+                    </tr><tr></tr>
+                    </table>
+                    
+                    <hr/>
+                   <table width="100%">                                         
+                    <tr></tr>
+                    <tr>           
+                        <td width="10%" align="right"><apex:outputText escape="false" value="<b>Campaign:</b>" /></td>                                 
+                        <td width="15%" align="left"><apex:inputField value="{!wriggly.s360a__Campaign__c}" /></td>                                                                              
+                        <td width="10%" align="right"><apex:outputText escape="false" value="<b>Process From:</b>"/></td>   
+                        <td width="10%" align="left"><apex:inputField value="{!wriggly.s360a__ProcessFrom__c}"/></td>   
+                        <td width="10%" align="right"><apex:outputText escape="false" value="<b>Process To:</b>"/></td>   
+                        <td width="10%" align="left"><apex:inputField value="{!wriggly.s360a__ProcessTo__c}"/></td>      
+                    </tr>  
+                    </table>               
+                    <hr/>
+                   <table width="100%">                                         
+                    <tr></tr>
+                    <tr>           
+                        <td width="200px" align="right"><apex:outputText escape="false" value="<b>Type of record to create:</b>" /></td>                                 
+                        <td width="150px" align="left"><apex:inputField value="{!wriggly.s360a__RGLIType__c}" /></td>                                                                              
+                        <td width="70px" align="right"><apex:outputText escape="false" value="<b>Active:</b>"/></td>   
+                        <td width="20px" align="left"><apex:inputField value="{!wriggly.s360a__isActive__c}"/></td>
+                        <td width="20%" align="right"><apex:outputText escape="false" value="<b>Product / Fund:</b>" rendered="{!!wriggly.s360a__UseCampaignProduct__c}" id="prod1" /></td>                          
+                        <td width="120px" align="left"><apex:inputField style="width:120px" value="{!wriggly.s360a__Product__c}" rendered="{!!wriggly.s360a__UseCampaignProduct__c}" id="prod2" /></td>                                                        
+                        <td width="100px" align="right"><apex:commandButton styleClass="cssbutton"  title="Save new RGLI record." value="Save"  action="{!saveRGLI}" id="theotherButton2" status="saving" rerender="pageBlock" style="float:right;" />
+                              <apex:actionStatus id="saving">
+                              <apex:facet name="start">
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                              </apex:facet>
+                              </apex:actionStatus></td>
+                    </tr>  
+                    </table>                         
+             </apex:outputPanel>                 
+            </apex:tab>                   
+           </apex:tabPanel> 
+           
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

@@ -1,0 +1,1165 @@
+<apex:page id="page" controller="s360a.supporter360Settings">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+<apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" /> 
+    <apex:sectionHeader title="supporter360" subtitle="Supporter360 Settings"></apex:sectionHeader>
+    <apex:messages />
+    <apex:form id="hiddenForm" style="display: none;">
+        <script type="text/javascript">
+            function updateValue(id, value)
+            {   document.getElementById('page:hiddenForm:' + id).value = value;
+                if (typeof window[id + 'ActionFunction'] === 'function')
+                {   eval(id + 'ActionFunction();');
+                }
+            }
+        </script>
+        <apex:actionFunction name="regularGivingProcessingActionFunction" status="regularGivingProcessingActionStatus" rerender="regularGivingProcessingSection" />
+        <apex:actionFunction name="paymentGatewayActionFunction" status="paymentGatewayActionStatus" rerender="payflowProSettingsSection, IATSSettingsSection, eWaySettingsSection,giftAidPaymentMethodRepeat" />
+        <apex:actionFunction name="giftAidSupportActionFunction" status="giftAidSupportActionStatus" rerender="giftAidSettingsSection" />
+        <apex:selectList id="regularGivingOpportunityRecordTypeId" size="1" value="{!supporter360Settings.s360a__RegularGivingOpportunityRecordTypeId__c}">
+            <apex:selectOptions value="{!opportunityRecordTypeSelectOptions}" />
+        </apex:selectList>
+        <apex:inputField id="regularGivingForecastingQuantity" value="{!supporter360Settings.s360a__RegularGivingForecastingQuantity__c}" />
+        <apex:inputField id="regularGivingForecastingUnit" value="{!supporter360Settings.s360a__RegularGivingForecastingUnit__c}" />
+        <apex:inputField id="regularGivingProcessing" value="{!supporter360Settings.s360a__RegularGivingProcessing__c}" />
+        <apex:inputField id="regularGivingProcessingTime" value="{!supporter360Settings.s360a__RegularGivingProcessingTime__c}" />
+        <apex:inputField id="regularGivingMaxRetries" value="{!supporter360Settings.s360a__RegularGivingAutoRetries__c}" />
+        <apex:inputField id="regularGivingRetryGap" value="{!supporter360Settings.s360a__RegularGivingAutoRetryGap__c}" />
+        <apex:inputField id="regularGivingRetryOverride" value="{!supporter360Settings.s360a__RegularGivingRetryOverride__c}" />
+        <apex:inputField id="paymentGateway" value="{!supporter360Settings.s360a__PaymentGateway__c}" />
+        <apex:inputField id="payflowProUser" value="{!supporter360Settings.s360a__PayflowProUser__c}" />
+        <apex:inputField id="payflowProVendor" value="{!supporter360Settings.s360a__PayflowProVendor__c}" />
+        <apex:inputField id="payflowProPartner" value="{!supporter360Settings.s360a__PayflowProPartner__c}" />
+        <apex:inputSecret id="payflowProPassword" value="{!payflowProPassword}" redisplay="true" rendered="{!AND($ObjectType.supporter360SettingsProtected__c .fields.PayflowProPassword__c.Createable,$ObjectType.supporter360SettingsProtected__c .fields.PayflowProPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+        <apex:inputField id="payflowProMode" value="{!supporter360Settings.s360a__PayflowProMode__c}" />
+        <apex:inputField id="eWayCustId" value="{!supporter360Settings.s360a__EwayCustomerID__c}"/>
+        <apex:inputField id="eWayUsername" value="{!supporter360Settings.s360a__EwayUserName__c}" />
+        <apex:inputSecret id="eWayPassword" value="{!eWayPassword}" rendered="{!AND($ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__EwayPassword__c.Createable,$ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__EwayPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+        <apex:inputField id="eWayCVN" value="{!supporter360Settings.s360a__EwayDisableCVN__c}" />        
+        <apex:inputField id="giftAidSupport" value="{!supporter360Settings.s360a__GiftAidSupport__c}" />
+        <apex:inputField id="giftAidContactName" value="{!supporter360Settings.s360a__GiftAidContactName__c}" />
+        <apex:inputField id="giftAidContactPhone" value="{!supporter360Settings.s360a__GiftAidContactPhone__c}" />
+        <apex:inputField id="giftAidAddress" value="{!supporter360Settings.s360a__GiftAidAddress__c}" />
+        <apex:inputField id="giftAidHMRCReference" value="{!supporter360Settings.s360a__GiftAidHMRCReference__c}" />
+        <apex:inputField id="RGLIMode" value="{!supporter360Settings.s360a__RGLIMode__c}" />
+    </apex:form>
+    <apex:form id="form">
+    <apex:outputPanel id="editpanel">
+      <apex:tabPanel rendered="{!renderMode == 'Edit'}" switchType="client" inactiveTabClass="inactiveTab">
+      <apex:tab name="generaledit" label="General Settings">
+        <apex:pageBlock mode="edit" title="supporter360 Settings" >
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!save}" value="Save" />
+                <apex:commandButton styleClass="cssbutton"  action="{!cancel}" value="Cancel" immediate="true" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="General" columns="1" rendered="{!addressManagementInstalled}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Default Country</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__DefaultCountry__c}">
+                        <apex:selectOptions value="{!countrySelectOptions}" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Opportunity Auto Naming</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__OpportunityAutoNaming__c}">
+                        <apex:selectOption itemValue="Disabled" itemLabel="Disabled" />
+                        <apex:selectOption itemValue="[Account Name] - [Record Type] - [Close Date]" itemLabel="[Account Name] - [Record Type] - [Close Date]" />                        
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Analytics__c.Fields.s360a__GivingStatsBaseDate__c.InlineHelpText}">
+                    <apex:outputPanel >Giving Stats Base Date</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Analytics.s360a__GivingStatsBaseDate__c}">
+                        <apex:selectOption itemValue="Fiscal" itemLabel="Fiscal" />
+                        <apex:selectOption itemValue="Calendar" itemLabel="Calendar" />     
+                        <apex:selectOption itemValue="Rolling" itemLabel="Rolling" />                                                
+                    </apex:selectList>                    
+                </apex:pageBlockSectionItem>                  
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__HighlightsPanelHeight__c.InlineHelpText}">
+                    <apex:outputPanel >Contact Highlights Height</apex:outputPanel>
+                    <apex:inputText value="{!supporter360Settings.s360a__HighlightsPanelHeight__c}" />
+                </apex:pageBlockSectionItem>    
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__HouseholdOpportunities__c.InlineHelpText}">
+                    <apex:outputPanel >Household Opportunities</apex:outputPanel>
+                    <apex:SelectList value="{!supporter360Settings.s360a__HouseholdOpportunities__c}" size="1">
+                        <apex:selectOptions value="{!hhOpportunities}" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Quick Opportunity Settings" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Default Opportunity Record Type</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__QuickOpportunityRecordTypeId__c}">
+                        <apex:selectOptions value="{!opportunityRecordTypeSelectOptions}" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Receipting Fields</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__QuickOpportunityReceiptingFields__c}">
+                        <apex:selectOption itemValue="Disabled" itemLabel="Disabled" />
+                        <apex:selectOption itemValue="Enabled" itemLabel="Enabled" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Auto Close Opportunity</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__QuickOpportunityAutoClose__c}">
+                        <apex:selectOption itemValue="Disabled" itemLabel="Disabled" />
+                        <apex:selectOption itemValue="Enabled" itemLabel="Enabled" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__QuickOpportunityCampaignMandatory__c.InlineHelpText}">
+                    <apex:outputPanel >Mandatory Campaign</apex:outputPanel>
+                    <apex:inputCheckbox value="{!supporter360Settings.s360a__QuickOpportunityCampaignMandatory__c}" disabled="false" />
+                </apex:pageBlockSectionItem>                  
+            </apex:pageBlockSection>
+
+            <apex:outputPanel id="regularGivingProcessingSection">
+                <apex:pageBlockSection title="Regular Giving Settings" columns="1" rendered="{!regularGivingManagementInstalled}">
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingOpportunityRecordTypeId__c.InlineHelpText}" >
+                        <apex:outputPanel >Opportunity Record Type</apex:outputPanel>
+                        <apex:selectList size="1" value="{!supporter360Settings.s360a__RegularGivingOpportunityRecordTypeId__c}" onchange="updateValue('regularGivingOpportunityRecordTypeId', this.value);">
+                            <apex:selectOptions value="{!opportunityRecordTypeSelectOptions}" />
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingForecastingQuantity__c.InlineHelpText}" >
+                        <apex:outputPanel >Regular Giving Forecasting</apex:outputPanel>
+                        <apex:outputPanel >
+                            <apex:selectList value="{!supporter360Settings.s360a__RegularGivingForecastingQuantity__c}" size="1" onchange="updateValue('regularGivingForecastingQuantity', this.value);">
+                                <apex:selectOptions value="{!forecastingQuantityOptions}" />
+                            </apex:selectList>
+                            <apex:selectList value="{!supporter360Settings.s360a__RegularGivingForecastingUnit__c}" size="1" onchange="updateValue('regularGivingForecastingUnit', this.value);">
+                                <apex:selectOption itemLabel="Day(s)" itemValue="Day(s)" />
+                                <apex:selectOption itemLabel="Week(s)" itemValue="Week(s)" />
+                                <apex:selectOption itemLabel="Month(s)" itemValue="Month(s)" />
+                                <apex:selectOption itemLabel="Year(s)" itemValue="Year(s)" />
+                            </apex:selectList>
+                            &nbsp;Ahead
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingProcessing__c.InlineHelpText}" >
+                        <apex:outputPanel >Automated Transaction Processing </apex:outputPanel>
+                        <apex:outputPanel >
+                            <apex:selectList size="1" value="{!supporter360Settings.s360a__RegularGivingProcessing__c}" onchange="updateValue('regularGivingProcessing', this.value)">
+                                <apex:selectOption itemLabel="Disabled" itemValue="Disabled" />
+                                <apex:selectOption itemLabel="Enabled" itemValue="Enabled" />
+                            </apex:selectList>
+                            <apex:actionStatus id="regularGivingProcessingActionStatus">
+                                <apex:facet name="start">
+                                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" id="automatedTransactionPaymentMethodRepeatSectionItem" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__AutomatedTransactionPaymentMethods__c.InlineHelpText}" >
+                        <apex:outputLabel >Automated Transaction Payment Methods</apex:outputLabel>
+                        <apex:outputPanel id="automatedTransactionPaymentMethodRepeat">
+                            <apex:repeat value="{!automatedTransactionPaymentMethodList}" var="automatedTransactionPaymentMethod" >
+                                <div style="margin-bottom: 3px;"><apex:outputPanel layout="none" rendered="{!NOT(automatedTransactionPaymentMethod.checked)}"><input type="checkbox" onchange="updateAutomatedTransactionPaymentMethodList();" name="{!automatedTransactionPaymentMethod.name}" /></apex:outputPanel><apex:outputPanel layout="none" rendered="{!automatedTransactionPaymentMethod.checked}"><input type="checkbox" name="{!automatedTransactionPaymentMethod.name}" onchange="updateAutomatedTransactionPaymentMethodList();" checked="checked" /></apex:outputPanel>&nbsp;{!automatedTransactionPaymentMethod.name}<br /></div>                                                            
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                    
+                    <apex:inputField id="automatedTransactionPaymentMethods" value="{!supporter360Settings.s360a__AutomatedTransactionPaymentMethods__c}"  rendered="{!AND(supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled',$ObjectType.s360a__supporter360Settings__c.fields.s360a__AutomatedTransactionPaymentMethods__c.Createable,$ObjectType.s360a__supporter360Settings__c.fields.s360a__AutomatedTransactionPaymentMethods__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                    <script type="text/javascript">
+                        function updateAutomatedTransactionPaymentMethodList()
+                        {   var listNodes = document.getElementById('{!$Component.form:j_id11:j_id65:automatedTransactionPaymentMethodRepeatSectionItem:automatedTransactionPaymentMethodRepeat}').childNodes;
+                            var apexObject = document.getElementById('{!$Component.form:j_id11:j_id65:automatedTransactionPaymentMethods}');
+                            apexObject.value = '';
+                            for (var index = 0; index < listNodes.length; index = index + 2)
+                            {   var checkbox = listNodes[index + 1].childNodes[0];
+                                if (checkbox.checked == true)
+                                {   if (apexObject.value != '')
+                                    {   apexObject.value += ',';
+                                    }
+                                    apexObject.value += checkbox.name;
+                                }
+                            }
+                        }
+                    </script>                       
+                    
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingProcessingTime__c.InlineHelpText}">
+
+                            <apex:outputPanel ><apex:outputLabel value="Automated Transaction Processing Time" /> </apex:outputPanel>
+                            <apex:outputPanel >
+                                <apex:selectList size="1" value="{!supporter360Settings.s360a__RegularGivingProcessingTime__c}">
+                                    <apex:selectOptions value="{!hourSelectOptions}" />
+                                </apex:selectList>&nbsp;Everyday
+                            </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}"  helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingProcessingDate__c.InlineHelpText}" >
+                        <apex:outputPanel ><apex:outputLabel value="Default Processing Date" /></apex:outputPanel>
+                        <apex:outputPanel >
+                            <apex:selectList size="1" value="{!supporter360Settings.s360a__RegularGivingProcessingDate__c}">
+                                <apex:selectOption itemValue="1" itemLabel="1" />
+                                <apex:selectOption itemValue="2" itemLabel="2" />
+                                <apex:selectOption itemValue="3" itemLabel="3" />
+                                <apex:selectOption itemValue="4" itemLabel="4" />
+                                <apex:selectOption itemValue="5" itemLabel="5" />
+                                <apex:selectOption itemValue="6" itemLabel="6" />
+                                <apex:selectOption itemValue="7" itemLabel="7" />
+                                <apex:selectOption itemValue="8" itemLabel="8" />
+                                <apex:selectOption itemValue="9" itemLabel="9" />
+                                <apex:selectOption itemValue="10" itemLabel="10" />
+                                <apex:selectOption itemValue="11" itemLabel="11" />
+                                <apex:selectOption itemValue="12" itemLabel="12" />
+                                <apex:selectOption itemValue="13" itemLabel="13" />
+                                <apex:selectOption itemValue="14" itemLabel="14" />
+                                <apex:selectOption itemValue="15" itemLabel="15" />
+                                <apex:selectOption itemValue="16" itemLabel="16" />
+                                <apex:selectOption itemValue="17" itemLabel="17" />
+                                <apex:selectOption itemValue="18" itemLabel="18" />
+                                <apex:selectOption itemValue="19" itemLabel="19" />
+                                <apex:selectOption itemValue="20" itemLabel="20" />
+                                <apex:selectOption itemValue="21" itemLabel="21" />
+                                <apex:selectOption itemValue="22" itemLabel="22" />
+                                <apex:selectOption itemValue="23" itemLabel="23" />
+                                <apex:selectOption itemValue="24" itemLabel="24" />
+                                <apex:selectOption itemValue="25" itemLabel="25" />
+                                <apex:selectOption itemValue="26" itemLabel="26" />
+                                <apex:selectOption itemValue="27" itemLabel="27" />
+                                <apex:selectOption itemValue="28" itemLabel="28" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingAutoRetries__c.InlineHelpText}" >
+                        <apex:outputPanel >Max Auto Retry Count</apex:outputPanel>
+                        <apex:inputField style="width:25px" value="{!supporter360Settings.s360a__RegularGivingAutoRetries__c}" onchange="updateValue('regularGivingMaxRetries', this.value);"/>
+                    </apex:pageBlockSectionItem>    
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingAutoRetryGap__c.InlineHelpText}" >
+                        <apex:outputPanel >Retry Gap (Days)</apex:outputPanel>
+                        <apex:inputField style="width:25px" value="{!supporter360Settings.s360a__RegularGivingAutoRetryGap__c}" onchange="updateValue('regularGivingRetryGap', this.value);"/>
+                    </apex:pageBlockSectionItem>    
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingRetryOverride__c.InlineHelpText}" >
+                        <apex:outputPanel >Disable Auto Retries</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__RegularGivingRetryOverride__c}" onchange="updateValue('regularGivingRetryOverride', this.value);"/>
+                    </apex:pageBlockSectionItem>                                                            
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RGLIMode__c.InlineHelpText}" >
+                        <apex:outputLabel value="Regular Giving Line Item Mode" />
+                        <apex:outputPanel >                            
+                            <apex:selectList size="1" value="{!supporter360Settings.s360a__RGLIMode__c}" >
+                                <apex:selectOption itemValue="RGLIs Off" itemLabel="RGLIs Off" />
+                                <apex:selectOption itemValue="RGLIs On" itemLabel="RGLIs On" />
+                                <apex:selectOption itemValue="RGLIs Mixed - Default On" itemLabel="RGLIs Mixed - Default On" />
+                                <apex:selectOption itemValue="RGLIs Mixed - Default Off" itemLabel="RGLIs Mixed - Default Off" />                        
+                            </apex:selectList>                                        
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__DirectDebitDays__c.InlineHelpText}" >
+                        <apex:outputPanel >Preferred Days</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__DirectDebitDays__c}" />
+                    </apex:pageBlockSectionItem> 
+                                                           
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+            <apex:pageBlockSection title="Payment Gateway Settings" columns="1" rendered="{!transactionManagementInstalled}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Payment Gateway</apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:selectList value="{!supporter360Settings.s360a__PaymentGateway__c}" size="1" onchange="updateValue('paymentGateway', this.value)">
+                            <apex:selectOption itemLabel="Disabled" itemValue="Disabled" />
+                            <apex:selectOption itemLabel="Payflow Pro" itemValue="Payflow Pro" />
+                            <apex:selectOption itemLabel="IATS" itemValue="IATS" />     
+                            <apex:selectOption itemLabel="eWay" itemValue="eWay" />                                                      
+                        </apex:selectList>
+                        <apex:actionStatus id="paymentGatewayActionStatus" >
+                            <apex:facet name="start">
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:outputPanel id="payflowProSettingsSection">
+                <apex:pageBlockSection title="Payflow Pro Settings" columns="1" rendered="{!supporter360Settings.s360a__PaymentGateway__c == 'Payflow Pro'}" >
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Partner</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__PayflowProPartner__c}" required="true" onkeyup="updateValue('payflowProPartner', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Merchant Login</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__PayflowProVendor__c}" required="true" onkeyup="updateValue('payflowProVendor', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >User</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__PayflowProUser__c}" onkeyup="updateValue('payflowProUser', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Password</apex:outputPanel>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputSecret redisplay="true" value="{!payflowProPassword}" onkeyup="updateValue('payflowProPassword', this.value);" rendered="{!AND($ObjectType.supporter360SettingsProtected__c .fields.PayflowProPassword__c.Createable,$ObjectType.supporter360SettingsProtected__c .fields.PayflowProPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Mode</apex:outputPanel>
+                        <apex:selectList value="{!supporter360Settings.s360a__PayflowProMode__c}" size="1">
+                            <apex:selectOption itemLabel="Test Mode" itemValue="Test" />
+                            <apex:selectOption itemLabel="Live Mode" itemValue="Live" />
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel> 
+
+            <apex:outputPanel id="IATSSettingsSection" >
+                <apex:pageBlockSection title="IATS Settings" columns="1" rendered="{!supporter360Settings.s360a__PaymentGateway__c == 'IATS'&&isMultiCurrency==false}" >
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Username (card processing) </apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__IATSAgentCode__c}" onkeyup="updateValue('IATSUsername', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Password (card processing)</apex:outputPanel>
+                            <apex:inputSecret redisplay="true" value="{!IATSPassword}" onkeyup="updateValue('IATSPassword', this.value);" rendered="{!AND($ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__IATSPassword__c.Createable,$ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__IATSPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Username (Direct Debit processing)</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__IATSAgentCodeDD__c}" onkeyup="updateValue('IATSUsernameDD', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Password (Direct Debit processing)</apex:outputPanel>
+                            <apex:inputSecret redisplay="true" value="{!IATSPasswordDD}" onkeyup="updateValue('IATSPasswordDD', this.value);" rendered="{!AND($ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__IATSPasswordDD__c.Createable,$ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__IATSPasswordDD__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                        
+                    </apex:pageBlockSectionItem>   
+                </apex:pageBlockSection>
+            </apex:outputPanel>                          
+            <apex:outputPanel id="eWaySettingsSection">
+                <apex:pageBlockSection title="eWay Settings" columns="1" rendered="{!supporter360Settings.s360a__PaymentGateway__c == 'eWay'}" >
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Customer ID</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__EwayCustomerID__c}" required="true" onkeyup="updateValue('eWayCustId', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Username</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__EwayUserName__c}" required="true" onkeyup="updateValue('eWayUsername', this.value);" />
+                    </apex:pageBlockSectionItem>   
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Password</apex:outputPanel>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputSecret redisplay="true" value="{!eWayPassword}" rendered="{!AND($ObjectType.supporter360SettingsProtected__c .fields.EwayPassword__c.Createable,$ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__EwayPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                                     
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Password</apex:outputPanel>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputSecret redisplay="true" value="{!ewayPassword}" required="true" onkeyup="updateValue('eWayPassword', this.value);" rendered="{!AND($ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__EwayPassword__c.Createable,$ObjectType.s360a__supporter360SettingsProtected__c.fields.s360a__EwayPassword__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionitem >
+                        <apex:outputPanel >Disable CVN</apex:outputPanel>
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField value="{!supporter360Settings.s360a__EwayDisableCVN__c}" onkeyup="updateValue('eWayCVN', this.value);" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem> 
+                </apex:pageBlockSection>                
+            </apex:outputPanel>   
+                             
+            <apex:outputPanel id="giftAidSettingsSection">
+                <apex:pageBlockSection title="Gift Aid Settings" columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Gift Aid Support</apex:outputPanel>
+                        <apex:outputPanel layout="none">
+                            <apex:selectList value="{!supporter360Settings.s360a__GiftAidSupport__c}" size="1" style="width: 300px;" onchange="updateValue('giftAidSupport', this.value);">
+                                <apex:selectOption itemLabel="Enabled" itemValue="Enabled" />
+                                <apex:selectOption itemLabel="Disabled" itemValue="Disabled" />
+                            </apex:selectList>
+                            <apex:actionStatus id="giftAidSupportActionStatus" >
+                                <apex:facet name="start">
+                                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>                        
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}" />
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >Accounting Period Ends</apex:outputPanel>
+                        <apex:outputPanel layout="none">
+                            <apex:selectList size="1" style="margin-right: 5px;" value="{!giftAidAccountingPeriodEndDate}">
+                                <apex:selectOption itemLabel="01" itemValue="01" />
+                                <apex:selectOption itemLabel="02" itemValue="02" />
+                                <apex:selectOption itemLabel="03" itemValue="03" />
+                                <apex:selectOption itemLabel="04" itemValue="04" />
+                                <apex:selectOption itemLabel="05" itemValue="05" />
+                                <apex:selectOption itemLabel="06" itemValue="06" />
+                                <apex:selectOption itemLabel="07" itemValue="07" />
+                                <apex:selectOption itemLabel="08" itemValue="08" />
+                                <apex:selectOption itemLabel="09" itemValue="09" />
+                                <apex:selectOption itemLabel="10" itemValue="10" />
+                                <apex:selectOption itemLabel="11" itemValue="11" />
+                                <apex:selectOption itemLabel="12" itemValue="12" />
+                                <apex:selectOption itemLabel="13" itemValue="13" />
+                                <apex:selectOption itemLabel="14" itemValue="14" />
+                                <apex:selectOption itemLabel="15" itemValue="15" />
+                                <apex:selectOption itemLabel="16" itemValue="16" />
+                                <apex:selectOption itemLabel="17" itemValue="17" />
+                                <apex:selectOption itemLabel="18" itemValue="18" />
+                                <apex:selectOption itemLabel="19" itemValue="19" />
+                                <apex:selectOption itemLabel="20" itemValue="20" />
+                                <apex:selectOption itemLabel="21" itemValue="21" />
+                                <apex:selectOption itemLabel="22" itemValue="22" />
+                                <apex:selectOption itemLabel="23" itemValue="23" />
+                                <apex:selectOption itemLabel="24" itemValue="24" />
+                                <apex:selectOption itemLabel="25" itemValue="25" />
+                                <apex:selectOption itemLabel="26" itemValue="26" />
+                                <apex:selectOption itemLabel="27" itemValue="27" />
+                                <apex:selectOption itemLabel="28" itemValue="28" />
+                                <apex:selectOption itemLabel="29" itemValue="29" />
+                                <apex:selectOption itemLabel="30" itemValue="30" />
+                                <apex:selectOption itemLabel="31" itemValue="31" />
+                            </apex:selectList>
+                            /
+                            <apex:selectList size="1" style="margin-left: 5px;" value="{!giftAidAccountingPeriodEndMonth}">
+                                <apex:selectOption itemLabel="01" itemValue="01" />
+                                <apex:selectOption itemLabel="02" itemValue="02" />
+                                <apex:selectOption itemLabel="03" itemValue="03" />
+                                <apex:selectOption itemLabel="04" itemValue="04" />
+                                <apex:selectOption itemLabel="05" itemValue="05" />
+                                <apex:selectOption itemLabel="06" itemValue="06" />
+                                <apex:selectOption itemLabel="07" itemValue="07" />
+                                <apex:selectOption itemLabel="08" itemValue="08" />
+                                <apex:selectOption itemLabel="09" itemValue="09" />
+                                <apex:selectOption itemLabel="10" itemValue="10" />
+                                <apex:selectOption itemLabel="11" itemValue="11" />
+                                <apex:selectOption itemLabel="12" itemValue="12" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >Contact Name</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__GiftAidContactName__c}" style="width: 300px;" onchange="updateValue('giftAidContactName', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >Contact Phone</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__GiftAidContactPhone__c}" style="width: 300px;" onchange="updateValue('giftAidContactPhone', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >Address</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__GiftAidAddress__c}" style="width: 300px;" onchange="updateValue('giftAidAddress', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >HMRC Reference</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Settings.s360a__GiftAidHMRCReference__c}" style="width: 300px;" onchange="updateValue('giftAidHMRCReference', this.value);" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem id="giftAidPaymentMethodRepeatSectionItem" rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                        <apex:outputPanel >Eligible Payment Methods</apex:outputPanel>
+                        <apex:outputPanel id="giftAidPaymentMethodRepeat">
+                            <apex:repeat value="{!giftAidPaymentMethodList}" var="giftAidPaymentMethod" >
+                                <div style="margin-bottom: 3px;"><apex:outputPanel layout="none" rendered="{!NOT(giftAidPaymentMethod.checked)}"><input type="checkbox" onchange="updateGiftAidPaymentMethodList();" name="{!giftAidPaymentMethod.name}" /></apex:outputPanel><apex:outputPanel layout="none" rendered="{!giftAidPaymentMethod.checked}"><input type="checkbox" name="{!giftAidPaymentMethod.name}" onchange="updateGiftAidPaymentMethodList();" checked="checked" /></apex:outputPanel>&nbsp;{!giftAidPaymentMethod.name}<br /></div>
+                            </apex:repeat>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField id="giftAidIneligiblePaymentMethods" value="{!supporter360Settings.s360a__GiftAidIneligiblePaymentMethods__c}"  rendered="{!AND(supporter360Settings.s360a__GiftAidSupport__c == 'Enabled',$ObjectType.s360a__supporter360Settings__c.fields.s360a__GiftAidIneligiblePaymentMethods__c.Createable,$ObjectType.s360a__supporter360Settings__c.fields.s360a__GiftAidIneligiblePaymentMethods__c.Updateable)}"/> <!-- //CRUD/FLS -->
+                    <script type="text/javascript">
+                        function updateGiftAidPaymentMethodList()
+                        {   var listNodes = document.getElementById('{!$Component.giftAidPaymentMethodRepeatSectionItem.giftAidPaymentMethodRepeat}').childNodes;
+                            var apexObject = document.getElementById('{!$Component.giftAidIneligiblePaymentMethods}');
+                            apexObject.value = '';
+                            for (var index = 0; index < listNodes.length; index = index + 2)
+                            {   var checkbox = listNodes[index + 1].childNodes[0];
+                                if (checkbox.checked == false)
+                                {   if (apexObject.value != '')
+                                    {   apexObject.value += ',';
+                                    }
+                                    apexObject.value += checkbox.name;
+                                }
+                            }
+                        }
+                    </script>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+        </apex:pageBlock>
+        </apex:tab>
+<!-- ************************************************************ -->
+      <apex:actionFunction name="rerenderfinance" rerender="page"/>
+      <apex:tab name="financeedit" label="Finance Settings">      
+        <apex:pageBlock mode="edit" title="Finance Settings">
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!save}" value="Save" />
+                <apex:commandButton styleClass="cssbutton"  action="{!cancel}" value="Cancel" immediate="true" />
+                &nbsp;&nbsp;
+                <apex:actionStatus id="finstatus">
+                    <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                    </apex:facet>
+                </apex:actionStatus>            
+            
+            </apex:pageBlockButtons>
+                <div class="boxshadow roundbox" style="padding:10px;width:700px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7; ">
+                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;              
+                    <apex:outputText escape="false" value="Define which fields on the <b>Transaction Item</b> object should be used to build the General Ledger final value. Default calculated fields are used but you can incorporate other calculated fields or your own set values or formula fields if you wish."/>                   
+                </div>               
+            <apex:pageBlockSection title="GL Code Settings" columns="1"> 
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLPrefixValue__c which is built during processing" >
+                <apex:outputPanel >GL Prefix Field</apex:outputPanel>            
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodePrefixField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>                       
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLMiddleValue__c which is built during processing" >
+                <apex:outputPanel >GL Middle Field</apex:outputPanel>            
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodeMiddleField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>                       
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLSuffixValue__c which is built during processing">
+                <apex:outputPanel >GL Suffix Field</apex:outputPanel>            
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodeSuffixField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>                       
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLEnablePaymentMethodCodes__c.InlineHelpText}">
+                <apex:outputPanel >Payment Method Codes</apex:outputPanel>            
+                <apex:inputCheckbox value="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c}" />                                      
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLNoPaymentMethod__c.InlineHelpText}"> <!-- rendered="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c}" > -->
+                <apex:outputPanel >On No Matching Method Code</apex:outputPanel> 
+                <apex:selectList value="{!supporter360Settings.s360a__GLNoPaymentMethod__c}" size="1">                 
+                    <apex:selectOptions value="{!GLNoPaymentMethodCode}"/>
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLDefaultMethodCode__c.InlineHelpText}"> <!-- rendered="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c && supporter360Settings.s360a__GLNoPaymentMethod__c == 'Set Default Code'}" > -->
+                <apex:outputPanel >Default Method Code</apex:outputPanel>            
+                <apex:inputField value="{!supporter360Settings.s360a__GLDefaultMethodCode__c}"/>                                      
+            </apex:pageBlockSectionItem>                                        
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="GL Code Naming" columns="1"> 
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Prefix part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Prefix Alternate Name</apex:outputPanel>            
+                <apex:inputField value="{!supporter360Settings.s360a__GLPrefixAlternateName__c}"/>                                      
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Middle part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Middle Alternate Name</apex:outputPanel>            
+                <apex:inputField value="{!supporter360Settings.s360a__GLMiddleAlternateName__c}" />                                     
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Suffix part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Suffix Alternate Name</apex:outputPanel>            
+                <apex:inputField value="{!supporter360Settings.s360a__GLSuffixAlternateName__c}" />                                    
+            </apex:pageBlockSectionItem>    
+            </apex:pageBlockSection>   
+            
+            <apex:pageBlockSection title="Regular Giving Line Item GL Override" columns="1"> 
+            <apex:pageBlockSectionItem helpText="This should be set to the value to be dropped into OLI.GLForceOverride__c - if blank or 'No Override' then GL values are not written to the OLI from the RGLI." >
+                <apex:outputPanel >GL Fields to Override</apex:outputPanel>            
+                <apex:inputField value="{!inputOLi.s360a__GLForceOverride__c}" onchange="rerenderfinance();"/>                                      
+            </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem helpText="The field that the RGLI prefix should be pulled from should an override be in place" >
+                    <apex:outputPanel >Prefix Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLIPrefixField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem>    
+                <apex:pageBlockSectionItem helpText="The field that the RGLI middle should be pulled from should an override be in place" >
+                    <apex:outputPanel >Middle Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLIMiddleField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem helpText="The field that the RGLI suffix should be pulled from should an override be in place" >
+                    <apex:outputPanel >Suffix Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLISuffixField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem>     
+            </apex:pageBlockSection>                        
+            
+            <apex:pageBlockSection title="Transaction Settings" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Field Layout</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__TransactionFieldConfiguration__c}">
+                        <apex:selectOption itemValue="Default" itemLabel="Default" />
+                        <apex:selectOption itemValue="Australia" itemLabel="Australia" />
+                        <apex:selectOption itemValue="United Kingdom" itemLabel="United Kingdom" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Approved Refund Users</apex:outputPanel>
+                    <apex:inputField value="{!userLookup.OwnerId}" required="false" />
+
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > 
+                    <apex:outputPanel ></apex:outputPanel>                               
+                    <apex:commandButton styleClass="cssbutton"  value="Add User" action="{!addRefundUser}" rerender="form"/>
+                </apex:pageBlockSectionItem>                
+                <apex:pageBlockSectionItem >    
+                    <apex:outputPanel >Existing Users</apex:outputPanel>
+                    <apex:selectList size="1" value="{!pickedRefundUser}">
+                        <apex:selectOptions value="{!refundUserList}"/>
+                    </apex:selectList>                                        
+                </apex:pageBlockSectionItem>  
+                <apex:pageBlockSectionItem > 
+                    <apex:outputPanel ></apex:outputPanel>                  
+                    <apex:commandButton styleClass="cssbutton"  value="Remove User" action="{!removeRefundUser}" rerender="form"/>
+                </apex:pageBlockSectionItem>                               
+            </apex:pageBlockSection>                               
+            </apex:pageBlock>         
+        </apex:tab>              
+        
+<!-- ************************************************************ -->
+        
+        <apex:tab name="maintedit" label="Maintenance Tasks">
+        <apex:pageBlock mode="edit" title="supporter360 Maintenance" >
+                <apex:outputPanel id="maintenance" > 
+                <apex:pageBlockTable value="{!actionItems}" var="ai" width="300px">
+                    <apex:column headerValue="Action">
+                        <apex:commandButton action="{!runMaintAction}" value="{!ai.label}" title="{!ai.description}" reRender="maintenance" status="taskstatus">
+                            <apex:param value="{!ai.label}" name="actioname"/>
+                        </apex:commandButton>
+                    </apex:column>
+                    <apex:column headerValue="Description">
+                        <apex:outputText value="{!ai.description}"/>
+                    </apex:column>                
+                </apex:pageBlockTable>   
+                <apex:actionStatus id="taskstatus">
+                     <apex:facet name="start">
+                         <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                     </apex:facet>
+                 </apex:actionStatus><br/>      
+                <apex:inputCheckbox value="{!processGLFailures}"/>&nbsp;&nbsp;  
+                <apex:outputText escape="false" style="font-weight:bold" value="Process failed GL code records in this batch run.<br/><br/>" />                                                                      
+                <apex:outputText escape="false" style="color:orange" value="<br/><b>Job submitted - it may take several minutes to process depending on the number of records</b><br/>" rendered="{!showBatchMsg}" />                 
+                <br/>
+                </apex:outputPanel>
+                <apex:pageBlocksection title="Other Items" id="otheredit">                 
+                     <apex:outputPanel rendered="{!utilityBeforecon}" id="utilityedit">
+                         <apex:outputLabel ><b>Create / Synchronise Utility Records For :</b>
+                             &nbsp;<apex:selectList value="{!utilityObjname}" size="1" style="width:100px;">                 
+                                 <apex:selectOptions value="{!UtilityObject}"/>
+                             </apex:selectList>
+                         </apex:outputLabel>
+                     </apex:outputPanel> 
+                     <apex:commandButton styleClass="cssbutton"  style="width:70px;" value="Process" action="{!runUtilityBatch}" rendered="{!utilityBeforecon}" rerender="otheredit"/><br/><br/>
+                     <apex:commandButton styleClass="cssbutton"  style="width:200px;" value="Run for another object?" action="{!afterCall}" rendered="{!!utilityBeforecon}" rerender="otheredit"/>
+                     <br/><br/>                     
+                     <apex:outputText value="{!utilityMessage}" style="color:orange" rendered="{!!utilityBeforecon}"></apex:outputText>                     
+                 </apex:pageBlocksection>   
+          </apex:pageBlock>
+        </apex:tab>
+        <apex:tab name="analyticsedit" label="RFM / RFV Config">
+            <apex:outputPanel id="anylyticeditpanel" >
+            <apex:pageBlock mode="edit" title="RFM / RFV Configuration" >
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!save}" value="Save" status="topbuttons1" />
+                <apex:commandButton styleClass="cssbutton"  action="{!cancel}" value="Cancel" immediate="true"  status="topbuttons1"/>
+                <apex:commandButton styleClass="cssbutton"  action="{!setRFMDefaults}" value="Set Defaults" rerender="anylyticeditpanel"  status="topbuttons1"/>
+                <apex:actionStatus id="topbuttons1">
+                     <apex:facet name="start">
+                         <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                     </apex:facet>
+                 </apex:actionStatus>                
+            </apex:pageBlockButtons> 
+                
+                <div class="boxshadow roundbox" style="padding:10px;width:700px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7; ">
+                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;              
+                    <apex:outputText escape="false" value="From this tab you can define what RFM (Recency, Frequency and Monetary) settings are used during calculations. If you don't know or want to experiment with some default settings just click the <b>'Set Defaults'</b> button.<br/><br/>"/>
+                    <apex:outputText escape="false" value="Set the date to check frequency from - any transactions before <b>'From Date'</b> will be ignored. Leave <b>'To Date'</b> blank to default to today whenever processing occurs.<br/><br/>"/>
+                    <apex:outputText escape="false" value="Band 1 is a low number, likely being set to 1. Each band should then go up as required with a more important donor scoring 5 for the most transactions. <b>Band 5 is always the set value and higher, there is no maximum value.</b>"/>                     
+                </div>                  
+                
+                <apex:pageBlockSection title="Frequency Definition (In Occurrences)" columns="1" >
+                    <apex:pageBlockSectionItem helpText="Frequency calculations will start from this date. Leave blank for all time.">
+                        <apex:outputPanel >Frequency From Date</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__FrequencyFromDate__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="Frequency calculations will stop at this date. Leave blank to have no end date.">
+                        <apex:outputPanel >Frequency To Date</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__FrequencyToDate__c}" required="false" />
+                    </apex:pageBlockSectionItem>                                    
+                    <apex:pageBlockSectionItem helpText="From this value to the value in Band 2 and so on for each band" >
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:inputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand1__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:inputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand2__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:inputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand3__c}" required="false" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:inputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand4__c}" required="false" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem helpText="Everything equal or above this value will be included." >
+                        <apex:outputPanel >Band 5 (+)</apex:outputPanel>
+                        <apex:inputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand5__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="Setting this option removes regular giving transactions from frequency - this may be useful as monthly transaction will give an unusually high number." >
+                        <apex:outputPanel >Exclude Regular Giving</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__ExcludeRegularGivingFromFrequency__c}" required="false" />
+                    </apex:pageBlockSectionItem>                                             
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Recency Definition (In Days)" columns="1" >
+                    <apex:pageBlockSectionItem helpText="Everything equal or older than this value will be included.">
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__RecencyBand1__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__RecencyBand2__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__RecencyBand3__c}" required="false" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__RecencyBand4__c}" required="false" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem helpText="Everything equal or less than this value will be included." >
+                        <apex:outputPanel >Band 5 (-)</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__RecencyBand5__c}" required="false" />
+                    </apex:pageBlockSectionItem>                          
+                </apex:pageBlockSection>                
+
+                <apex:pageBlockSection title="Monetary Definition (In Lifetime Value)" columns="1" >
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__MonetaryBand1__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__MonetaryBand2__c}" required="false" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__MonetaryBand3__c}" required="false" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__MonetaryBand4__c}" required="false" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 5 (+)</apex:outputPanel>
+                        <apex:inputField value="{!supporter360Analytics.s360a__MonetaryBand5__c}" required="false" />
+                    </apex:pageBlockSectionItem>                          
+                </apex:pageBlockSection>                   
+                
+            </apex:pageBlock>
+            </apex:outputPanel>
+      </apex:tab>                
+      </apex:tabPanel>
+      </apex:outputPanel>
+<!-- ################################        View Mode        ########################### -->
+        
+      <apex:tabPanel rendered="{!renderMode == 'Detail'}" switchType="client" inactiveTabClass="inactiveTab">
+      <apex:tab name="generaldetail" label="General Settings">        
+        <apex:pageBlock mode="maindetail" title="supporter360 Settings">
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!edit}" value="Edit" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="General" columns="1" rendered="{!addressManagementInstalled}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Default Country</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__DefaultCountry__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__OpportunityAutoNaming__c.InlineHelpText}">
+                    <apex:outputPanel >Opportunity Auto Naming</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__OpportunityAutoNaming__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Analytics__c.Fields.s360a__GivingStatsBaseDate__c.InlineHelpText}">
+                    <apex:outputPanel >Giving Stats Base Date</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Analytics.s360a__GivingStatsBaseDate__c}" />
+                </apex:pageBlockSectionItem>                
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__HighlightsPanelHeight__c.InlineHelpText}">
+                    <apex:outputPanel >Contact Highlights Height</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__HighlightsPanelHeight__c}" />
+                </apex:pageBlockSectionItem>    
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__HouseholdOpportunities__c.InlineHelpText}">
+                    <apex:outputPanel >Household Opportunities</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__HouseholdOpportunities__c}" />
+                </apex:pageBlockSectionItem>                            
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Quick Opportunity Settings" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Opportunity Record Type</apex:outputPanel>
+                    <apex:outputText value="{!quickOpportunityRecordTypeName}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__QuickOpportunityReceiptingFields__c.InlineHelpText}">
+                    <apex:outputPanel >Receipting Fields</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__QuickOpportunityReceiptingFields__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__QuickOpportunityAutoClose__c.InlineHelpText}">
+                    <apex:outputPanel >Auto Close Opportunity</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__QuickOpportunityAutoClose__c}" />
+                </apex:pageBlockSectionItem>
+               
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__QuickOpportunityCampaignMandatory__c.InlineHelpText}">
+                    <apex:outputPanel >Mandatory Campaign</apex:outputPanel>
+                    <apex:inputCheckbox value="{!supporter360Settings.s360a__QuickOpportunityCampaignMandatory__c}" disabled="true" />
+                </apex:pageBlockSectionItem>                
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Regular Giving Settings" columns="1" rendered="{!regularGivingManagementInstalled}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Opportunity Record Type</apex:outputPanel>
+                    <apex:outputText value="{!regularGivingOpportunityRecordTypeName}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingForecastingQuantity__c.InlineHelpText}">
+                    <apex:outputPanel >Regular Giving Forecasting</apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:outputField value="{!supporter360Settings.s360a__RegularGivingForecastingQuantity__c}" />&nbsp;<apex:outputField value="{!supporter360Settings.s360a__RegularGivingForecastingUnit__c}" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingProcessing__c.InlineHelpText}">
+                    <apex:outputPanel >Automated Transaction Processing </apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__RegularGivingProcessing__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" >
+                    <apex:outputPanel >Automated Transaction Processing Time </apex:outputPanel>
+                    <apex:outputText value="{!automatedTransactionProcessingTime}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingProcessingDate__c.InlineHelpText}">
+                    <apex:outputPanel >Default Processing Date</apex:outputPanel>
+                    <apex:outputText value="{!supporter360Settings.s360a__RegularGivingProcessingDate__c}" />
+                </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingAutoRetries__c.InlineHelpText}">
+                        <apex:outputPanel >Max Auto Retry Count</apex:outputPanel>
+                        <apex:outputField style="width:25px" value="{!supporter360Settings.s360a__RegularGivingAutoRetries__c}"/>
+                    </apex:pageBlockSectionItem>    
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingAutoRetryGap__c.InlineHelpText}">
+                        <apex:outputPanel >Retry Gap (Days)</apex:outputPanel>
+                        <apex:outputField style="width:25px" value="{!supporter360Settings.s360a__RegularGivingAutoRetryGap__c}"/>
+                    </apex:pageBlockSectionItem>    
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RegularGivingRetryOverride__c.InlineHelpText}">
+                        <apex:outputPanel >Disable Auto Retries</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Settings.s360a__RegularGivingRetryOverride__c}" />
+                    </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__RGLIMode__c.InlineHelpText}">
+                        <apex:outputPanel >Regular Giving Line Item Mode</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Settings.s360a__RGLIMode__c}" />  
+                    </apex:pageBlockSectionItem> 
+                    <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__DirectDebitDays__c.InlineHelpText}">
+                        <apex:outputPanel >Preferred Days</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Settings.s360a__DirectDebitDays__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__RegularGivingProcessing__c == 'Enabled'}" helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__AutomatedTransactionPaymentMethods__c.InlineHelpText}">
+                        <apex:outputPanel >Automated Transaction Payment Methods</apex:outputPanel>
+                        <apex:repeat value="{!automatedTransactionPaymentMethodList}" var="automatedTransactionPaymentMethod">
+                            <div style="margin-bottom: 3px;">
+                                <apex:outputPanel layout="none" rendered="{!NOT(automatedTransactionPaymentMethod.checked)}">
+                                    <img src="/img/checkbox_unchecked.gif" alt="Not Checked" width="21" height="16" class="checkImg" title="Not Checked"/>
+                                </apex:outputPanel>
+                                <apex:outputPanel layout="none" rendered="{!automatedTransactionPaymentMethod.checked}">
+                                    <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked" />
+                                </apex:outputPanel>
+                                &nbsp;{!automatedTransactionPaymentMethod.name}<br />
+                            </div>
+                        </apex:repeat>
+                    </apex:pageBlockSectionItem>                                                                                  
+                        
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Payment Gateway Settings" columns="1" rendered="{!transactionManagementInstalled}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Payment Gateway</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__PaymentGateway__c}" />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="payflowProSettingSection" title="Payflow Pro Settings" columns="1" rendered="{!supporter360Settings.s360a__PaymentGateway__c == 'Payflow Pro'}" >
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Partner</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__PayflowProPartner__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Merchant Login</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__PayflowProVendor__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >User</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__PayflowProUser__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Password</apex:outputPanel>
+                    <apex:outputText value="{!payflowProPasswordMasked}" escape="false" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Mode</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__PayflowProMode__c}" />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Gift Aid Settings" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Gift Aid Support</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidSupport__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >Accounting Period</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidAccountingPeriod__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >Address</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidAddress__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >Contact Name</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidContactName__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >Contact Phone</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidContactPhone__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >HMRC Reference</apex:outputPanel>
+                    <apex:outputField value="{!supporter360Settings.s360a__GiftAidHMRCReference__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!supporter360Settings.s360a__GiftAidSupport__c == 'Enabled'}">
+                    <apex:outputPanel >Eligible Payment Methods</apex:outputPanel>
+                    <apex:repeat value="{!giftAidPaymentMethodList}" var="giftAidPaymentMethod">
+                        <div style="margin-bottom: 3px;">
+                            <apex:outputPanel layout="none" rendered="{!NOT(giftAidPaymentMethod.checked)}">
+                                <img src="/img/checkbox_unchecked.gif" alt="Not Checked" width="21" height="16" class="checkImg" title="Not Checked"/>
+                            </apex:outputPanel>
+                            <apex:outputPanel layout="none" rendered="{!giftAidPaymentMethod.checked}">
+                                <img src="/img/checkbox_checked.gif" alt="Checked" width="21" height="16" class="checkImg" title="Checked" />
+                            </apex:outputPanel>
+                            &nbsp;{!giftAidPaymentMethod.name}<br />
+                        </div>
+                    </apex:repeat>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>    
+        </apex:pageBlock>
+        </apex:tab>
+        
+      <apex:tab name="financeedit" label="Finance Settings">
+        <apex:pageBlock mode="maindetail" title="Finance Settings" >
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!edit}" value="Edit" />
+            </apex:pageBlockButtons>
+                <div class="boxshadow roundbox" style="padding:10px;width:700px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7; ">
+                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;              
+                    <apex:outputText escape="false" value="Define which fields on the <b>Transaction Item</b> object should be used to build the General Ledger final value. Default calculated fields are used but you can incorporate other calculated fields or your own set values or formula fields if you wish."/>                   
+                </div>               
+            <apex:pageBlockSection title="GL Code Settings" columns="1"> 
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLPrefixValue__c which is built during processing" >
+                <apex:outputPanel >GL Prefix Field</apex:outputPanel>            
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodePrefixField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>                       
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLMiddleValue__c which is built during processing">
+                <apex:outputPanel >GL Middle Field</apex:outputPanel>            
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodeMiddleField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem helpText="The field to be used as the middle field when building the final GL string on the TLI record. Default is GLSuffixValue__c which is built during processing">
+                <apex:outputPanel >GL Suffix Field</apex:outputPanel> 
+                <apex:selectList value="{!supporter360Settings.s360a__GLCodeSuffixField__c}" size="1">                 
+                    <apex:selectOptions value="{!tranItemFieldOptions}"/>
+                </apex:selectList>
+            </apex:pageBlockSectionItem>           
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLEnablePaymentMethodCodes__c.InlineHelpText}">
+                <apex:outputPanel >Payment Method Codes</apex:outputPanel>            
+                <apex:inputCheckbox value="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c}" disabled="true"/>                                      
+            </apex:pageBlockSectionItem>
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLNoPaymentMethod__c.InlineHelpText}" rendered="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c}" >
+                <apex:outputPanel >On No Matching Method Code</apex:outputPanel> 
+                <apex:selectList value="{!supporter360Settings.s360a__GLNoPaymentMethod__c}" size="1">                 
+                    <apex:selectOptions value="{!GLNoPaymentMethodCode}"/>
+                </apex:selectList>                
+            </apex:pageBlockSectionItem>                       
+            <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__supporter360Settings__c.Fields.s360a__GLDefaultMethodCode__c.InlineHelpText}" rendered="{!supporter360Settings.s360a__GLEnablePaymentMethodCodes__c && supporter360Settings.s360a__GLNoPaymentMethod__c == 'Set Default Code'}" >
+                <apex:outputPanel >Default Method Code</apex:outputPanel>            
+                <apex:outputField value="{!supporter360Settings.s360a__GLDefaultMethodCode__c}"/>                                      
+            </apex:pageBlockSectionItem>                            
+            </apex:pageBlockSection> 
+            
+            <apex:pageBlockSection title="GL Code Naming" columns="1"> 
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Prefix part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Prefix Alternate Name</apex:outputPanel>            
+                <apex:outputField value="{!supporter360Settings.s360a__GLPrefixAlternateName__c}"/>                                      
+            </apex:pageBlockSectionItem> 
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Middle part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Middle Alternate Name</apex:outputPanel>            
+                <apex:outputField value="{!supporter360Settings.s360a__GLMiddleAlternateName__c}" />                                     
+            </apex:pageBlockSectionItem>    
+            <apex:pageBlockSectionItem helpText="Use this option to rename the Suffix part of the GL code so it has a more relevant name in display pages" >
+                <apex:outputPanel >Suffix Alternate Name</apex:outputPanel>            
+                <apex:outputField value="{!supporter360Settings.s360a__GLSuffixAlternateName__c}" />                                    
+            </apex:pageBlockSectionItem>    
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="Regular Giving Line Item GL Override" columns="1"> 
+            <apex:pageBlockSectionItem helpText="This should be set to the value to be dropped into OLI.GLForceOverride__c - if blank or 'No Override' then GL values are not written to the OLI from the RGLI." >
+                <apex:outputPanel >GL Fields to Override</apex:outputPanel>            
+                <apex:outputField value="{!inputOLi.s360a__GLForceOverride__c}"/>                                      
+            </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem rendered="{!inputOLi.s360a__GLForceOverride__c != 'No Override'}" helpText="The field that the RGLI prefix should be pulled from should an override be in place" >
+                    <apex:outputPanel >Prefix Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLIPrefixField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem>    
+                <apex:pageBlockSectionItem rendered="{!inputOLi.s360a__GLForceOverride__c != 'No Override'}" helpText="The field that the RGLI middle should be pulled from should an override be in place" >
+                    <apex:outputPanel >Middle Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLIMiddleField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem rendered="{!inputOLi.s360a__GLForceOverride__c != 'No Override'}" helpText="The field that the RGLI suffix should be pulled from should an override be in place" >
+                    <apex:outputPanel >Suffix Value Source Field</apex:outputPanel>            
+                    <apex:selectList value="{!supporter360Settings.s360a__GLRGLISuffixField__c}" size="1">                 
+                        <apex:selectOptions value="{!campaignFieldOptions}"/>
+                    </apex:selectList>                                       
+                </apex:pageBlockSectionItem>           
+            </apex:pageBlockSection>                          
+            
+            <apex:pageBlockSection title="Transaction Settings" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Field Layout</apex:outputPanel>
+                    <apex:selectList size="1" value="{!supporter360Settings.s360a__TransactionFieldConfiguration__c}">
+                        <apex:selectOption itemValue="Default" itemLabel="Default" />
+                        <apex:selectOption itemValue="Australia" itemLabel="Australia" />
+                        <apex:selectOption itemValue="United Kingdom" itemLabel="United Kingdom" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem > 
+                    <apex:outputPanel >Approved Refund Users</apex:outputPanel>
+                    <apex:selectList size="1" value="{!pickedRefundUser}">
+                        <apex:selectOptions value="{!refundUserList}"/>
+                    </apex:selectList> 
+                </apex:pageBlockSectionItem>  
+            </apex:pageBlockSection>
+            </apex:pageBlock>
+        </apex:tab>        
+        
+        <apex:tab name="maintdetail" label="Maintenance Tasks">
+        <apex:pageBlock mode="maindetail" title="supporter360 Maintenance" >
+            <apex:outputPanel id="maintenancedetail">
+                <apex:pageBlockTable value="{!actionItems}" var="ai" width="300px">
+                    <apex:column headerValue="Action">
+                        <apex:commandButton action="{!runMaintAction}" value="{!ai.label}" title="{!ai.description}" reRender="maintenancedetail" status="taskstatus1">
+                            <apex:param value="{!ai.label}" name="actioname"/>
+                        </apex:commandButton>
+                    </apex:column>
+                    <apex:column headerValue="Description">
+                        <apex:outputText value="{!ai.description}"/>
+                    </apex:column>                
+                </apex:pageBlockTable> 
+                <apex:actionStatus id="taskstatus1">
+                     <apex:facet name="start">
+                         <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                     </apex:facet>
+                </apex:actionStatus><br/>   
+                <apex:inputCheckbox value="{!processGLFailures}"/>&nbsp;&nbsp;  
+                <apex:outputText escape="false" style="font-weight:bold" value="Process failed GL code records in this batch run.<br/><br/>" />                            
+                <apex:outputText escape="false" style="color:orange" value="<br/><b>Job submitted - it may take several minutes to process depending on the number of records</b><br/>" rendered="{!showBatchMsg}" />                 
+                <br/>
+                </apex:outputPanel>
+                <apex:pageBlocksection title="Other Items" id="otherdetail">                 
+                     <apex:outputPanel rendered="{!utilityBeforecon}" id="utilitydetail">
+                         <apex:outputLabel ><b>Create / Synchronise Utility Records For:</b>
+                             &nbsp;<apex:selectList value="{!utilityObjname}" size="1" style="width:100px;">                 
+                                 <apex:selectOptions value="{!UtilityObject}"/>
+                             </apex:selectList>
+                         </apex:outputLabel>
+                     </apex:outputPanel> 
+                     <apex:commandButton styleClass="cssbutton"  style="width:70px;" value="Process" action="{!runUtilityBatch}" rendered="{!utilityBeforecon}" rerender="otherdetail"/><br/><br/>
+                     <apex:commandButton styleClass="cssbutton"  style="width:200px;" value="Run for another object?" action="{!afterCall}" rendered="{!!utilityBeforecon}" rerender="otherdetail"/>
+                     <br/><br/>
+                     <apex:outputText value="{!utilityMessage}" style="color:orange" rendered="{!!utilityBeforecon}"></apex:outputText>                     
+                </apex:pageBlocksection>
+          </apex:pageBlock>
+        </apex:tab>
+        <apex:tab name="analyticsdetail" label="RFM / RFV Config">
+            <apex:outputPanel id="anylyticdetailpanel" >
+            <apex:pageBlock mode="maindetail" title="RFM / RFV Configuration" >
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!edit}" value="Edit" />
+            </apex:pageBlockButtons> 
+                
+                <div class="boxshadow roundbox" style="padding:10px;width:700px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7; ">
+                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;              
+                    <apex:outputText escape="false" value="From this tab you can define what RFM (Recency, Frequency and Monetary) settings are used during calculations. If you don't know or want to experiment with some default settings just click the <b>'Set Defaults'</b> button.<br/><br/>"/>
+                    <apex:outputText escape="false" value="Set the date to check frequency from - any transactions before <b>'From Date'</b> will be ignored. Leave <b>'To Date'</b> blank to default to today whenever processing occurs.<br/><br/>"/>
+                    <apex:outputText escape="false" value="Band 1 is a low number, likely being set to 1. Each band should then go up as required with a more important donor scoring 5 for the most transactions. <b>Band 5 is always the set value and higher, there is no maximum value.</b>"/>                     
+                </div>                  
+                
+                <apex:pageBlockSection title="Frequency Definition (In Occurrences)" columns="1" >                
+                    <apex:pageBlockSectionItem helpText="Frequency calculations will start from this date. Leave blank for all time.">
+                        <apex:outputPanel >Frequency From Date</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__FrequencyFromDate__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="Frequency calculations will stop at this date. Leave blank to have no end date.">
+                        <apex:outputPanel >Frequency To Date</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__FrequencyToDate__c}" />
+                    </apex:pageBlockSectionItem>                                    
+                    <apex:pageBlockSectionItem helpText="From this value to the value in Band 2 and so on for each band" >
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:outputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand1__c}"/>
+                    </apex:pageBlockSectionItem>                
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:outputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand2__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:outputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand3__c}" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:outputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand4__c}" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem helpText="Everything equal or above this value will be included." >
+                        <apex:outputPanel >Band 5 (+)</apex:outputPanel>
+                        <apex:outputField style="width:100px" value="{!supporter360Analytics.s360a__FrequencyBand5__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem helpText="Setting this option removes regular giving transactions from frequency - this may be useful as monthly transaction will give an unusually high number." >
+                        <apex:outputPanel >Exclude Regular Giving</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__ExcludeRegularGivingFromFrequency__c}" />
+                    </apex:pageBlockSectionItem>                                             
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Recency Definition (In Days)" columns="1" >
+                    <apex:pageBlockSectionItem helpText="Everything equal or older than this value will be included.">
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__RecencyBand1__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__RecencyBand2__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__RecencyBand3__c}" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__RecencyBand4__c}" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem helpText="Everything equal or less than this value will be included.">
+                        <apex:outputPanel >Band 5 (-)</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__RecencyBand5__c}" />
+                    </apex:pageBlockSectionItem>                          
+                </apex:pageBlockSection>                
+
+                <apex:pageBlockSection title="Monetary Definition (In Lifetime Value)" columns="1" >
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 1</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__MonetaryBand1__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 2</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__MonetaryBand2__c}" />
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 3</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__MonetaryBand3__c}" />
+                    </apex:pageBlockSectionItem>                    
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 4</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__MonetaryBand4__c}" />
+                    </apex:pageBlockSectionItem>      
+                    <apex:pageBlockSectionItem >
+                        <apex:outputPanel >Band 5 (+)</apex:outputPanel>
+                        <apex:outputField value="{!supporter360Analytics.s360a__MonetaryBand5__c}" />
+                    </apex:pageBlockSectionItem>                          
+                </apex:pageBlockSection>        
+            </apex:pageBlock>
+            </apex:outputPanel>
+        </apex:tab>    
+        </apex:tabPanel>
+        <apex:commandButton action="{!fixTranId}" image="{!URLFOR($Resource.s360a__s360Images, '/present.png')}" style="width:20px;height:20px" />
+       
+    </apex:form>
+</apex:page>

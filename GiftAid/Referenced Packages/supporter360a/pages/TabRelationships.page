@@ -1,0 +1,87 @@
+<apex:page Controller="s360a.RelationshipInline" showHeader="false" sidebar="false" id="thepage">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+<style>
+.mouseOverInfo {
+    background-color: #F8FBFF;
+    text-align: left;
+}    
+</style>
+<apex:form >
+    <apex:pageblock >
+        <apex:outputPanel >
+            <table width="60%">
+                <tr>
+                    <td><left><apex:outputLink value="{!urlFor($Page.s360a__RelationshipNew,null,[Id=passedId,mode='New',returl='main'])}"  target="_blank" styleClass="btn" style="text-decoration: none;height:22px;">New Relationship</apex:outputLink></left><br/></td>
+                    <td><center>&nbsp;&nbsp;<apex:outputText escape="false" value="<b>Filter by Type:</b>"/>&nbsp;&nbsp;<apex:selectList value="{!filterOption}" size="1" onchange="onchangeval(this)">
+                    <apex:selectOptions value="{!RelationTypes}"/> 
+                    </apex:selectList>&nbsp;&nbsp;<apex:commandButton styleClass="cssbutton" value="Filter" action="{!filter}" rerender="tablepanel"/></center></td>
+                    <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                        <apex:outputLink value="{!urlFor($Page.s360a__TabRelationships,null,[Id=passedId])}" target="_blank">   
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/open_in_new_window.png')}" width="17px" height="17px" />                        
+                        </apex:outputLink>
+                        <div style="display: none; opacity: 0;position:absolute;top:10px;height:40px" class="mouseOverInfo">                                                                      
+                            <apex:outputLink value="{!urlFor($Page.s360a__TabRelationships,null,[Id=passedId])}" target="_blank">                            
+                                <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/open_in_new_window.png')}" height="13px" style="float:right" />
+                            </apex:outputLink>
+                            <apex:outputText style="font-weight:bold" value="If you have a lot of relationships to view you can pop them out into a full page by clicking here."/>                                
+                        </div>                    
+                    </div>
+                    </td>
+                </tr>
+            </table>
+        </apex:outputPanel>
+        <apex:outputPanel id="tablepanel">
+            <apex:pageblocktable value="{!displayRelation}" var="ah" width="100%">
+                 <apex:column headerValue="Action" width="60px">
+                   <apex:outputLink style="vertical-align:middle" title="Edit relationship" value="{!urlFor($Page.s360a__RelationshipNew,null,[id=passedId,mode='edit',sno=ah.relation.Id,returl='main'])}"  target="_blank"><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" width="12px" height="12px"/></apex:outputLink>
+                    &nbsp;<apex:outputText style="vertical-align:top" value="|" /> &nbsp; 
+                    <apex:commandlink style="vertical-align:middle" title="Delete relationship" action="{!Deletefunction}" onclick="if(confirm('Are you sure you want to delete?')) return true; else return false;" target="_top" ><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" width="12px" height="12px"/>
+                       <apex:param name="deleteno" value="{!ah.relation.Id}"/> 
+                    </apex:commandlink> 
+                </apex:column>
+                
+                <apex:column headerValue="With">
+                   <apex:outputLink value="/{!ah.RelationWithId}" target="_blank">{!ah.RelationWith} </apex:outputLink>
+                </apex:column>﻿                
+
+                <apex:column headerValue="Relationship" ><apex:outputLink value="{!urlFor($Page.s360a__RelationshipNew,null,[id=passedId,mode='view',sno=ah.relation.Id])}" target="_blank">{!ah.name} </apex:outputLink></apex:column>
+                <apex:column >
+                   <apex:facet name="header"> 
+                       <apex:commandLink action="{!sortColumn}" value="Status{!IF(sortExpression=='Status',IF(sortDirection='ASC','▼','▲'),'')}" id="statusSort"> 
+                          <apex:param value="Status" name="column" assignTo="{!sortExpression}" ></apex:param> 
+                       </apex:commandLink> 
+                   </apex:facet>                 
+                   <apex:outputText value="{!ah.relation.s360a__Status__c}"/>
+                </apex:column>
+                <apex:column headerValue="Highlights">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/fundAus.png')}" width="16px" height="16px" rendered="{!ah.recentDonation}" title="{!ah.recentDonationDescription}"/>
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/promotion.png')}" width="14px" height="14px" rendered="{!ah.isVIP}" title="{!ah.VIPDescription}"/>    
+                </apex:column>
+                <apex:column headerValue="Job Title" >
+                    <apex:OutputText value="{!ah.relation.s360a__JobTitle__c}"/>
+                </apex:column> 
+                <apex:column headerValue="Relationship Flags">                    
+                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" width="17px" height="17px" />
+                        <div style="display: none; opacity: 0;" class="mouseOverInfo">                                          
+                            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />
+                            <apex:outputText escape="false" value="{!ah.popupOverview}"/>                                
+                        </div>
+                    </div>   
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/organisations.png')}" width="17px" height="17px" rendered="{!ah.relation.s360a__PrimaryEmployer__c}" title="Primary Employer"/>
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/favorite.png')}" width="17px" height="17px" rendered="{!ah.isPrimaryContact}" title="Primary Contact"/>
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/favorite_place.png')}" width="17px" height="17px" rendered="{!ah.isKeyInfluencer}" title="Key Influencer"/>    
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/mail.png')}" width="17px" height="17px" rendered="{!ah.isMailingContact}" title="Mailing Contact"/> 
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/regular.png')}" width="17px" height="17px" rendered="{!ah.isWorkPlaceGiving}" title="Workplace Giving Contact"/>                        
+                </apex:column>                
+                <apex:column headerValue="Soft Credit">
+                     <apex:inputCheckbox value="{!ah.relation.s360a__SoftCreditR1toR2__c}" title="R1 to R2 soft credit" disabled="true"/>
+                     &nbsp; / &nbsp;
+                      <apex:inputCheckbox value="{!ah.relation.s360a__SoftCreditR2toR1__c}" title="R2 to R1 soft credit" disabled="true"/>
+                 </apex:column>
+            </apex:pageblocktable><br/>
+        </apex:outputPanel>
+    </apex:pageblock>
+</apex:form>
+</apex:page>

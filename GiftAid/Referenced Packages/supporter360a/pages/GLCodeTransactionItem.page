@@ -1,0 +1,3 @@
+<apex:page standardController="s360a__TransactionItem__c">
+    <c:GLCodeComponent passedRecord="{!s360a__TransactionItem__c}" /> 
+</apex:page>

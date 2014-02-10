@@ -1,0 +1,21 @@
+<apex:page controller="ctr_GiftAidXML" tabStyle="s360a__GiftAidClaim__c">
+	<apex:form >
+		<apex:sectionHeader title="Process New Gift Aid Claim" subtitle="Gift Aid" />
+		
+		<!-- List of records to be sent -->
+		<apex:pageBlock >
+		
+		</apex:pageBlock>
+		
+		<!-- Compiled XML -->
+		<apex:pageBlock >
+		
+		</apex:pageBlock>
+		
+		<!-- Response from Gateway -->
+		<apex:pageBlock >
+		
+		</apex:pageBlock>
+				
+	</apex:form>
+</apex:page>

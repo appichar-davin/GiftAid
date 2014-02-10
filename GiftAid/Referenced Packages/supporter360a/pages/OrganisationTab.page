@@ -1,0 +1,40 @@
+<apex:page standardController="s360a__Organisation__c" showHeader="false" sidebar="false" extensions="s360a.OrganisationTabContrl">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>             
+
+    <!-- Create Tab panel --> 
+    <apex:outputpanel id="Ref">
+    <apex:tabPanel switchType="client" selectedTab="name6" id="ContactTabPanel"  inactiveTabClass="inactiveTab" rendered="{!!recMade}">
+        <apex:tab label="Relationships" name="name6" id="tabsix"><apex:outputPanel layout="block" style="overflow:auto; height:{!panelSize}px;margin: 0 2px" ><apex:include pageName="s360a__TabRelationships"/></apex:outputPanel></apex:tab>
+        <apex:tab label="Phone" name="name1" id="tabOne"><apex:outputPanel layout="block" style="overflow:auto; height:{!panelSize}px;margin: 0 2px" >
+        <apex:include pageName="s360a__TabPhones"/>       </apex:outputPanel>
+        </apex:tab>
+        <apex:tab label="Address" name="name2" id="tabTwo"><apex:outputPanel layout="block" style="overflow:auto; height:{!panelSize}px;margin: 0 2px" >
+        <apex:include pageName="s360a__TabAddresses"/></apex:outputPanel>
+        </apex:tab>
+
+        <apex:tab label="Email" name="name5" id="tabfive"><apex:outputPanel layout="block" style="overflow:auto; height:{!panelSize}px;margin: 0 2px" ><apex:include pageName="s360a__TabEmailAddresses"/></apex:outputPanel></apex:tab>
+        <apex:tab label="Organisation Codes" name="name3" id="tabthree"><apex:outputPanel layout="block" style="overflow:auto; height:150px;margin: 0 2px" ><apex:include pageName="s360a__TabContactCodes"/></apex:outputPanel></apex:tab>   
+    </apex:tabPanel>
+    <apex:form rendered="{!recMade}">
+
+    <apex:outputPanel id="xx">
+        <table>
+            <td><apex:commandButton styleClass="cssbutton" value="Populate Utility Data" action="{!populateUtility}" rerender="Ref" status="sts"/>
+                <apex:actionStatus id="sts" style="align:center;">      
+                <apex:facet name="start" >
+                   &nbsp;&nbsp; <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}" title="Processing..."/>
+                </apex:facet>
+                <apex:facet name="stop"></apex:facet>
+            </apex:actionStatus>            
+            </td>
+            </table><br/>            
+            <table>
+            <td width="95px">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/leftarrow.png')}" title="Can't be bothered to read all that? Don't worry, just click the button!"/>
+            </td>
+            <td class="boxshadow roundbox" style="width: 550px; border: solid 2px grey;text-align:center"><apex:outputText escape="false" style="color:orange" value="<b><br/><u>This appears to be a new record</u></b><br/><br/>In order for supporter360 to keep a full picture of everything happening around this record it needs a <b>Utility Record</b>. Please click the button to populate the intiial data.<br/><br/><b>If you are an administrator and you have imported multiple records you can run a batch update from supporter360 Settings to create Utility records for all imported data.<b><br/><br/>" /></td>
+            </table>
+            </apex:outputPanel>
+    </apex:form>
+    </apex:outputpanel>    
+</apex:page>

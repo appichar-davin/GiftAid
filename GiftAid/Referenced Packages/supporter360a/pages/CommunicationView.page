@@ -1,0 +1,2 @@
+<apex:page Controller="s360a.CommunicationCodeClass" tabstyle="Contact" >
+</apex:page>

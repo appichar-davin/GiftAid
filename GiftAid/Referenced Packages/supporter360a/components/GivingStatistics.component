@@ -1,0 +1,313 @@
+<apex:component controller="s360a.GivingStatisticsManagementNew" allowDML="true" id="theComponent">
+<style>
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 2px;
+        padding:10px;
+        position: fixed; 
+        z-index: 9999;  
+        width: 400px;
+        box-shadow: 10px 10px 5px #888;
+   
+/* get the pop up in the middle of the screen */
+        top: 30%;
+        left: 54%;
+        margin-top: -10px;
+        margin-left: -250px;      
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;        
+    }
+.popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+}
+</style>
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+    <apex:attribute name="record" description="Passing the sObject (Contact, Organisation or Group) to the controller" assignTo="{!record}" type="sObject" />
+    <apex:outPutPanel id="outer">
+    <apex:form id="form">              
+        <apex:pageBlock id="pageBlock" >
+            <apex:tabPanel switchType="client" value="{!selectedTab}" id="givingStatsTabPanel" inactiveTabClass="inactiveTab" >       
+                <apex:tab label="Overview" name="overview">                
+                <apex:outputPanel id="summary">
+                <table>                 
+                <td><apex:chart height="145px" width="140px" data="{!pieData}" animate="false" id="graph1">
+                    <apex:pieSeries dataField="data" labelField="name" donut="40"/>
+                </apex:chart></td>
+                <td><table>  
+                          <tr>
+                          <td><apex:outputText escape="false" style="font-family:Arial;text-align:left;font-size:8pt;" value="<b>Fund / Product</b>"/></td>
+                          <td><apex:outputText escape="false" style="font-family:Arial;text-align:left;font-size:8pt;" value="<b>Total</b>" /></td>
+                          </tr>                       
+                      <apex:repeat value="{!productLines}" var="q">
+                          <tr>
+                          <td><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="{!q.pname}"/></td>
+                          <td><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="{!q.ptotal}" /></td>
+                          </tr>             
+                      </apex:repeat>    
+                          <tr>
+                          <td><apex:outputText escape="false" style="font-family:Arial;text-align:left;font-size:8pt;" value="<b>Total all funds</b>"/></td>
+                          <td><apex:outputText escape="false" style="font-family:Arial;text-align:left;font-size:8pt;" value="<b>{!pieTotal}</b>" /></td>
+                          </tr>                                          
+                   </table></td>
+                   <td>
+                   <apex:chart height="145px" width="300px" data="{!graphData}" id="graph2">
+                      <apex:axis title="Total / year" type="Numeric" position="left" fields="amount" grid="true"/>
+                      <apex:axis title="Times / year" type="Numeric" position="right" fields="times" grid="true"/>          
+                      <apex:axis type="Category" position="bottom" fields="year" />
+                      <apex:lineSeries title="Amount" axis="left" fill="true" xField="year" yField="amount"  markerType="cross" markerSize="2" markerFill="#FF0000"/>
+                      <apex:lineSeries title="Times" axis="right" xField="year" yField="times"  markerType="circle" markerSize="3" markerFill="#8E35EF"/>        
+                   </apex:chart></td>
+                   <td><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;font-weight:bold;" value="First Donation's Campaign"/>
+                   <br/><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="{!thisAccount.FirstOpportunityCampaign__r.Name}"/>
+                        <apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="(No recorded campaign / data)" rendered="{!thisAccount.FirstOpportunityCampaign__r.Name == null}"/>
+                   <br/><br/><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;font-weight:bold;" value="Last Campaign Donated To"/>
+                   <br/><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="{!thisAccount.LastOpportunityCampaign__r.Name}"/>
+                        <apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="(No recorded campaign / data)" rendered="{!thisAccount.LastOpportunityCampaign__r.Name == null}"/>                   
+                   <br/><br/><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;font-weight:bold;" value="Largest Donation Campaign"/>
+                   <br/><apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="{!thisAccount.LargestOpportunityCampaign__r.Name}"/>                
+                        <apex:outputText style="font-family:Arial;text-align:left;font-size:8pt;" value="(No recorded campaign / data)" rendered="{!thisAccount.LargestOpportunityCampaign__r.Name == null}"/>                                                                     
+                  </td>
+               <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/refresh.png')}" action="{!refreshStatsButton}" style="float:right;height:30px"/>
+               </table>
+            </apex:outputPanel>            
+            </apex:tab>                 
+                <apex:tab label="Hard Credit" name="hardCredit" id="hardCredit">                                          
+                     <apex:pageBlockSection id="pageBlockSection1" columns="2">
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LastHardCreditDonationDate)}">
+                                    <apex:param value="{!LastHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="This Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!ThisYearsHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(ThisYearsHardCreditDonations,0)})" rendered="{!ThisYearsHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Largest Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LargestHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LargestHardCreditDonationDate)}">
+                                    <apex:param value="{!LargestHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastYearsHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LastYearsHardCreditDonations, 0)})" rendered="{!LastYearsHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="First Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!FirstHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(FirstHardCreditDonationDate)}">
+                                    <apex:param value="{!FirstHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Lifetime Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LifetimeHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LifetimeHardCreditDonations, 0)})" rendered="{!LifetimeHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/refresh.png')}" action="{!refreshStatsButton}" value="Recalculate History" style="float:right;height:30px"/>
+                </apex:tab>
+                <apex:tab label="Soft Credit" name="softCredit" id="softCredit">
+                    <apex:pageBlockSection id="pageBlockSection2" columns="2">
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LastSoftCreditDonationDate)}">
+                                    <apex:param value="{!LastSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="This Year's Donations " />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!ThisYearsSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(ThisYearsSoftCreditDonations, 0)})" rendered="{!ThisYearsSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Largest Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LargestSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LargestSoftCreditDonationDate)}">
+                                    <apex:param value="{!LargestSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastYearsSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LastYearsSoftCreditDonations, 0)})" rendered="{!LastYearsSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="First Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!FirstSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(FirstSoftCreditDonationDate)}">
+                                    <apex:param value="{!FirstSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Lifetime Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LifetimeSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LifetimeSoftCreditDonations, 0)})" rendered="{!LifetimeSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/refresh.png')}" action="{!refreshStatsButton}" value="Recalculate History" style="float:right;height:30px"/>
+                </apex:tab>
+                <apex:tab label="Hard and Soft Credit" name="hardSoftCredit" id="hardSoftCredit">
+                    <apex:pageBlockSection id="pageBlockSection3" columns="2">
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastHardSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LastHardSoftCreditDonationDate)}">
+                                    <apex:param value="{!LastHardSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="This Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!ThisYearsHardSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(ThisYearsHardSoftCreditDonations, 0)})" rendered="{!ThisYearsHardSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Largest Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LargestHardSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(LargestHardSoftCreditDonationDate)}">
+                                    <apex:param value="{!LargestHardSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LastYearsHardSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LastYearsHardSoftCreditDonations, 0)})" rendered="{!LastYearsHardSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="First Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!FirstHardSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(FirstHardSoftCreditDonationDate)}">
+                                    <apex:param value="{!FirstHardSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Lifetime Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!LifetimeHardSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(LifetimeHardSoftCreditDonations, 0)})" rendered="{!LifetimeHardSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/refresh.png')}" action="{!refreshStatsButton}" style="float:right;height:30px"/>
+                </apex:tab>                
+                <apex:tab label="Funds & Products" name="funds" id="funds">
+                <apex:outputPanel layout="block" style="overflow:auto; height:100px;margin: 0 2px" > <!-- the style is the scroll bars -->
+                 <apex:pageBlockTable value="{!productLines}" var="q">
+                        <apex:column headerValue="Fund / Product"  value="{!q.pname}"/>
+                        <apex:column headerValue="Total Income" value="{!q.ptotal}" />
+                        <apex:column headerValue="Total Transactions" value="{!q.pcount}"/>  
+                        <apex:column headerValue="Average Transaction" value="{!q.pavg}"/>                 
+                 </apex:pageBlockTable> 
+                </apex:outputPanel>
+                </apex:tab>                            
+            </apex:tabPanel>
+        </apex:pageBlock>
+    </apex:form>
+    </apex:outPutPanel>
+</apex:component>

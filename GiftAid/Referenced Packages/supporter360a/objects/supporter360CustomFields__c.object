@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>List</customSettingsType>
+    <customSettingsVisibility>Public</customSettingsVisibility>
+    <description>Custom fields to that can be displayed on  VF pages</description>
+    <enableFeeds>false</enableFeeds>
+    <label>supporter360 Custom Fields</label>
+</CustomObject>

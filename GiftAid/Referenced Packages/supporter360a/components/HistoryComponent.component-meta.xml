@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexComponent xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>27.0</apiVersion>
+    <description>Display the history in a Visualforce component to make it more easily viewable to the user</description>
+    <label>HistoryComponent</label>
+</ApexComponent>

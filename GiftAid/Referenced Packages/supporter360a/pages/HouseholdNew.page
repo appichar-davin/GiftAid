@@ -1,0 +1,83 @@
+<apex:page id="page" controller="s360a.HouseholdNewWizard" action="{!pageInit}">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+    <apex:sectionHeader title="New Household Wizard" />
+    <apex:form id="form">
+        <apex:pageBlock id="transactionPageBlock" mode="edit" title="New Household">
+            <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton"  action="{!save}" value="Create Household" />
+                <apex:commandButton styleClass="cssbutton"  action="{!cancel}" value="Cancel"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection id="transactionBlockSection" title="Address Details" columns="1">
+                <apex:messages /> 
+                <!-- Street -->
+                <apex:pageBlockSectionItem id="primaryStreetSI">
+                    <apex:outputLabel value="Primary Street" />
+                    <apex:inputField id="primaryStreet" value="{!tempContact.s360a__AddressPrimaryStreet__c}" style="width: 305px;" />
+                </apex:pageBlockSectionItem>
+                <!-- City -->
+                <apex:pageBlockSectionItem id="primaryCitySI">
+                    <apex:outputLabel value="Primary City" />
+                    <apex:inputField id="primaryCity" value="{!tempContact.s360a__AddressPrimaryCity__c}" style="width: 310px;" />
+                </apex:pageBlockSectionItem>
+                <!-- State -->
+                <apex:pageBlockSectionItem id="primaryStateSI">
+                    <apex:outputLabel value="Primary State" />
+                    <apex:inputField id="primaryState" value="{!tempContact.s360a__AddressPrimaryState__c}" style="width: 310px;" />
+                </apex:pageBlockSectionItem>
+                <!-- Country -->
+                <apex:pageBlockSectionItem id="primaryCountrySI">
+                    <apex:outputLabel value="Primary Country" />
+                    <apex:inputField id="primaryCountry" value="{!tempContact.s360a__AddressPrimaryCountry__c}" />
+                </apex:pageBlockSectionItem>
+                <!-- Postcode -->
+                <apex:pageBlockSectionItem id="primaryPostcodeSI">
+                    <apex:outputLabel value="Primary Postcode" />
+                    <apex:inputField id="primaryPostcode" value="{!tempContact.s360a__AddressPrimaryPostalCode__c}" style="width: 310px;" />
+                </apex:pageBlockSectionItem>
+                <!-- Preferred Mailing Address -->
+                <apex:pageBlockSectionItem id="preferredMailingAddressSI">
+                    <apex:outputLabel value="Preferred Mailing Address" />
+                    <apex:inputField id="preferredMailingAddress" value="{!tempContact.s360a__AddressPrimaryPreferredMailingAddress__c}" />
+                </apex:pageBlockSectionItem>
+                <!-- Preferred Mailing Street -->
+                <apex:pageBlockSectionItem id="preferredStreetAddressSI">
+                    <apex:outputLabel value="Preferred Street Address" />
+                    <apex:inputField id="preferredStreetAddress" value="{!tempContact.s360a__AddressPrimaryPreferredStreetAddress__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="findMatchingContactsSI">
+                    <apex:outputLabel value="" />
+                    <apex:outputPanel >
+                        <apex:commandButton styleClass="cssbutton"  value="Find Matching Contacts" id="findMatchingContacts" action="{!findMatchingContacts}" reRender="form" status="loading" />
+                        <apex:actionStatus id="loading" startStyle="position: absolute; background-repeat: no-repeat; background-image: url('{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}'); width: 100%; height: 100%;" stopStyle=""/><!-- Updated by shail -->
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection id="matchingContactsBlockSection" title="Matching Contacts" columns="1" rendered="{!IF(matchingContactsFlag == true, true, false)}">
+                Contacts to be added in the new household
+                <apex:pageBlockTable value="{!myContacts}" var="c" id="theTable" rowClasses="odd,even" styleClass="tableClass" title="Contacts to be added in the new household">
+                    <apex:column width="20px" id="column">
+                        <apex:facet name="header"><apex:inputCheckbox id="all" onclick="selectAll(this);"/></apex:facet>
+                        <apex:inputCheckbox id="chk" value="{!c.addToHousehold}" />
+                    </apex:column>
+                    <apex:column width="150px">
+                        <apex:facet name="header">First Name</apex:facet>
+                        <apex:outputField id="contactFirstName" value="{!c.Contact.FirstName}" />
+                    </apex:column>
+                    <apex:column >
+                        <apex:facet name="header">Last Name</apex:facet>
+                        <apex:outputField id="contactLastName" value="{!c.Contact.LastName}" />
+                    </apex:column> 
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+            <script type="text/javascript">
+                function selectAll(cb)
+                {   var inputElem = document.getElementsByTagName("input");
+                    for(var i=0; i<inputElem.length; i++)
+                    {   if(inputElem[i].id.indexOf("chk")!=-1)
+                        inputElem[i].checked = cb.checked;
+                    }
+                } 
+            </script>
+            </apex:pageBlock>
+            </apex:form>
+</apex:page>

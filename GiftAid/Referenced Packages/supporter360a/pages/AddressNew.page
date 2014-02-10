@@ -1,0 +1,126 @@
+<apex:page Controller="s360a.AddressNew" showHeader="true" sidebar="true">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+<apex:form >
+ 
+<apex:sectionheader title="Address Edit" subtitle="New Address" >
+ </apex:sectionheader>
+ <apex:pageMessages />
+<apex:pageBlock title="Address Edit" mode="edit">
+  <apex:pageBlockButtons >
+                <apex:commandButton styleClass="cssbutton" value="Save" action="{!savebttn}"/>&nbsp;&nbsp;
+                <apex:commandButton styleClass="cssbutton"  value="Save & New" action="{!SavenNewbuttn}"/>&nbsp;&nbsp;
+                <apex:commandButton styleClass="cssbutton"  value="Cancel" action="{!cancelbttn}" immediate="true"/> 
+            </apex:pageBlockButtons>                        
+            
+           <apex:pageblocksection columns="1" title="Contact Information">                        
+            <apex:pageblocksectionitem >                        
+             <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink>         
+             </apex:pageblocksectionitem> 
+             
+             <apex:pageblocksectionitem > 
+             <apex:outputtext value="Display Address As" ></apex:outputtext>
+             <apex:selectList value="{!Addressas}" size="1">
+            <apex:selectOptions value="{!Address}"/>
+            </apex:selectList>     
+             </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+            
+            <apex:pageblocksection columns="1" title="Address Information">                              
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Address Type"></apex:outputLabel>
+            <apex:selectList value="{!AddressType}" size="1">
+            <apex:selectOptions value="{!AddressTypes}"/>
+            </apex:selectList>   
+            </apex:pageblocksectionitem> 
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Description"></apex:outputtext>
+            <apex:inputtext size="65" value="{!inview.description}" />
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Street"></apex:outputtext>
+            <apex:inputTextarea value="{!inview.street}" rows="3" style="width:300px;" />
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="City"></apex:outputtext>
+            <apex:inputtext size="65" value="{!inview.city}" />
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="State"></apex:outputtext>
+            <apex:inputtext size="65" value="{!inview.state}" />
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Postcode"></apex:outputtext>
+            <apex:inputtext size="65" value="{!inview.postcode}" />
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Country"></apex:outputtext>
+            <apex:selectList value="{!country}" size="1">
+            <apex:selectOptions value="{!Countries}"/>
+            </apex:selectList>
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Preferred Mailing"></apex:outputtext>
+            <apex:inputCheckbox value="{!inview.isPreferredMailing}" disabled="false"/>
+            </apex:pageblocksectionitem>                         
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Preferred Street"></apex:outputtext>
+             <apex:inputCheckbox value="{!inview.isPreferredStreet}" disabled="false"/>
+            </apex:pageblocksectionitem>
+            <apex:pageblocksectionitem >                         
+             <apex:outputtext value="Active"></apex:outputtext>
+            <apex:inputCheckbox value="{!inview.isActive}" disabled="false"/>
+            </apex:pageblocksectionitem>                           
+            </apex:pageblocksection>
+            
+            
+            <apex:pageblocksection columns="1" title="Other Information">       
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Street Directory Reference"></apex:outputtext>
+             <apex:inputtext size="65" value="{!inview.StreetReference}" />
+            </apex:pageblocksectionitem>
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateFrom__c}" />
+            </apex:pageblocksectionitem> <apex:pageblocksectionitem > 
+            <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateTo__c}" />
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Temp Do Not Mail Start"></apex:outputLabel>
+            <apex:inputfield value="{!utmail.s360a__DateFrom__c}" />
+            </apex:pageblocksectionitem> <apex:pageblocksectionitem > 
+            <apex:outputLabel value="Temp Do Not Mail End"></apex:outputLabel>
+            <apex:inputfield value="{!utmail.s360a__DateTo__c}" />
+            </apex:pageblocksectionitem>
+            <apex:pageblocksectionitem >             
+            <apex:outputtext value="Last Temp Do Not Mail Request"></apex:outputtext>
+             <apex:inputtext size="65" value="{!inview.lastMailRequest}" />
+            </apex:pageblocksectionitem>
+            
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="RTS"></apex:outputLabel>            
+            <apex:inputCheckbox value="{!inview.rts}" />
+            </apex:pageblocksectionitem> 
+            
+            <apex:pageblocksectionitem >               
+            <apex:outputLabel value="RTS Date"></apex:outputLabel>
+            <apex:inputfield value="{!utrts.s360a__DateFrom__c}" />
+            </apex:pageblocksectionitem> <apex:pageblocksectionitem > 
+            <apex:outputLabel value="RTS Follow Up Date"></apex:outputLabel>
+            <apex:inputfield value="{!utrts.s360a__DateTo__c}" />
+            </apex:pageblocksectionitem>
+            
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="RTS Follow Up Channel"></apex:outputLabel>            
+           <apex:selectList value="{!rtschannel}" size="1">
+            <apex:selectOptions value="{!channel}"/>
+            </apex:selectList>
+            </apex:pageblocksectionitem>
+            
+            </apex:pageblocksection>
+           
+ </apex:pageBlock>
+  </apex:form>
+</apex:page>

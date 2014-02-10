@@ -1,0 +1,15 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: AutomatedTransactionManagementProcessing.page      *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page standardController="Opportunity" recordSetVar="opportunities" extensions="s360a.AutomatedTransactionManagementProcessing" tabStyle="Opportunity" action="{!executeBatch}">
+    <apex:sectionHeader title="Regular Giving" subtitle="Processing Opportunities" />
+    <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+</apex:page>

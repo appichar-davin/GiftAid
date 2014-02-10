@@ -1,0 +1,222 @@
+<apex:page standardcontroller="Contact" extensions="s360a.HouseholdMembers" showHeader="false" sidebar="false">
+<style>
+.customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 1px;
+        left: 10%;
+        padding:10px;
+        position: absolute;
+        z-index: 9999;
+        
+        /* These are the 3 css properties you will need to tweak so the pop 
+        up displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can also add 
+        the height property for a fixed size pop up.*/
+        
+        width: 675px;
+        margin-left: -50px;
+        top:0px;
+}
+.popupBackground{
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 20);
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+}  
+</style>
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+    <apex:form >
+    <apex:pageBlock >
+    <apex:tabPanel switchType="client" id="givingStatsTabPanel" inactiveTabClass="inactiveTab">              
+    <apex:tab label="Household Members" name="hmem" id="hmem">
+    <apex:outputPanel id="hhpanel">
+
+    <apex:outputPanel layout="block" style="overflow:auto; height:122px;margin: 0 2px" > <!-- the style is the scroll bars -->
+    <apex:pageblocktable value="{!members}" var="m" width="100%">
+        <apex:column headerValue="Name">
+            <apex:outputLink value="/{!m.record.Id}" target="_blank">{!m.record.Name} </apex:outputLink>
+    <!--    value="{!m.record.FirstName} {!m.record.LastName}"/> -->
+    </apex:column>  
+        <apex:column headerValue="Household Role">
+            <apex:inputField rendered="{!m.isPrimary}" value="{!m.record.s360a__PrimaryHouseholdRole__c}"/>
+            <apex:inputField rendered="{!!m.isPrimary}" value="{!m.record.s360a__SecondaryHouseholdRole__c}"/> 
+        </apex:column>   
+        <apex:column headerValue="Member Type">
+            <apex:inputField rendered="{!m.isPrimary}" value="{!m.record.s360a__PrimaryHouseholdMemberType__c}"/>
+            <apex:inputField rendered="{!!m.isPrimary}" value="{!m.record.s360a__SecondaryHouseholdMemberType__c}"/> 
+        </apex:column>                   
+        <apex:column headerValue="Phone"  >{!m.record.Phone}</apex:column>             
+        <apex:column headerValue="Household Type" >
+            <apex:outputText value="Primary" rendered="{!m.isPrimary}"/>
+            <apex:outputText value="Secondary" rendered="{!!m.isPrimary}"/>
+        </apex:column>           
+        <apex:column headerValue="Action">
+            <apex:commandButton styleClass="cssbutton" action="{!remove}" value="Remove" style="height:21px" rerender="hhpanel, popupouter" status="mainstatus">
+                <apex:param name="hhmember" value="{!m.record.Id}"/> 
+            </apex:commandButton>
+        </apex:column> 
+    </apex:pageblocktable>
+    </apex:outputPanel>
+    <br/>
+    <apex:commandButton styleClass="cssbutton" style="height:21px" action="{!saveChanges}" value="Save Changes" rerender="hhpanel, popupouter" status="mainstatus"/>&nbsp;&nbsp;
+    <apex:actionStatus id="mainstatus">
+         <apex:facet name="start">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+         </apex:facet>
+    </apex:actionStatus>        
+
+    </apex:outputPanel>
+    </apex:tab>
+                <apex:tab label="Household Total Hard Credit" name="hardCredit" id="hardCredit"> 
+                    <apex:pageBlockSection id="pageBlockSection1" columns="2">
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LastHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.LastHardCreditDonationDate)}">
+                                    <apex:param value="{!hs.LastHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="This Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.ThisYearsHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.ThisYearsHardCreditDonations,0)})" rendered="{!hs.ThisYearsHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Largest Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LargestHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.LargestHardCreditDonationDate)}">
+                                    <apex:param value="{!hs.LargestHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LastYearsHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.LastYearsHardCreditDonations, 0)})" rendered="{!hs.LastYearsHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="First Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.FirstHardCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.FirstHardCreditDonationDate)}">
+                                    <apex:param value="{!hs.FirstHardCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Lifetime Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LifetimeHardCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.LifetimeHardCreditDonations, 0)})" rendered="{!hs.LifetimeHardCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:tab>
+                <apex:tab label="Household Total Soft Credit" name="softCredit" id="softCredit">
+                    <apex:pageBlockSection id="pageBlockSection2" columns="2">
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LastSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.LastSoftCreditDonationDate)}">
+                                    <apex:param value="{!hs.LastSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="This Year's Donations " />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.ThisYearsSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.ThisYearsSoftCreditDonations, 0)})" rendered="{!hs.ThisYearsSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Largest Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LargestSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.LargestSoftCreditDonationDate)}">
+                                    <apex:param value="{!hs.LargestSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Last Year's Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LastYearsSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.LastYearsSoftCreditDonations, 0)})" rendered="{!hs.LastYearsSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="First Donation" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.FirstSoftCreditDonation}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({0,date,dd'/'MM'/'yyyy})" rendered="{!!ISNULL(hs.FirstSoftCreditDonationDate)}">
+                                    <apex:param value="{!hs.FirstSoftCreditDonationDate}" /> 
+                                </apex:outputText>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                         <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Lifetime Donations" />
+                            <apex:outputText >
+                                <apex:outputText value="{0, number, {!symbol}#,##0.00}">
+                                    <apex:param value="{!hs.LifetimeSoftCreditDonationTotal}" />
+                                </apex:outputText>
+                                &nbsp;&nbsp;
+                                <apex:outputText value=" ({!ROUND(hs.LifetimeSoftCreditDonations, 0)})" rendered="{!hs.LifetimeSoftCreditDonations != 0}"/>
+                            </apex:outputText>
+                         </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    
+                </apex:tab>
+               
+    
+    </apex:tabPanel>
+</apex:pageBlock> 
+    </apex:form>
+</apex:page>

@@ -1,0 +1,13 @@
+<!-- 
+/*****************************************************************
+ *                                                               *
+ *   Product: supporter360                                       *
+ *      File: OpportunityManagementOverride.page                 *
+ *   Version: 1.0                                                *
+ * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+ *                                                               *
+ *****************************************************************/
+ -->
+
+<apex:page standardcontroller="Opportunity" extensions="s360a.OpportunityManagementOverride" action="{!autoForward}">
+</apex:page>

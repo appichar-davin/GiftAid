@@ -1,0 +1,792 @@
+<!--
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: TransactionManagementOverride2.page                *
+  *   Version: 1.0                                                *
+  * Copyright: ©2013 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+<apex:page id="page" standardcontroller="s360a__Transaction2__c" extensions="s360a.TransactionManagementOverride">
+    <style type="text/css">
+         body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+    </style>
+    <apex:sectionHeader title="Transaction Edit" subtitle="New Transaction" rendered="{!renderMode == 'New'}" />
+    <apex:sectionHeader title="Transaction Edit" subtitle="{!transactionObject.Name}" rendered="{!renderMode == 'Edit'}" />
+    <apex:sectionHeader title="Transaction" subtitle="{!transactionObject.Name}" rendered="{!renderMode == 'Detail'}" />
+    <apex:outputPanel id="msgpanel">
+        <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+    </apex:outputPanel>
+    <apex:form id="hiddenForm" style="display: none;" rendered="{!OR(renderMode == 'New', renderMode == 'Edit')}">
+        <script type="text/javascript">
+            function updateValue(id, value)
+            {   document.getElementById('page:hiddenForm:' + id).value = value;
+                if (typeof window[id + 'ActionFunction'] === 'function')
+                {   eval(id + 'ActionFunction();');
+                }
+            }
+        </script>
+        <apex:actionFunction name="paymentMethodActionFunction" status="paymentMethodActionStatus" rerender="pageBlockButtonsTop, paymentMethodDetails, pageBlockButtonsBottom" />
+        <apex:actionFunction name="paymentTypeActionFunction" status="paymentTypeActionStatus" rerender="transactionDetailsSection, partialPaymentDetails" />
+        <apex:actionFunction name="statusActionFunction" status="statusActionStatus" rerender="paymentMethodDetails"/>
+        <apex:actionFunction name="paymentGatewayProcessTypeActionFunction" status="paymentGatewayProcessTypeActionStatus" rerender="paymentMethodDetails" />
+        <apex:selectList size="1" value="{!transactionObject.s360a__PaymentMethod__c}" id="paymentMethod">
+            <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+        </apex:selectList>
+        <apex:selectList size="1" value="{!transactionObject.s360a__PaymentType__c}" id="paymentType">
+            <apex:selectOptions value="{!paymentTypeSelectOptions}" />
+        </apex:selectList>
+        <apex:selectList size="1" value="{!transactionObject.s360a__Status2__c}" id="status">
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Income'}" itemValue="Awaiting Payment" itemLabel="Awaiting Payment" />
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Income'}" itemValue="Payment Received" itemLabel="Payment Received" />
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Refund'}" itemValue="Awaiting Refund" itemLabel="Awaiting Refund" />
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Refund'}" itemValue="Refund Paid" itemLabel="Refund Paid" />
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Adjustment'}" itemValue="Adjustment In Progress" itemLabel="Adjustment In Progress" />
+            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Adjustment'}" itemValue="Adjustment Complete" itemLabel="Adjustment Complete" />            
+        </apex:selectList>
+        <apex:selectList value="{!transactionObject.s360a__PaymentGatewayProcessType__c}" size="1" id="paymentGatewayProcessType">
+            <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+            <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" />
+        </apex:selectList>
+    </apex:form>
+    <apex:form id="form">   
+        <apex:pageBlock rendered="{!OR(renderMode == 'New', renderMode == 'Edit')}" title="Transaction Edit" mode="edit">
+            <apex:pageBlockButtons location="top">
+                <apex:outputPanel id="pageBlockButtonsTop" rendered="{!!isRefund && !isAdjustment}">
+                    <apex:actionStatus id="hidebuttonstop" >
+                        <apex:facet name="start">
+                            <apex:outputPanel >
+                                Processing...<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" style="padding-left: 5px; padding-right: 5px;"/>
+                            </apex:outputPanel>
+                        </apex:facet>
+                        <apex:facet name="stop">  
+                            <apex:outputPanel >              
+                                <apex:commandButton action="{!saveAction}" value="Save" rendered="{!transactionObject.s360a__PaymentMethod__c != 'Payment Gateway'}" disabled="{!disableSave}" rerender="msgpanel, form" status="hidebuttonstop"/>
+                                <apex:commandButton action="{!saveAction}" value="Process" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway'}"  disabled="{!disableSave}" rerender="msgpanel, form" status="hidebuttonstop"/>
+                                <apex:commandButton action="{!submitRefund}" value="Submit Refund" rendered="{!isRefund}" rerender="msgpanel, form"/>                     
+                                <apex:commandButton action="{!cancelAction}" value="Cancel" immediate="true" rerender="msgpanel, form" status="hidebuttonstop"/>
+                            </apex:outputPanel>
+                        </apex:facet>
+                    </apex:actionStatus>                
+                </apex:outputPanel>
+            </apex:pageBlockButtons>
+            <apex:pageBlockButtons location="bottom">
+                <apex:outputPanel id="pageBlockButtonsBottom">
+                    <apex:actionStatus id="hidebuttonsbottom" >
+                        <apex:facet name="start">
+                            <apex:outputPanel >
+                                Processing...<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}"  style="padding-left: 5px; padding-right: 5px;"/>
+                            </apex:outputPanel>
+                        </apex:facet>
+                        <apex:facet name="stop">  
+                            <apex:outputPanel >                     
+                                <apex:commandButton action="{!saveAction}" value="Save" rendered="{!transactionObject.s360a__PaymentMethod__c != 'Payment Gateway' && !isRefund && !isAdjustment}"  disabled="{!disableSave}" rerender="msgpanel, form" status="hidebuttonsbottom"/>
+                                <apex:commandButton action="{!saveAction}" value="Process" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway' && !isRefund && !isAdjustment}"  disabled="{!disableSave}" rerender="msgpanel, form" status="hidebuttonsbottom"/>                   
+                                <apex:outputText escape="false" rendered="{!isRefund && !isApprovedRefunder}"><b>Select refund approver:</b></apex:outputText>&nbsp;&nbsp;&nbsp;
+                                <apex:selectList value="{!refundUser}" size="1" rendered="{!isRefund && !isApprovedRefunder}">
+                                    <apex:selectOptions value="{!refundUserList}"/>
+                                </apex:selectList>                    
+                                <apex:commandButton action="{!submitRefund}" value="Submit Refund" rendered="{!isRefund}" rerender="msgpanel, form" status="hidebuttonsbottom"/> 
+                                <apex:commandButton action="{!submitAdjustment}" value="Submit Adjustment" rendered="{!isAdjustment}" rerender="msgpanel, form" status="hidebuttonsbottom"/>                                                            
+                                <apex:commandButton action="{!cancelAction}" value="Cancel" immediate="true" rerender="msgpanel, form" status="hidebuttonsbottom"/>
+                            </apex:outputPanel>
+                        </apex:facet>
+                    </apex:actionStatus>                                          
+                </apex:outputPanel>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Transaction Details" columns="1" id="transactionDetailsSection">
+                <apex:pageBlockSectionItem />
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Opportunity" />    
+                    <apex:outputPanel styleClass="requiredInput" layout="block">  
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <input type="text" value="{!opportunity.Name}" style="width: 300px;" disabled="disabled" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Transaction Type" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">  
+                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                        <apex:selectList size="1" value="{!transactionObject.s360a__TransactionType__c}" required="true" style="width: 300px;" id="transactionType">
+                            <apex:selectOptions value="{!transactionTypeSelectOptions}" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Payment Type" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                        <apex:selectList size="1" value="{!transactionObject.s360a__PaymentType__c}" required="true"  style="width: 300px;" id="paymentType" onchange="updateValue('paymentType', this.value);" >
+                            <apex:selectOptions value="{!paymentTypeSelectOptions}" />
+                        </apex:selectList>
+                        <apex:actionStatus id="paymentTypeActionStatus" >
+                            <apex:facet name="start"><img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...</apex:facet>
+                        </apex:actionStatus>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Payment Method" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">  
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <apex:selectList size="1" value="{!transactionObject.s360a__PaymentMethod__c}" required="true" style="width: 300px;" id="paymentMethod" onchange="updateValue('paymentMethod', this.value);" >
+                            <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+                        </apex:selectList>
+                        <apex:actionStatus id="paymentMethodActionStatus" >
+                            <apex:facet name="start">
+                                <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentType__c == 'Full'}">
+                    <apex:outputLabel value="Amount" /> 
+                    <apex:outputPanel styleClass="requiredInput" layout="block">  
+                        <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                        <input type="text" value="{!IF(MOD(transactionObject.Amount__c, 1) == 0, TEXT(transactionObject.Amount__c) + '.00', IF(MOD(transactionObject.Amount__c, 0.1) == 0, TEXT(transactionObject.Amount__c) + '0', TEXT(transactionObject.Amount__c)))}" style="width: 300px;" disabled="disabled" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentMethod__c != 'Payment Gateway'}">
+                    <apex:outputLabel value="Status" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                        <apex:selectList size="1" style="width: 300px;" value="{!transactionObject.s360a__Status2__c}" required="true" onchange="updateValue('status', this.value);">
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Income'}" itemValue="Awaiting Payment" itemLabel="Awaiting Payment" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Income'}" itemValue="Payment Received" itemLabel="Payment Received" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Income'}" itemValue="Payment Failed" itemLabel="Payment Failed" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Refund'}" itemValue="Awaiting Refund" itemLabel="Awaiting Refund" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Refund'}" itemValue="Refund Paid" itemLabel="Refund Paid" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Adjustment'}" itemValue="Adjustment In Progress" itemLabel="Adjustment In Progress" />
+                            <apex:selectOption rendered="{!transactionObject.s360a__TransactionType__c == 'Adjustment'}" itemValue="Adjustment Complete" itemLabel="Adjustment Complete" />                          
+                        </apex:selectList>
+                        <apex:actionStatus id="statusActionStatus">
+                            <apex:facet name="start"><img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...</apex:facet>
+                        </apex:actionStatus>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:inputField id="notes" value="{!transactionObject.s360a__Notes__c}" style="width: 300px;" />
+            </apex:pageBlockSection>
+<!-- PARTIAL PAYMENTS -->            
+            <apex:outputPanel id="partialPaymentDetails">
+                <apex:pageBlockSection title="Partial Payment Details" columns="1" rendered="{!transactionObject.s360a__PaymentType__c == 'Partial' && !isRefund && !isAdjustment}">
+                    <apex:pageBlockTable id="table" value="{!partialPaymentItems}" var="partialPaymentItem" rowClasses="odd, even" styleClass="tableClass">
+                        <apex:column width="300" headerValue="Product / Fund">
+                            <apex:outputText value="{!partialPaymentItem.opportunityLineItem.PricebookEntry.Product2.Name}" />
+                        </apex:column>
+                        <apex:column width="150" headerValue="Quantity">
+                            <apex:outputText value="{0, number, #,##0.00}">
+                                <apex:param value="{!partialPaymentItem.opportunityLineItem.Quantity}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Sales Price">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!partialPaymentItem.opportunityLineItem.UnitPrice}" />
+                            </apex:outputText>
+                        </apex:column>
+                        <apex:column width="150" headerValue="Total Price">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!partialPaymentItem.opportunityLineItem.UnitPrice * partialPaymentItem.opportunityLineItem.Quantity}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Balance Due">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!partialPaymentItem.opportunityLineItem.s360a__BalanceDue__c}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column headerValue="Payment Amount">
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputText value="{!partialPaymentItem.amount}" style="width: 100px;" />
+                                <apex:outputPanel rendered="{!partialPaymentItem.errorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!partialPaymentItem.errorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+<!-- BEGIN REFUNDS & ADJUSTMENTS -->      
+            <apex:actionRegion >      
+            <apex:outputPanel id="refundDetails">
+                <apex:pageBlockSection title="Refund Payment Details" columns="1" rendered="{!isRefund}">
+                <apex:outputLink style="float:right;" target="_blank" value="http://www.supporter360.net/how-to-refunds-adjustments"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}" /></apex:outputLink>
+                    <apex:pageBlockTable id="table" value="{!refundPaymentItems}" var="refundPaymentItem" rowClasses="odd, even" styleClass="tableClass">
+                        <apex:column width="300" headerValue="Product / Fund">
+                            <apex:outputText value="{!refundPaymentItem.opportunityLineItem.PricebookEntry.Product2.Name}" />
+                        </apex:column>
+                        <apex:column width="150" headerValue="Maximum Refund">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!refundPaymentItem.maxItemAmount}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Note / Comment">
+                            <apex:inputField value="{!refundPaymentItem.opportunityLineItem.Description}" style="width: 180px;" rendered="{!AND($ObjectType.opportunityLineItem.fields.Description.Createable,$ObjectType.opportunityLineItem.fields.Description.Updateable)}"/> <!-- //CRUD/FLS -->
+                        </apex:column>  
+                        <apex:column width="100" headerValue="Action">
+                            <apex:commandButton value="Auto-Fill Max" action="{!refundPaymentItem.setMax}" rerender="refundDetails" title="Click this to auto-fill the max amount for this line item."/>
+                        </apex:column>                                                 
+                        <apex:column headerValue="Refund Amount">
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputText value="{!refundPaymentItem.amount}" style="width: 60px;" />
+                                <apex:outputPanel rendered="{!refundPaymentItem.errorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!refundPaymentItem.errorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+            </apex:outputPanel>    
+            </apex:actionRegion>                     
+<!-- END REFUNDS -->  
+<!-- BEGIN ADJUSTMENTS -->            
+            <apex:actionRegion >
+            <apex:outputPanel id="adjustmentPaidDetails" rendered="{!arePaidAdjustments}">              
+                <apex:pageBlockSection title="Adjustment Details: Paid Line Items" columns="1" rendered="{!isAdjustment}">
+                <apex:outputLink style="float:right;" target="_blank" value="http://www.supporter360.net/how-to-refunds-adjustments"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>
+                <apex:outputText style="color:orange" escape="false" value="{!paidTranMsg}"/>                
+                    <apex:pageBlockTable id="table" value="{!paidAdjustmentItems}" var="adjustmentItem" rowClasses="odd, even" styleClass="tableClass">
+                        <apex:column width="300" headerValue="Product / Fund">
+                            <apex:outputText value="{!adjustmentItem.opportunityLineItem.PricebookEntry.Product2.Name}" />
+                        </apex:column>
+                        <apex:column width="150" headerValue="Quantity">
+                            <apex:outputText value="{0, number, #,##0.00}">
+                                <apex:param value="{!adjustmentItem.opportunityLineItem.Quantity}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Balance Due">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!adjustmentItem.opportunityLineItem.s360a__BalanceDue__c}" />
+                            </apex:outputText>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Note / Comment">
+                            <apex:inputField value="{!adjustmentItem.opportunityLineItem.Description}" style="width: 130px;" rendered="{!AND($ObjectType.opportunityLineItem.fields.Description.Createable,$ObjectType.opportunityLineItem.fields.Description.Updateable)}"/> <!-- //CRUD/FLS -->
+                        </apex:column>  
+                        <apex:column width="150" headerValue="Total Amount">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!adjustmentItem.oldAmount}" />
+                            </apex:outputText>
+                        </apex:column>                                
+                        <apex:column headerValue="Adjustment Amount">
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel layout="block" />
+                                <apex:inputText value="{!adjustmentItem.adjustmentAmount}" style="width: 60px;" />
+                                <apex:outputText escape="false" style="color:red" value="<b>*</b>" rendered="{!adjustmentItem.hasChanged}"/>
+                                <apex:outputPanel rendered="{!adjustmentItem.errorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!adjustmentItem.errorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                        <apex:column width="150" headerValue="Adjusted Amount">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!adjustmentItem.adjustedAmount}" />
+                            </apex:outputText>
+                        </apex:column>                         
+                    </apex:pageBlockTable>  
+                    <apex:outputPanel >                                      
+                    <apex:commandButton action="{!adjustmentRecalc}" value="Recalculate" reRender="form, adjustmentDetails" style="float:right" status="recalcstatus"/>                    
+                        <apex:actionStatus id="recalcstatus" >
+                            <apex:facet name="start">
+                                <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;float:right" />
+                            </apex:facet>
+                        </apex:actionStatus>  
+                    </apex:outputPanel>                                        
+                </apex:pageBlockSection>
+                    <table><tr>
+                        <td width="30px"/>
+                        <td><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/Bank-icon.png')}" rendered="{!helgaBucket > 0}" style="float:left"/></td>
+                        <td><apex:outputText escape="false" value="{!helgaNote}" rendered="{!helgaBucket > 0}" style="vertical-align:text-bottom;" /></td>
+                    </tr></table>                
+            </apex:outputPanel>   
+            
+            <apex:outputPanel id="adjustmentUnpaidDetails" rendered="{!areUnpaidAdjustments}">
+                <apex:pageBlockSection title="Adjustment Details: Unpaid Line Items" columns="1" rendered="{!isAdjustment}">
+                    <apex:pageBlockTable id="table" value="{!unpaidAdjustmentItems}" var="adjustmentItem" rowClasses="odd, even" styleClass="tableClass">
+                        <apex:column width="300" headerValue="Product / Fund">
+                            <apex:outputText value="{!adjustmentItem.opportunityLineItem.PricebookEntry.Product2.Name}" />
+                        </apex:column>
+                        <apex:column width="150" headerValue="Quantity">
+                            <apex:inputField value="{!adjustmentItem.opportunityLineItem.Quantity}"/>
+                        </apex:column> 
+                        <apex:column headerValue="Unit Price">
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel layout="block" />
+                                <apex:inputField value="{!adjustmentItem.opportunityLineItem.UnitPrice}" style="width: 60px;" rendered="{!AND($ObjectType.opportunityLineItem.fields.UnitPrice.Createable,$ObjectType.opportunityLineItem.fields.UnitPrice.Updateable)}"/> <!-- //CRUD/FLS -->
+                                <apex:outputText escape="false" style="color:red" value="<b>*</b>" rendered="{!adjustmentItem.hasChanged}"/>
+                                <apex:outputPanel rendered="{!adjustmentItem.errorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!adjustmentItem.errorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                        <apex:column width="150" headerValue="Total Amount">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!adjustmentItem.oldAmount}" />
+                            </apex:outputText>
+                        </apex:column>                           
+                        <apex:column width="50" headerValue="Action">
+                            <apex:commandLink action="{!delAdjustmentOLi}" rerender="form, adjustmentUnpaidDetails" title="Delete Opportunity Line Item" status="recalcunpaid">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/s360delete.png')}" width="17px" height="17px"/>
+                            <apex:param name="deladjustment" value="{!adjustmentItem.randomId}"/>
+                            </apex:commandLink>
+                        </apex:column>                                               
+                    </apex:pageBlockTable> 
+                    <apex:outputPanel >                      
+                    <apex:commandButton action="{!adjustmentRecalc}" value="Recalculate" reRender="form, adjustmentDetails" style="float:right" status="recalcunpaid"/>
+                        <apex:actionStatus id="recalcunpaid" >
+                            <apex:facet name="start">
+                                <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;float:right" />
+                            </apex:facet>
+                        </apex:actionStatus>  
+                    </apex:outputPanel>                                                
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+<!-- new OLis -->
+            <apex:outputPanel id="newAdjustmentDetails">
+                <apex:pageBlockSection title="New Adjustment Line Items" columns="1" rendered="{!isAdjustment}">
+                    <apex:outputPanel id="newOLiTable" rendered="{!areNewAdjustments}">
+                    <apex:pageBlockTable id="table" value="{!newAdjustmentItems}" var="newAdjustmentItem" rowClasses="odd, even" styleClass="tableClass">
+                        <apex:column width="300" headerValue="Product / Fund">
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel layout="block" />                            
+                                <apex:inputField value="{!newAdjustmentItem.prodLookup.s360a__Product__c}" />
+                                <apex:outputPanel rendered="{!newAdjustmentItem.productErrorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!newAdjustmentItem.productErrorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>                                                
+                        </apex:column>
+                        <apex:column width="150" headerValue="Quantity">
+                            <apex:inputField value="{!newAdjustmentItem.opportunityLineItem.Quantity}"/>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Unit Price">
+                            <apex:inputField value="{!newAdjustmentItem.opportunityLineItem.UnitPrice}" required="true"/>
+                        </apex:column> 
+                        <apex:column width="150" headerValue="Total Price">
+                            <apex:outputText value="{0, number, $#,##0.00}">
+                                <apex:param value="{!newAdjustmentItem.opportunityLineItem.UnitPrice * newAdjustmentItem.opportunityLineItem.Quantity}" />
+                            </apex:outputText>
+                        </apex:column> 
+
+                        <apex:column headerValue="Allocation From Received Funds" rendered="{!arePaidAdjustments}">
+                            <apex:outputPanel styleClass="requiredInput" layout="block" id="newadjustments">
+                                <apex:outputPanel layout="block" />
+                                <apex:outputPanel >
+                                    <apex:inputText value="{!newAdjustmentItem.helgaAllocation}" style="width: 100px;" disabled="{!newAdjustmentItem.disableHelgaInput}" />
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!newAdjustmentItem.errorMessage != null}"><br /><div style="color: #CC0000; padding-left: 2px; margin-top: 2px;"><b>Error:</b> {!newAdjustmentItem.errorMessage}</div></apex:outputPanel>
+                            </apex:outputPanel>
+                        </apex:column>
+                        <apex:column width="50" headerValue="Action">
+                            <apex:commandLink action="{!delAdjustmentOLi}" rerender="form, adjustmentUnpaidDetails" title="Delete Opportunity Line Item" status="addnew">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/s360delete.png')}" width="17px" height="17px"/>
+                            <apex:param name="deladjustment" value="{!newAdjustmentItem.randomId}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                      </apex:pageBlockTable>      
+                    </apex:outputPanel>  
+                    <apex:outputPanel >                                                            
+                    <apex:commandButton action="{!adjustmentRecalc}" value="Recalculate" reRender="form, adjustmentDetails, newadjustments" style="float:right" status="recalcnew" rendered="{!areNewAdjustments}"/>  
+                    <apex:commandButton action="{!addNewAdjustment}" value="Add New" reRender="form, newAdjustmentDetails, newadjustments" style="float:right" status="recalcnew"/>
+                        <apex:actionStatus id="recalcnew" >
+                            <apex:facet name="start">
+                                <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;float:right" />
+                            </apex:facet>
+                        </apex:actionStatus> 
+                    </apex:outputPanel>                                                                                       
+                </apex:pageBlockSection>
+                
+            </apex:outputPanel>            
+            </apex:actionRegion>
+                                 
+<!-- END ADJUSTMENTS -->   
+                      
+            <apex:outputPanel id="paymentMethodDetails">
+                <apex:outputPanel rendered="{!OR(transactionObject.s360a__Status2__c == 'Payment Received', transactionObject.s360a__Status2__c == 'Refund Paid', transactionObject.s360a__Status2__c == 'Payment Failed', transactionObject.s360a__Status2__c == 'Awaiting Payment')}">
+                    <apex:pageBlockSection title="BPAY Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'BPAY'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Cheque'}" >
+                        <apex:pageBlockSection title="Cheque Details"  columns="2" rendered="{!OR(supporter360Settings.s360a__TransactionFieldConfiguration__c == '', supporter360Settings.s360a__TransactionFieldConfiguration__c == 'Default', supporter360Settings.s360a__TransactionFieldConfiguration__c == 'Australia')}">
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Cheque Date" />
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                    <apex:inputField taborderhint="1" value="{!transactionObject.s360a__ChequeDate__c}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField taborderhint="6" value="{!transactionObject.s360a__Bank__c}" />
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Drawer's Name" />
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                    <apex:inputField taborderhint="2" value="{!transactionObject.s360a__DrawersName__c}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField taborderhint="7" value="{!transactionObject.s360a__Branch__c}" />
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Cheque Number" />
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                    <apex:inputField taborderhint="3" value="{!transactionObject.s360a__ChequeNumber__c}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField taborderhint="8" value="{!transactionObject.s360a__ABN__c}" />
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="BSB" />
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                    <apex:inputField taborderhint="4" value="{!transactionObject.s360a__BSB__c}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:inputField taborderhint="9" value="{!transactionObject.s360a__ACN__c}" />
+                            <apex:pageBlockSectionItem >
+                                <apex:outputLabel value="Account Number" />
+                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                    <apex:inputField taborderhint="5" value="{!transactionObject.s360a__AccountNumber__c}" />
+                                </apex:outputPanel>
+                            </apex:pageBlockSectionItem>
+                            <apex:pageBlockSectionItem />
+                        </apex:pageBlockSection>
+                        <apex:pageBlockSection title="Cheque Details" columns="2" rendered="{!supporter360Settings.s360a__TransactionFieldConfiguration__c == 'United Kingdom'}">
+                            <apex:inputField value="{!transactionObject.s360a__ChequeDate__c}" />
+                            <apex:inputField value="{!transactionObject.s360a__ABN__c}" />
+                            <apex:inputField value="{!transactionObject.s360a__DrawersName__c}" />
+                            <apex:inputField value="{!transactionObject.s360a__ACN__c}" />
+                            <apex:inputField value="{!transactionObject.s360a__ChequeNumber__c}" />
+                            <apex:pageBlockSectionItem />
+                            <apex:inputField value="{!transactionObject.s360a__Bank__c}" />
+                            <apex:pageBlockSectionItem />
+                            <apex:inputField value="{!transactionObject.s360a__Branch__c}" />
+                            <apex:pageBlockSectionItem />
+                        </apex:pageBlockSection>
+                    </apex:outputPanel>
+                    <apex:pageBlockSection title="Credit Card Details" columns="2" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Credit Card'}">
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Card Type" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__CardType__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Card Number (Last Four Digits)" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__CardNumberLastFourDigits__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Name On Card" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__NameOnCard__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Expiry Month" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__ExpiryMonth__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem rendered="{!creditCardExpiryYearError == false}">
+                            <apex:outputLabel value="Expiry Year" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}">
+                                    <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!creditCardExpiryYearError == true}">
+                            <apex:outputLabel value="Expiry Year" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" styleClass="error">
+                                    <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                </apex:selectList>
+                                <div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Direct Debit Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Debit'}">
+                      <apex:repeat value="{!DirectDebitFields}" var="f">
+                       <apex:pageBlockSectionItem >
+                          <apex:outputLabel value="{!f.Label}" /> 
+                          <apex:inputField value="{!transactionObject [f.fieldPath]}"  required="{!OR(f.required, f.dbrequired)}"/>
+                        </apex:pageBlockSectionItem>   
+                      </apex:repeat>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Direct Deposit Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Deposit'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Bank Statement Date" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__BankStatementDate__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Bank Transfer Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Bank Transfer'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Bank Statement Date" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__BankStatementDate__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Charities Aid Foundation (CAF) Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Charities Aid Foundation (CAF)'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Cheque Number" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__ChequeNumber__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Online Fundraising Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Online Fundraising'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Online Fundraising" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__OnlineFundraising__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Electronic Funds Transfer (EFT) Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Electronic Funds Transfer (EFT)'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Money Order Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Money Order'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Money Order Number" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__MoneyOrderNumber__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Web Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Web'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Transaction Reference #" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Credit Card Details" collapsible="false" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="Process" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:selectList value="{!transactionObject.s360a__PaymentGatewayProcessType__c}" size="1" style="width: 300px;" onchange="updateValue('paymentGatewayProcessType', this.value)">
+                                    <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+                                    <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" rendered="{!hasActiveCreditCards}" />
+                                </apex:selectList>
+                                <apex:actionStatus id="paymentGatewayProcessTypeActionStatus">
+                                    <apex:facet name="start">
+                                        <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+                                    </apex:facet>
+                                </apex:actionStatus>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem />
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}">
+                            <apex:outputLabel value="Card Type" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__CardType__c}" style="width: 300px;" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}">
+                            <apex:outputLabel value="Name On Card" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__NameOnCard__c}" style="width: 300px;" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}">
+                            <apex:outputLabel value="Credit Card Number" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__CreditCardNumber__c}" style="width: 300px;" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}">
+                            <apex:outputLabel value="Expiry Month" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:inputField value="{!transactionObject.s360a__ExpiryMonth__c}" style="width: 300px;" />
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card' && paymentGatewayExpiryYearError == false}">
+                            <apex:outputLabel value="Expiry Year" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" style="width: 300px;">
+                                    <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                </apex:selectList>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card' && paymentGatewayExpiryYearError == true}">
+                            <apex:outputLabel value="Expiry Year" />
+                            <apex:outputPanel styleClass="requiredInput" layout="block">
+                                <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" styleClass="error" style="width: 300px;">
+                                    <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                </apex:selectList>
+                                <div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                        <apex:inputField value="{!transactionObject.s360a__CVV__c}" rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}" style="width: 300px;" />
+                        <apex:inputField value="{!transactionObject.s360a__TokeniseCard__c}" rendered="{!AND(transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card', paymentGatewaySupportsTokenisation)}" />
+                        <apex:pageBlockSectionItem rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'Existing Credit Card'}">
+                            <apex:outputLabel value="Credit Card" />
+                            <apex:outputPanel >
+                                <apex:inputField value="{!transactionObject.s360a__CreditCard__c}" id="selectedCreditCard" rendered="FALSE"/> <!-- //CRUD/FLS -->
+                                <apex:pageBlockTable id="table" value="{!displayActiveCreditCardList}" var="creditCard" rowClasses="odd, even" styleClass="tableClass" style="width: auto;" >
+                                    <apex:column width="20" headerValue="" rendered="{!transactionObject.s360a__CreditCard__c == creditCard.cardId}">
+                                        <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" checked="checked" />
+                                    </apex:column>
+                                    <apex:column width="20" headerValue="" rendered="{!transactionObject.s360a__CreditCard__c != creditCard.cardId}">
+                                        <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" />
+                                    </apex:column>
+                                    <apex:column width="180" headerValue="Card Type" >
+                                        <apex:outputText value="{!creditCard.CardType}" />
+                                    </apex:column>
+                                    <apex:column width="250" headerValue="Name On Card" >
+                                        <apex:outputText value="{!creditCard.CardHolderName}" />
+                                    </apex:column> 
+                                    <apex:column width="200" headerValue="Credit Card Number" >
+                                        <apex:outputText value="{!creditCard.CreditCardNumber}" />
+                                    </apex:column> 
+                                    <apex:column width="100" headerValue="Expiry Date" >
+                                        <apex:outputText value="{!creditCard.ExpiryDate}" />
+                                    </apex:column> 
+                                </apex:pageBlockTable>
+                            </apex:outputPanel>
+                        </apex:pageBlockSectionItem>
+                    </apex:pageBlockSection>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!renderMode == 'Detail'}" title="Transaction Detail" mode="maindetail">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!editAction}" value="Edit" />
+                <apex:commandButton action="{!deleteAction}" value="Delete" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Transaction Details" columns="1" id="transactionDetailsSection">
+                <apex:outputField value="{!transactionObject.s360a__Opportunity__c}" />
+                <apex:outputField value="{!transactionObject.s360a__TransactionType__c}" />
+                <apex:outputField value="{!transactionObject.s360a__PaymentMethod__c}" />
+                <apex:outputField value="{!transactionObject.s360a__PaymentType__c}" />
+                <apex:outputField value="{!transactionObject.s360a__Amount__c}" />
+                <apex:outputField value="{!transactionObject.s360a__Status2__c}" />
+                <apex:outputField value="{!transactionObject.s360a__Notes__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Tax Details" columns="1" id="accountSection" rendered="{!OR(transactionObject.s360a__Status2__c == 'Payment Received', transactionObject.s360a__Status2__c == 'Refund Paid')}">
+                <apex:outputField value="{!transactionObject.s360a__AmountExTax__c}" />
+                <apex:outputField value="{!transactionObject.s360a__AmountTax__c}" />
+                <apex:outputField value="{!transactionObject.s360a__AmountIncTax__c}" />
+            </apex:pageBlockSection>
+            <apex:outputPanel >
+                <apex:pageBlockSection title="BPAY Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'BPAY'}">
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Cheque Details" columns="2" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Cheque'}">
+                    <apex:outputField value="{!transactionObject.s360a__ChequeDate__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__ABN__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__DrawersName__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__ACN__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__ChequeNumber__c}" />
+                    <apex:pageBlockSectionItem />
+                    <apex:outputField value="{!transactionObject.s360a__Bank__c}" />
+                    <apex:pageBlockSectionItem />
+                    <apex:outputField value="{!transactionObject.s360a__Branch__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Credit Card Details" columns="2" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Credit Card'}">
+                    <apex:outputField value="{!transactionObject.s360a__CardType__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__CardNumberLastFourDigits__c}" />
+                    <apex:pageBlockSectionItem />
+                    <apex:outputField value="{!transactionObject.s360a__NameOnCard__c}" />
+                    <apex:pageBlockSectionItem />
+                    <apex:outputField value="{!transactionObject.s360a__ExpiryMonth__c}" />
+                    <apex:pageBlockSectionItem />
+                    <apex:outputField value="{!transactionObject.s360a__ExpiryYear__c}" />
+                </apex:pageBlockSection>
+                    <apex:pageBlockSection title="Direct Debit Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Debit'}">
+                      <apex:repeat value="{!DirectDebitFields}" var="f">
+                       <apex:pageBlockSectionItem >
+                          <apex:outputLabel value="{!f.Label}" /> 
+                          <apex:outputField value="{!transactionObject [f.fieldPath]}" />
+                        </apex:pageBlockSectionItem>   
+                      </apex:repeat>
+                    </apex:pageBlockSection>
+                <apex:pageBlockSection title="Direct Deposit Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Deposit'}">
+                    <apex:outputField value="{!transactionObject.s360a__BankStatementDate__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Bank Transfer Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Bank Transfer'}">
+                    <apex:outputField value="{!transactionObject.s360a__BankStatementDate__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Charities Aid Foundation (CAF) Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Charities Aid Foundation (CAF)'}">
+                    <apex:outputField value="{!transactionObject.s360a__ChequeNumber__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Online Fundraising Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Online Fundraising'}">
+                    <apex:outputField value="{!transactionObject.s360a__OnlineFundraising__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Electronic Funds Transfer (EFT) Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Electronic Funds Transfer (EFT)'}">
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Money Order Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Money Order'}">
+                    <apex:outputField value="{!transactionObject.s360a__MoneyOrderNumber__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Web Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Web'}">
+                    <apex:outputField value="{!transactionObject.s360a__TransactionReference__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Credit Card Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                    <apex:outputField value="{!transactionObject.s360a__CreditCard__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__CardType__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__CreditCardNumber__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__NameOnCard__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__ExpiryDate__c}" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Payment Gateway Details" columns="1" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                    <apex:outputField value="{!transactionObject.s360a__PaymentGatewayTransactionReference__c}" />
+                    <apex:outputField value="{!transactionObject.s360a__APICallLogEntry__c}" />
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+    <apex:relatedList list="TransactionItems__r" rendered="{!renderMode == 'Detail'}" />
+</apex:page>

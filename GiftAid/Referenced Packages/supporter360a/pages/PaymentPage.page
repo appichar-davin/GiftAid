@@ -1,0 +1,315 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: paymentPage.page                                  *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page > 
+<!-- id="page" controller="PaymentPage" showHeader="false" sidebar="false" contentType="text/html" tabStyle="Opportunity" standardStylesheets="true">
+    <apex:outputText escape="false" value="{!'<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">'}" />
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <title>{!paymentPage.PageTitle__c}</title>
+            <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+            <style type="text/css">
+                html, body { height: 100%; }
+                body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+                .bPageBlock .pbTitle { width: auto; }
+                
+                /* Remove Styles */
+                body, body .bPageBlock, body #bodyCell .bResource .secondaryPalette, body .secondaryPalette.bPageBlock, body .overlayDialog .secondaryPalette.bPageBlock, body .individualPalette .secondaryPalette.bPageBlock, body .bodyDiv .genericTable, body .genericPageBlockTable, body .bodyDiv .bSubBlock, body .bComponentBlock .bPageBlock, body .bMyDashboard .bPageBlock, body.rlHoverFrame .bPageBlock, body.subjectSelectionPopup div.choicesBox, body.lookupTab .secondaryPalette.bPageBlock, body.popupTab .secondaryPalette.bPageBlock, body.UserTagStatsPage .secondaryPalette.bPageBlock
+                { background-color: {!paymentPage.BackgroundColour__c}; border-bottom: 0px; border-left: 0px; border-radius: 0px; border-right: 0px; }
+                body .bEditBlock .pbBody .pbSubheader.first { border-top: 0px; margin-top: 0px; }
+                .detailPage .bPageBlock, .editPage .bPageBlock { border-top-width: 0px; }
+                .opportunityTab .secondaryPalette, .individualPalette .opportunityBlock .secondaryPalette { background-color: #FFFFFF; border-bottom-color: #FFFFFF; border-left-color: #FFFFFF; border-right-color: #FFFFFF; border-top-color: #FFFFFF; }
+                body .bPageBlock .pbBody .pbSubheader { border-top-width: 0px; }
+                
+                /* SectionHeaderFont */
+                body .x-btn button, body .btn, body .btnImportant, body .btnDisabled, body .btnCancel, body .menuButton .menuButtonButton, body .menuButton .menuButtonMenu a, body .menuButton .menuButtonMenu input.theOption, h1, h2, h3, h4, h5, h6 { font-family: "{!paymentPage.SectionHeaderFont__c}", "Arial", "Helvetica", sans-serif; }
+                .requiredLegend .requiredText { font-family: "{!paymentPage.SectionHeaderFont__c}", "Arial", "Helvetica", sans-serif; }
+                
+                /* SectionHeaderFontSize */
+                body .bPageBlock .pbBody .pbSubheader h3, body .bWizardBlock .bPageBlock .pbBody .pbSubheader label { font-size: {!paymentPage.SectionHeaderFontSize__c}; }
+                
+                /* RequiredInformationFontSize */
+                .pbSubheader { font-size: {!paymentPage.RequiredInformationFontSize__c}; }
+                
+                /* SectionHeaderFontColour */
+                body .bEditBlock .pbBody .pbSubheader, body .bWizardBlock .pbBody .pbSubheader { color: {!paymentPage.SectionHeaderFontColour__c}; background-image: none; }
+                .requiredLegend { color: {!paymentPage.SectionHeaderFontColour__c}; }
+                
+                /* SectionheaderBackgroundColour */
+                .pbSubheader .brandTertiaryBgr .opportunityTab .tertiaryPalette, .individualPalette .opportunityBlock .tertiaryPalette, .layoutEdit .individualPalette .opportunityBlock .tertiaryPalette { background-color: {!paymentPage.SectionHeaderBackgroundColour__c};  }
+                
+                /* RequiredColour */
+                .requiredExample { border-left: 3px solid {!paymentPage.RequiredColour__c}; }
+                .bPageBlock .requiredInput .requiredBlock { background-color: {!paymentPage.RequiredColour__c}; }
+                .bPageBlock .detailList .error, .bPageTitle .tagDropDown #tag_edit_error, .bPageTitle .tagDropDown .tagDropDownContent .error, .tagRenameMenu .error, .inlineEditDiv .error, .inlineEditRequiredDiv .error { border: 2px solid {!paymentPage.RequiredColour__c}; }
+                .errorStyle, .errorMsg, .importantWarning, .pbBody .errorStyle a, .pbBody .errorMsg a { color: {!paymentPage.RequiredColour__c}; }
+                
+                /* FieldName */
+                body, td { font-family: "{!paymentPage.FieldNameFont__c}", color:#ffffff; "Arial", "Helvetica", sans-serif; }                
+                body .bPageBlock .pbBody .labelCol  {color:{!paymentPage.LabelFontColour__c} }                                              
+                .bPageBlock .labelCol { font-size: {!paymentPage.FieldNameFontSize__c}; }
+
+               
+               
+                
+            </style>
+        </head>
+        <body>
+            <apex:form style="height: 100%">
+                <apex:outputPanel rendered="{!usingSSL == true}">
+                    <apex:outputPanel rendered="{!formStage == '1'}">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+                                    <apex:pageBlock mode="Edit">
+                                        <apex:pageBlockSection title="Contact Information" showHeader="true" columns="1">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputText value="Title" />
+                                                <apex:inputField required="true" value="{!contact.Salutation}" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:inputField required="true" value="{!contact.FirstName}" style="width: 300px;" />
+                                            <apex:inputField required="true" value="{!contact.LastName}" style="width: 300px;" />
+                                            <apex:pageBlockSectionItem />
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Address" />
+                                                <apex:inputField required="true" value="{!contact.AddressPrimaryStreet__c}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Town / City" />
+                                                <apex:inputField required="true" value="{!contact.AddressPrimaryCity__c}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="State/Province" />
+                                                <apex:inputField required="false" value="{!contact.AddressPrimaryState__c}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Country" />
+                                                <apex:inputField required="true" value="{!contact.AddressPrimaryCountry__c}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Zip/Postal Code" />
+                                                <apex:inputField required="true" value="{!contact.AddressPrimaryPostalCode__c}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem />
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Preferred Phone Number" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                    <apex:selectList size="1" value="{!contact.PhoneNumberPreferredType__c}" style="width: 300px;" >
+                                                        <apex:selectOptions value="{!preferredPhoneSelectOptions}" />
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Phone Number" />
+                                                <apex:inputField required="true" value="{!contact.Phone}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Preferred Email" />
+                                                <apex:outputPanel styleClass="requiredInput" layout="block">
+                                                    <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                                                    <apex:selectList size="1" value="{!contact.EmailAddressPreferredType__c}" style="width: 300px;" >
+                                                        <apex:selectOptions value="{!preferredEmailSelectOptions}" />
+                                                    </apex:selectList>
+                                                </apex:outputPanel>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Email Address" />
+                                                <apex:inputField required="true" value="{!contact.Email}" style="width: 300px;" />
+                                            </apex:pageBlockSectionItem>
+                                            <apex:pageBlockSectionitem >
+                                                <apex:outputLabel value="{!contactUsMessage}" />
+                                                <apex:inputCheckBox value="{!contactable}" />
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>
+                                        
+                                        <apex:outputPanel id="formdesigner" rendered="{!paymentPage.CustomFormEnabled__c}">
+                                        <apex:repeat value="{!pageSections}" var="secs">                                                                      
+                                            <apex:pageBlockSection title="{!secs.sectionTitle}" showHeader="true" columns="1" collapsible="false">
+                                                <apex:repeat value="{!secs.pageItems}" var="pi2" >
+                                                    <apex:pageBlockSectionItem rendered="{!!pi2.isHidden}">
+                                                        <apex:outputLabel value="{!pi2.fieldLabel}" rendered="{!pi2.destField != null}"/>
+                                                        <apex:inputField style="width: 300px;" value="{!pi2.inputObject[pi2.destField]}" rendered="{!pi2.destField != 'xx'}" required="{!pi2.isRequired}" />
+                                                    </apex:pageBlockSectionItem>        
+                                                    <apex:pageBlockSectionItem rendered="{!pi2.isHidden}">
+                                                        <apex:inputHidden value="{!pi2.inputObject[pi2.destField]}" rendered="{!pi2.destField != null}" required="{!pi2.isRequired}"/>
+                                                    </apex:pageBlockSectionItem>   
+                                                </apex:repeat>                
+                                            </apex:pageBlockSection>
+                                        </apex:repeat>                 
+                                        </apex:outputPanel>                                       
+
+                                        <apex:pageBlockSection title="Payment Information" showHeader="true" columns="1">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="Payment Type"/>
+                                                <apex:selectList size="1" style="width: 300px;" value="{!paymentType}">
+                                                    <apex:selectOption itemLabel="One-Off" itemValue="One-Off" />
+                                                    <apex:selectOption itemLabel="Monthly" itemValue="Monthly" />
+                                                </apex:selectList>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:inputField required="true" value="{!transactionObject.Amount__c}" style="width: 300px;" />
+                                            <apex:pageblockSectionItem >                       
+                                              <apex:outputLabel value="Currencies" Rendered="{!isMulticurrency}" />                        
+                                                <apex:selectList value="{!selectedCurrency}"  Rendered="{!isMulticurrency}" Size="1" >
+                                                    <apex:selectOptions value="{!currencies}"/>
+                                                </apex:selectList>  
+                                            </apex:pageblockSectionItem>                                                                                         
+                                        </apex:pageBlockSection>
+                                        
+                                        <apex:pageBlockSection title="Gift Aid" showHeader="true" columns="1" rendered="{!GiftAidEnabled}">
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputPanel >
+                                                    <table cellpadding="0" cellspacing="0" border="0">
+                                                        <tr>
+                                                            <td>
+                                                                <apex:image url="{!URLFOR($Resource.s360Images,'/GiftAidLogo.gif')}" />
+                                                            </td>                                                      
+                                                            <td>
+                                                                    <apex:outputLabel styleClass="labelCol" value="I confirm I have paid or will pay
+                                                                     an amount of Income Tax and/or Capital Gains Tax for each tax year 
+                                                                     (6 April to 5 April) that is at least equal to the amount of tax 
+                                                                     that all the charities or Community Amateur Sports Clubs (CASCs) 
+                                                                     that I donate to will reclaim on my gifts for that tax year. I understand that other 
+                                                                     taxes such as VAT and Council Tax do not qualify. I understand the 
+                                                                     charity will reclaim 28p of tax on every £1 that I gave up to 5 April 
+                                                                     2008 and will reclaim 25p of tax on every £1 that I give on or after 6 April 2008. 
+                                                                     I confirm that I will notify you if I wish to cancel this declaration, or if I 
+                                                                     no longer pay sufficient tax on my income and/or capital gains, or if I change my home address."/>
+                                                                    <apex:inputCheckbox value="{!GiftAidDeclared}"/>                                                               
+                                                           </td>
+                                                       </tr>
+                                                   </table>     
+                                                 </apex:outputPanel>                                                   
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>                                        
+                                        <apex:pageBlockSection title="Credit Card Details" columns="1" >
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputPanel layout="none">Card Type</apex:outputPanel>
+                                                <apex:outputPanel layout="none">
+                                                    <table cellpadding="0" cellspacing="0">
+                                                        <tr>
+                                                            <td><apex:inputField value="{!transactionObject.CardType__c}" required="true" style="width: 300px;"/></td>
+                                                            <td style="padding-left: 20px;"><apex:image url="{!URLFOR($Resource.s360Images,'/sslLogo.jpg')}"/></td>
+                                                        </tr>
+                                                    </table>
+                                                </apex:outputPanel>
+                                            </apex:pageBlockSectionItem>
+                                            <apex:inputField value="{!transactionObject.NameOnCard__c}" required="true" />
+                                            <apex:inputField value="{!transactionObject.CreditCardNumber__c}" required="true" />
+                                            <apex:inputField value="{!transactionObject.ExpiryMonth__c}" required="true" />
+                                            <apex:inputField value="{!transactionObject.ExpiryYear__c}" required="true" />
+                                            <apex:pageBlockSectionItem >
+                                                <apex:outputLabel value="CVN / CCV" />
+                                                <apex:inputField value="{!transactionObject.CVV__c}" />
+                                            </apex:pageBlockSectionItem>
+                                        </apex:pageBlockSection>
+                                        <apex:pageBlockButtons location="bottom">
+                                            <apex:commandButton value="Process" action="{!process1}" />
+                                        </apex:pageBlockButtons>
+                                    </apex:pageBlock>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!formStage == '2'}" layout="none">
+                        <apex:actionFunction name="process2" action="{!process2}" />
+                        <table width="100%" style="height: 100%;">
+                            <tr>
+                                <td valign="center" style="padding: 20px;">
+                                    <apex:outputPanel layout="block" style="width: auto; border: 1px solid #000000; padding: 10px; background-color: #FFFFCC; margin-bottom: 10px;">
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td width="32"><apex:image value="/img/loading32.gif" /></td>
+                                                <td width="15"></td>
+                                                <td>
+                                                    {!paymentPage.ProcessingMessage__c}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                    <apex:outputPanel rendered="{!formStage == '3'}">
+                        <apex:outputPanel rendered="{!paymentType == 'One-Off'}">
+                            <div style="padding: 20px;">
+                                <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+                                <apex:pageBlock mode="maindetail">
+                                    <apex:pageBlockSection title="Transaction Details" columns="1" >
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Date / Time" />
+                                            <apex:outputText value="{!transactionDateTimeString}" />
+                                        </apex:pageBlockSectionItem>
+                                        <apex:outputField value="{!transactionObject.CreditCardNumber__c}"/>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Expiry Date"/>
+                                            <apex:outputText value="{!transactionObject.ExpiryMonth__c} / {!transactionObject.ExpiryYear__c}"/>
+                                        </apex:pageBlockSectionItem>
+                                        <apex:outputField value="{!transactionObject.Amount__c}"/>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Reference Number"/>
+                                            <apex:outputText value="{!transactionReference}"/>
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                    <apex:pageBlockButtons location="bottom">
+                                        <apex:commandButton value="Process Another Payment" action="{!processAnother}" />
+                                    </apex:pageBlockButtons>
+                                </apex:pageBlock>
+                            </div>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!paymentType == 'Monthly'}">
+                            <div style="padding: 20px;">
+                                <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+                                <apex:pageBlock mode="maindetail">
+                                    <apex:pageBlockSection title="Payment Details" columns="1" >
+                                        <apex:outputField value="{!transactionObject.CreditCardNumber__c}" />
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Expiry Date" />
+                                            <apex:outputText value="{!transactionObject.ExpiryMonth__c} / {!transactionObject.ExpiryYear__c}" />
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Payment Type" />
+                                            <apex:outputText value="{!paymentType}" />
+                                        </apex:pageBlockSectionItem>
+                                        <apex:outputField value="{!transactionObject.Amount__c}"/>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="First Payment To Be Processed" />
+                                            <apex:outputText value="{!firstPaymentToBeProcessed}" />
+                                        </apex:pageBlockSectionItem>
+                                        <apex:pageBlockSectionItem >
+                                            <apex:outputLabel value="Reference Number" />
+                                            <apex:outputText value="{!transactionReference}" />
+                                        </apex:pageBlockSectionItem>
+                                    </apex:pageBlockSection>
+                                    <apex:pageBlockButtons location="bottom">
+                                        <apex:commandButton value="Process Another Payment" action="{!processAnother}" />
+                                    </apex:pageBlockButtons>
+                                </apex:pageBlock>
+                            </div>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!usingSSL == false}">
+                    <div style="padding: 20px;">
+                        <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+                    </div>
+                </apex:outputPanel>
+            </apex:form>
+            <apex:outputPanel rendered="{!formStage == '2'}">
+                <script type="text/javascript">
+                    process2();
+                </script>
+            </apex:outputPanel>
+        </body>
+    </html> -->
+</apex:page>

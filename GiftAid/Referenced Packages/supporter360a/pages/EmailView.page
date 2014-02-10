@@ -1,0 +1,133 @@
+<apex:page Controller="s360a.EmailInlineClass" tabstyle="Contact" >
+<apex:form >
+
+<apex:sectionheader title="Email Address" subtitle="Email Address" >
+ </apex:sectionheader>
+ <apex:pageMessages />
+ <apex:pageBlock title="Email Address Detail" mode="maindetail" rendered="{!isview}">
+  <apex:pageBlockButtons >
+                <apex:commandButton value="Edit" action="{!editbttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Delete" onclick="if(confirm('Are you sure you want to delete?')) return deletecall(); else return false;" />&nbsp;&nbsp;
+                <apex:commandButton value="Clone" action="{!clonebttn}"/>
+                <apex:actionfunction name="deletecall" action="{!Deletefunction}" >
+                <apex:param name="deleteno" value="{!sno}" /></apex:actionFunction>
+            </apex:pageBlockButtons>                        
+            
+            <apex:pageblocksection columns="1">    
+                    
+            <apex:pageblocksectionitem >                        
+            <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink> 
+            </apex:pageblocksectionitem>  
+                                 
+            <apex:pageblocksectionitem >
+             <apex:outputtext value="Email Address Type" ></apex:outputtext>
+             <apex:outputLabel value="" >{!viewrec.oType}</apex:outputLabel>
+             </apex:pageblocksectionitem>
+                      
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Email Address"></apex:outputtext>
+            <apex:outputLabel value="">{!viewrec.oValue}</apex:outputLabel>
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Active"></apex:outputtext>
+            <apex:inputcheckbox value="{!viewrec.isActive}" disabled="true" />
+            </apex:pageblocksectionitem>                         
+           
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Show On Account Record"></apex:outputtext>
+           <apex:inputcheckbox value="{!viewrec.showOnAccountRecord}" disabled="true" />
+           </apex:pageblocksectionitem>
+           
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Preferred Email Address"></apex:outputLabel>
+            <apex:inputcheckbox value="{!viewrec.isPreferred}" disabled="true" />
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem ><apex:outputLabel value="Description"></apex:outputLabel>
+              <apex:outputLabel value="">{!viewrec.description}</apex:outputLabel>
+              </apex:pageblocksectionitem>
+                           
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    		<apex:param value="{!viewrec.fromdate}" /> 
+			</apex:outputText>            
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    		<apex:param value="{!viewrec.todate}" /> 
+			</apex:outputText>
+            
+            </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+           
+ </apex:pageBlock>
+ <apex:pageBlock title="Phone Number Edit" mode="edit" rendered="{!isedit}">
+  <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!savebuttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Save & New" action="{!saveNewbuttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Cancel" action="{!cancelbttn}"/>
+            </apex:pageBlockButtons>                        
+            
+            <apex:pageblocksection columns="1" title="Information">    
+                    
+            <apex:pageblocksectionitem >                        
+             <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink> 
+            </apex:pageblocksectionitem>  
+                                 
+            <apex:pageblocksectionitem >   
+             <apex:outputtext value="Email Address Type" ></apex:outputtext>   
+             <apex:outputPanel styleClass="requiredInput" layout="block" >
+            <apex:outputPanel styleClass="requiredBlock" layout="block"/>       
+             <apex:selectList value="{!no}" size="1" required="true" id="amt" label="Phone Number Type">
+			<apex:selectOptions value="{!number}"/>
+			</apex:selectList> 
+			 <apex:message for="amt" style="color: #cc0000"/></apex:outputPanel>             
+             </apex:pageblocksectionitem>
+                      
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Email Address"></apex:outputtext>
+            <apex:outputPanel styleClass="requiredInput" layout="block" >
+            <apex:outputPanel styleClass="requiredBlock" layout="block"/>  
+            <apex:inputtext value="{!viewrec.oValue}" required="true" id="amt" label="Phone Number"/>
+             <apex:message for="amt" style="color: #cc0000"/></apex:outputPanel> 
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Active"></apex:outputtext>
+            <apex:inputcheckbox value="{!viewrec.isActive}" />
+            </apex:pageblocksectionitem>                         
+           
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Show On Account Record"></apex:outputtext>
+           <apex:inputcheckbox value="{!viewrec.showOnAccountRecord}" />
+           </apex:pageblocksectionitem>
+           
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Preferred Email Address"></apex:outputLabel>
+            <apex:inputcheckbox value="{!viewrec.isPreferred}" />
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem ><apex:outputLabel value="Description"></apex:outputLabel>
+              <apex:inputtext value="{!viewrec.description}" />
+              </apex:pageblocksectionitem>
+                           
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateFrom__c}" /> 
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateTo__c}" /> 
+            </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+           
+ </apex:pageBlock>
+  </apex:form>
+  </apex:page>

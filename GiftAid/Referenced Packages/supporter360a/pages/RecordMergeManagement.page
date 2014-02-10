@@ -1,0 +1,136 @@
+<!--
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: RecordMergeManagement.page                         *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+ 
+<apex:page controller="s360a.RecordMergeManagement" tabStyle="Contact">
+	<script type="text/javascript">
+		function updateValue(selectedIndexId, index, valueId, value)
+		{	document.getElementById(selectedIndexId).value = index;
+			document.getElementById(valueId).value = value;
+		}
+		
+		function masterRecordChanged(selectElement)
+		{	result = confirm('This action will modify the radio buttons values below. Are you sure?');
+			if (result == false)
+			{	selectElement.value = masterRecord;
+			}
+			else
+			{	masterRecord = selectElement.value;
+				masterRecordActionFunction();
+			}
+		}
+	</script>
+	<style type="text/css">
+		 body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+		.evenRow { background-color: #FFFFFF; }
+		.oddRow { background-color: #EEEEEE; }
+	</style>
+	<apex:outputPanel layout="block">
+		{!debugString}
+		<apex:form id="form">
+			<apex:actionFunction name="masterRecordActionFunction" rerender="fieldSections" action="{!masterRecordChanged}" status="masterRecordActionStatus" />
+			<apex:actionFunction name="showAPINamesActionFunction" rerender="fieldSections" status="showAPINamesActionStatus" />
+			<apex:sectionHeader title="supporter360" subtitle="Merge Records" />
+			<c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+			<apex:pageBlock title="Merge Records"  mode="edit">
+				<apex:pageBlockSection columns="2" title="Merge Controls">
+					<apex:pageBlockSectionItem >
+						<apex:outputPanel layout="none">Master Record</apex:outputPanel>
+						<apex:outputPanel layout="none">
+							<apex:selectList size="1" value="{!masterRecord}" onchange="masterRecordChanged(this);" style="width: 300px;">
+								<apex:selectOptions value="{!masterRecordSelectOptions}" />
+							</apex:selectList>
+							<apex:actionStatus id="masterRecordActionStatus">
+								<apex:facet name="start">
+									<img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+								</apex:facet>
+							</apex:actionStatus>
+						</apex:outputPanel>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputPanel layout="none">Show API Names</apex:outputPanel>
+						<apex:outputPanel layout="none">
+							<apex:inputCheckBox value="{!showAPINames}" onchange="showAPINamesActionFunction();" />
+							<apex:actionStatus id="showAPINamesActionStatus">
+								<apex:facet name="start">
+									<img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+								</apex:facet>
+							</apex:actionStatus>
+						</apex:outputPanel>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem >
+						<apex:outputPanel layout="none">Move Related List Records To Merged Record</apex:outputPanel>
+						<apex:outputPanel layout="none">
+							<apex:inputCheckBox value="{!mergeRelatedLists}" />
+						</apex:outputPanel>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem />
+					<apex:pageBlockSectionItem >
+						<apex:outputPanel layout="none">Delete Source Records After Successful Merge</apex:outputPanel>
+						<apex:outputPanel layout="none">
+							<apex:inputCheckBox value="{!deleteSourceRecords}" />
+						</apex:outputPanel>
+					</apex:pageBlockSectionItem>
+					<apex:pageBlockSectionItem />
+				</apex:pageBlockSection>
+				<apex:outputPanel id="fieldSections">
+					<apex:repeat var="section" value="{!sections}">
+						<apex:outputPanel layout="none" rendered="{!section.renderSection}">
+							<apex:pageBlockSection columns="1" title="{!section.name}">
+								<apex:pageBlockTable id="table" value="{!section.fieldRows}" var="fieldRow" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;" >
+									<apex:column width="250" headerValue="Field Label">
+										<apex:inputHidden id="selectedIndex" value="{!fieldRow.selectedIndex}"/>
+										{!fieldRow.label}
+									</apex:column>
+									<apex:column width="350" headerValue="API Name" rendered="{!showAPINames}">
+										<span style="font-family: 'Courier New';">{!fieldRow.name}</span>
+									</apex:column>
+									<apex:column width="300" headerValue="Merged Record">
+										<apex:inputText id="selectedValue" value="{!fieldRow.selectedValue}" disabled="true" style="width: 250px;" />
+									</apex:column>
+									<apex:column width="300" headerValue="Source Record 1">
+										<apex:repeat var="fieldValue" value="{!fieldRow.fieldValues}">
+											<apex:outputPanel rendered="{!fieldValue.recordIndex == 0}">
+												<apex:outputPanel rendered="{!(fieldRow.selectedIndex == fieldValue.recordIndex)}">
+													<input type="radio" name="{!fieldRow.name}" checked="true" onchange="updateValue('{!$Component.selectedIndex}', '{!fieldValue.recordIndex}', '{!$Component.selectedValue}', '{!fieldValue.value}');" />
+												</apex:outputPanel>
+												<apex:outputPanel rendered="{!(fieldRow.selectedIndex != fieldValue.recordIndex)}">
+													<input type="radio" name="{!fieldRow.name}" onchange="updateValue('{!$Component.selectedIndex}', '{!fieldValue.recordIndex}', '{!$Component.selectedValue}', '{!fieldValue.value}');" />
+												</apex:outputPanel>
+												{!fieldValue.value}
+											</apex:outputPanel>
+										</apex:repeat>
+									</apex:column>
+									<apex:column width="300" headerValue="Source Record 2">
+										<apex:repeat var="fieldValue" value="{!fieldRow.fieldValues}">
+											<apex:outputPanel rendered="{!fieldValue.recordIndex == 1}">
+												<apex:outputPanel rendered="{!(fieldRow.selectedIndex == fieldValue.recordIndex)}">
+													<input type="radio" name="{!fieldRow.name}" checked="true" onchange="updateValue('{!$Component.selectedIndex}', '{!fieldValue.recordIndex}', '{!$Component.selectedValue}', '{!fieldValue.value}');" />
+												</apex:outputPanel>
+												<apex:outputPanel rendered="{!(fieldRow.selectedIndex != fieldValue.recordIndex)}">
+													<input type="radio" name="{!fieldRow.name}" onchange="updateValue('{!$Component.selectedIndex}', '{!fieldValue.recordIndex}', '{!$Component.selectedValue}', '{!fieldValue.value}');" />
+												</apex:outputPanel>
+												{!fieldValue.value}
+											</apex:outputPanel>
+										</apex:repeat>
+									</apex:column>
+								</apex:pageBlockTable>
+							</apex:pageBlockSection>
+						</apex:outputPanel>
+					</apex:repeat>
+				</apex:outputPanel>
+				<apex:pageBlockButtons location="bottom">
+					<apex:commandButton value="Merge Records" action="{!mergeRecords}" onclick="return confirm('Are you sure you want to merge these records?');" />
+					<apex:commandButton value="Cancel" immediate="true" />
+				</apex:pageBlockButtons>
+			</apex:pageBlock>
+		</apex:form>
+	</apex:outputPanel>
+</apex:page>

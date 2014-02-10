@@ -1,0 +1,224 @@
+<apex:page id="page"  controller="s360a.DirectDebitProcessing" >
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>     
+    <script>
+    function selectAll(aa)
+    {
+     //   alert('Inside function ---->' + aa.checked);
+        getvaluefn(aa.checked); 
+        return true;
+    }
+ /*
+    function searchAll()
+    {
+        alert('Inside function ---->');
+      //  return false;
+        getvaluefn1(); 
+        return false;
+    }
+    */   
+
+        function getObjectById(elementID)
+        {   if (document.getElementById)
+            {   return (document.getElementById(elementID));
+            }
+            else if (document.all)
+            {   return (document.all[elementID]);
+            }
+            else if (document.layers)
+            {   return(document.layers[elementID]);
+            }
+            else
+            {   return(null);
+            }
+        }
+        
+        function showElementById(id)
+        {   var element = getObjectById(id);
+            if (element != null)
+            {    element.style.display = "block";
+            }
+        }
+        
+        function hideElementById(id)
+        {   var element = getObjectById(id);
+            if (element != null)
+            {   element.style.display = "none";
+            }
+        }
+        
+        function toggle(checkBox)
+        {   if(checkBox.checked == true)
+            {    showElementById("page:Form:Search:batch");
+            }
+            else
+            {    hideElementById("page:Form:Search:batch");
+            }
+        }
+    
+        function toggle3(checkBox)
+        {   if(checkBox.checked == true)
+            {    showElementById("page:Form:Search:oppy");
+            }
+            else
+            {    hideElementById("page:Form:Search:oppy");
+            }
+        }
+
+
+    </script>
+    
+    <apex:form id="Form">
+        <apex:pageBlock id="Search" helpTitle="supporter360 General Help" helpUrl="http://www.supporter360.net/support">   
+            <apex:pageBlockSection title="Direct Debit Transaction Processing" Columns="1">
+                
+                 <apex:outputLabel ></apex:outputLabel>
+                 <apex:outputLabel >Select the transaction status that you want to work with. To get detailed help check out our support page : 
+                     <apex:outputLink style="float:right;" target="_blank" value="http://www.supporter360.net/how-to-direct-debit-aus"><apex:image value="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>      
+                 </apex:outputLabel>     
+                 <apex:pageBlockSection columns="2">
+                 <apex:pageBlockSectionItem helpText="Select transaction status to search for - Awaiting Payment for this month's transactions. 
+                 
+                 If you want to specify a date tick the 'Do you want to create a batch of direct debits?' option and enter a date. Click search and select all records if they're all good. Click Export and you're done. When you want to reconcile the batch follow the above but you would search for 'Processing' and click the 'Reconcile' button - you need to pick a value from the drop-down to reconcile them as, hopefully 'Payment Received'">
+                 <apex:outputLabel for="Picklist1">Select Transaction Type</apex:outputLabel>
+                 <apex:inputField id="Picklist1"  value="{!trans.s360a__Status2__c}"/>
+                 </apex:pageBlockSectionItem>                
+                 </apex:pageBlockSection>
+                   <label for="Test3">Do you want to <b>create a batch of direct debits?</b></label><input type="checkbox" name="Test3" id="toggle4" onClick="toggle3(this);"/> 
+                   <label for="Test"> or do you want to <b>reconcile a batch?</b></label><input type="checkbox" name="Test" id="toggle2" onClick="toggle(this);"/>                                                  
+                 
+           
+            </apex:pageBlockSection>     
+
+          <apex:outputPanel id="oppy" style="display: none;">
+                <apex:pageBlockSection columns="2">
+                 <apex:pageBlockSectionItem >
+                 <apex:outputLabel value="Opportunity Date"></apex:outputLabel>
+                 <apex:inputField value="{!opp1.s360a__BankStatementDate__c}"/>
+                 </apex:pageBlockSectionItem>
+
+                 </apex:pageBlockSection>
+           </apex:outputPanel>
+           
+
+          <apex:outputPanel id="batch" style="display: none;">
+                <apex:pageBlockSection columns="2">
+                 <apex:pageBlockSectionItem >
+                 <apex:outputLabel value="ABA Batch Date"></apex:outputLabel>
+                 <apex:inputField value="{!trans1.s360a__BankStatementDate__c}"/>
+                 </apex:pageBlockSectionItem>
+                  
+                 </apex:pageBlockSection>
+           </apex:outputPanel>      
+
+            <apex:pageBlockButtons location="bottom" >
+                <apex:commandButton styleClass="cssbutton" value="Search" action="{!searchTrans}" reRender="form2,form4,form3" status="Status1"/>
+                <apex:outputLabel value="Max Records:"/>
+                <apex:inputText value="{!recordLimit}" style="width:50px;margin-left:10px"/>                
+                <apex:commandButton styleClass="cssbutton" value="TransFix" action="{!transFix}" reRender="form2,form4,form3" status="Status1" rendered="{!showTFix}"/>
+                <apex:outputLabel rendered="{!showTFix}" value="TFix Limit (0 = 1000)"></apex:outputLabel>
+                <apex:inputText value="{!recordLimit}" rendered="{!showTFix}"/>
+                <apex:actionStatus startText=" (Searching...)" stopText="" id="Status1"/>
+            </apex:pageBlockButtons>
+    
+        </apex:pageBlock>
+    </apex:form>
+    
+    <apex:form id="form2">
+        <apex:pageBlock rendered="{!searchResult}" id="block1">
+        <apex:outputText style="font-weight: bold; color:RED;" value="You must select at least one record" rendered="{!noTrans}"/>
+   
+           <apex:actionStatus startText=" (Processing...)" stopText="" id="counterStatus"/>
+           
+           <apex:pageBlockTable value="{!transactionList}" var="t" id="table">
+                <apex:column >
+                 <apex:facet name="header">
+                 <apex:inputCheckbox value="{!selectAll}" onclick="return selectAll(this);"/></apex:facet>
+                    <apex:inputCheckbox value="{!t.selected}"/>
+                </apex:column>
+
+                <apex:column value="{!t.tran.Name}" />
+                <apex:column value="{!t.tran.s360a__AccountName__c}" />
+                <apex:column value="{!t.tran.s360a__BSB__c}" />
+                <apex:column value="{!t.tran.s360a__AccountNumber__c}" />
+                <apex:column value="{!t.tran.s360a__Amount__c}" />
+                <apex:column value="{!t.tran.s360a__OpportunityCloseDate__c}" />
+                <apex:column value="{!t.tran.s360a__Status2__c}" />
+                <apex:column value="{!t.tran.s360a__ABABatchDateTime__c}" />
+               
+            </apex:pageBlockTable>
+ 
+                <br/>    
+                <apex:outputLabel ><b>Number of found records:   </b></apex:outputLabel>
+                <apex:outputText > {!recordCount}</apex:outputText>
+                <br/><br/>            
+
+            <apex:pageBlock >
+            <br/> 
+            <apex:outputLabel rendered="{!trans.s360a__Status2__c = 'Awaiting Payment'}"><b>Email batch details on export? </b></apex:outputLabel>
+            <apex:inputCheckbox value="{!doSendEmail}" rendered="{!trans.s360a__Status2__c = 'Awaiting Payment'}"/>               
+             
+            <br/><br/><br/>
+                <table width="50%">
+                    <tr>
+                        <td width="100px" align="left"><apex:commandButton styleClass="cssbutton" value="Export Selected" action="{!init}" /></td> <!-- rendered="{!trans.s360a__Status2__c = 'Awaiting Payment'}" -->
+                        <td width="20px" align="left"><apex:outputText style="vertical-align:text-bottom" escape="false" value="<b>Or</b>" /></td>
+                        <td width="100px" align="left"><apex:commandButton styleClass="cssbutton" value="Reconcile Selected As:" action="{!rSelected}" /></td> <!-- rendered="{!trans.Status2__c = 'Processing'}" -->
+                        <td width="30px" align="left">&nbsp;&nbsp;&nbsp;&nbsp;<apex:inputField value="{!trans1.s360a__Status2__c}"/> <!-- rendered="{!trans.Status2__c = 'Processing'}" -->
+                        <div><apex:outputText style="font-weight: bold; color:RED;" value="You must select a value" rendered="{!noStatus}"/></div>
+                        </td>
+
+                    </tr>
+                </table>
+                
+             </apex:pageBlock> 
+      
+          </apex:pageBlock> 
+     
+        <apex:pageBlock rendered="{!searchResult1}" id="block2">
+        <apex:outputText style="font-weight: bold; color:RED;" value="No trasanctions to display" />
+        </apex:pageBlock>        
+    </apex:form>
+ 
+ 
+ <apex:form id="form3">
+ 
+ <apex:outputPanel rendered="{!message}">
+    <style type="text/css">
+         body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+    </style>
+    <apex:sectionHeader title="Direct Debit" subtitle="Export ABA File" />
+    <apex:outputPanel layout="block" style="width: auto; border: 1px solid #000000; padding: 10px; background-color: #FFFFCC; margin-bottom: 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="32"><apex:image value="/img/msg_icons/{!pageMessageIcon}32.png" /></td>
+                <td width="20"></td>
+                <td>
+                    <apex:outputPanel layout="block" style="margin-bottom: 5px;">
+                        <apex:outputText style="font-weight: bold;" value="{!pageMessageHeader}" />
+                    </apex:outputPanel>
+                    <apex:outputText escape="false" value="{!pageMessageBody}" />
+                </td>
+            </tr>
+        </table> 
+    </apex:outputPanel>
+    
+    <apex:outputPanel rendered="{!success}">
+        <script type="text/javascript">
+            setTimeout(function () { window.location = '{!abaExportURL}'; }, 50)
+        </script> 
+        </apex:outputPanel>
+   </apex:outputPanel>      
+ </apex:form>
+    
+    <apex:form >
+       <apex:actionRegion >
+        <apex:actionFunction name="getvaluefn" action="{!selectAll}" rerender="block1" status="counterStatus">
+        <apex:param name="one" value="" />
+        </apex:actionFunction>
+        </apex:actionRegion>
+
+    </apex:form>
+    <apex:form id="form4" >
+      <apex:outputText style="font-weight: bold; color:RED;" value="Records Updated Sucessfully" rendered="{!ChangeStatus}"/>
+    </apex:form>
+</apex:page>

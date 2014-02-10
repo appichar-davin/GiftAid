@@ -1,0 +1,1465 @@
+<apex:page docType="html-5.0" controller="s360a.IncomeProcessing" extensions="s360a.AutoComplete" sidebar="false" showHeader="true" id="thepage">
+<apex:pageMessages ></apex:pageMessages>
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" />
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.0/jquery-ui.min.js" />      
+<apex:stylesheet value="{!URLFOR($Resource.s360a__s360jQuery, 'cssautocomplete/ui-lightness/jquery-ui-1.8.16.custom.css')}"/>
+<script>  
+/*
+        *check if jquery is loaded if not load jquery again
+**/
+    if(typeof jQuery != 'undefined'){
+           $j =jQuery.noConflict();
+    }
+    $j(function(){
+            $j( ".autoComplete" ).autocomplete({
+                source: function(request, response) {
+                   queryDataAutoComplete(response ,request.term);
+                },
+                minLength: 3,
+                select: function(event, ui) {
+                                    //pass the selected value to hidden input field
+                                    $j('.hiddenFieldAutoComplete').val(ui.item.value);                              
+                                    $j(this).val(ui.item.label);
+                                   
+                                    return false;
+                                },
+                focus: function( event, ui ) {
+                        $j(this).val( ui.item.label );
+                        return false;  
+                }
+            });
+    });
+        
+         /*
+        *This method queries data according to the passed parameter
+        *and populates the combobox accordingly
+        ***/    
+    function queryDataAutoComplete(response,param){
+      Visualforce.remoting.Manager.invokeAction(
+                     '{!$RemoteAction.AutoComplete.getData}','{!sObjVal}','{!labelField}','{!labelField1}','{!labelField2}','{!valueField}',param,
+                     function(result, event){
+                         //if success
+                         if(event.status){ 
+                            var data = [];  
+                            $j.each(result,function(){
+                                 var obj = new Object();
+                                 for (var field in this) { 
+                                     //match the passed label and returned value to populate the label and value                             
+                                     if((field.toUpperCase()=='{!labelField }'.toUpperCase())){
+                                         obj.label = this[field] + ' (e:' + this['s360a__EmailAddressPreferredEmailAddress__c'] +')';                                                                               
+                                     }
+                                     else if((field.toUpperCase()=='{!valueField}'.toUpperCase())){
+                                         obj.value= this[field];                                                                               
+                                     }                                    
+                                }                                
+                                 data.push(obj);
+                             });
+                             //return the data
+                             response( data);
+                         }
+                         else{
+                              alert('Invalid Field/Object API Name : '+event.message);
+                         }                         
+                     }, 
+                      {escape: true}
+                );
+    }     
+
+    function toggle_visibility(id) 
+    {
+       var e = document.getElementById(id);
+       if(e.style.display == 'block')
+          e.style.display = 'none';
+       else
+          e.style.display = 'block';
+    }
+    function allowDrop(ev)
+    {
+        ev.preventDefault();
+    }
+
+    function drag(ev)
+    {
+        ev.dataTransfer.setData("Text",ev.target.id);
+    }
+
+    function drop(ev)
+    {
+        ev.preventDefault();
+        var data=ev.dataTransfer.getData("Text");
+        ev.target.appendChild(document.getElementById(data));
+    }    
+
+    function noenter(ev)  
+    {
+        if (window.event && window.event.keyCode == 13 || ev.which == 13) {
+            doSaveOnEnter();
+            return false;          
+         } else {
+              return true;
+         }
+    }
+</script> 
+<apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" /> 
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+<style>
+.pressed {
+    box-shadow: 0px 0px 0px;
+}
+
+.header {
+    font-weight:bold;
+}    
+.nolink {
+    text-decoration: none !important;
+}
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 2px;
+        padding:10px;
+        position: fixed; 
+        z-index: 9999;  
+        width: auto;
+        box-shadow: 10px 10px 5px #888;
+   
+/* get the pop up in the middle of the screen */
+        top: 35%;
+        left: 54%;
+        margin-top: -10px;
+        margin-left: -250px;      
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;        
+    }
+.popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+}
+.bar {
+    display: inline-block;
+    line-height: 1;
+    padding: 7px 10px;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+    height: 14px;
+    background-color: #39c;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #888;
+}
+body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+     .evenRow { background-color: #FFFFFF; }
+     .oddRow { background-color: #EEEEEE; }
+
+     .centered { text-align: center; }
+     .centeredOrange { text-align: center; color: orange; }
+     .normalOrange { color: orange; }
+     .centered-table {
+         margin-left: auto;
+         margin-right: auto;
+}
+    div.hideCurrDate span.dateInput span.dateFormat{
+       display:none;
+}
+.roundbox {
+    padding: 5px;
+    padding-left: 10px;
+    background: white;
+    border: 1px solid #bbbbbb;
+    box-shadow: 6px 6px 5px #888;
+    
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+.mouseOverInfo {
+    background-color: #F8FBFF;
+    text-align: left;
+    left: 0px;
+    box-shadow: 3px 3px 3px #888;    
+}   
+div.hideCurrDate span.dateInput span.dateFormat{
+    display:none;
+}
+   .displayNone { 
+        display:none; 
+    }
+    .displayBlock {
+        display:block;
+    }
+    .ui-autocomplete-loading { 
+        background: white url(/img/loading32.gif) right center no-repeat;
+        background-size:15px 15px; 
+    }
+    .placeHolder {
+        font-style: italic;
+    }
+.textfontBold {
+    vertical-align:text-bottom;font-weight:bold;font-size:11px;
+}    
+.textfontNormal {
+    vertical-align:text-bottom;font-size:11px;
+}
+.headerclass {
+    vertical-align:bottom;
+}
+.autocomplete {
+    max-height: 200px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+            /* add padding to account for vertical scrollbar */
+            padding-right: 20px;
+}
+.vertical-line {
+    border-right: thin solid grey;
+}
+</style>
+<div style="max-width:{!mySettings.mainDivWidth}px;margin-left:auto;margin-right:auto"  ondrop="drop(event)" ondragover="allowDrop(event)">   <!-- div to contain entire app -->  
+    <apex:form id="thepage">
+    <apex:outputPanel id="errorpanel">
+        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showError}"/>
+        <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showError}" style="max-width:400px;">
+                <apex:outputText escape="false" value="<b><u>We found an error</u></b><br/><br/>" />
+                <apex:pagemessages />
+                <br/>
+                <apex:commandButton styleClass="cssbutton" value="Close" action="{!closeError}"/>            
+        </apex:outputPanel>
+    </apex:outputPanel>        
+    <apex:outputPanel id="newobjectpanel">
+        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showNewObject}"/>
+        <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showNewObject}">
+            <table>                               
+                <apex:repeat value="{!ContactQuickFields}" var="f">
+                    <tr>
+                        <td style="width:150px"><apex:outputText value="{!f.Label}:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                        <td><apex:inputField value="{!newObject [f.fieldPath]}"   style=";vertical-align:middle;"/></td>  <!--required="{!OR(f.required, f.dbrequired)}"-->
+                    </tr>             
+                 </apex:repeat>
+             </table>
+             <apex:commandButton styleClass="cssbutton" value="Save" action="{!saveNewObject}" reRender="errorpanel,thepage"/> 
+             <apex:commandButton styleClass="cssbutton" value="Cancel" action="{!newObjectButton}" immediate="true" reRender="errorpanel,newobjectpanel"/>            
+        </apex:outputPanel>
+    </apex:outputPanel>    
+        <apex:pageBlock > 
+    <apex:outputPanel id="productselectorpanel">
+        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showProductSelector}"/>
+        <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showProductSelector}" style="width:700px;top: 5%;left:40%">     
+            <div style="float:left;border-style:solid;border-width:1px;border-color:grey;padding:10px">
+                <table>
+                    <tr><td><apex:outputText value="Name:" styleClass="textfontBold" style="vertical-align:middle;" /></td></tr>
+                    <tr><td><apex:inputField value="{!inputFilterProduct.Name}" required="false" style="vertical-align:middle;" /></td></tr>
+                    <tr><td><apex:outputText value="Giving Stats:" styleClass="textfontBold" style="vertical-align:middle;" /></td></tr>
+                    <tr><td><apex:selectList value="{!inputFilterProduct.s360a__ShortWebDescription__c}" size="1">
+                                <apex:selectOption itemLabel="Any" itemValue="Any" />
+                                <apex:selectOption itemLabel="True" itemValue="True" />
+                                <apex:selectOption itemLabel="False" itemValue="False" />
+                            </apex:selectList></td></tr>
+                    <tr><td><apex:outputText value="Product Family:" styleClass="textfontBold" style="vertical-align:middle;" /></td></tr>
+                    <tr><td><apex:inputField value="{!inputFilterProduct.Family}" style="vertical-align:middle;"/></td></tr>  
+                    <tr><td><apex:outputText value="Product Code:" styleClass="textfontBold" style="vertical-align:middle;" /></td></tr>
+                    <tr><td><apex:inputField value="{!inputFilterProduct.ProductCode}" style="vertical-align:middle;"/></td></tr>                                                            
+                </table>            
+            <apex:commandButton styleClass="cssbutton" value="Filter" action="{!filterProducts}" rerender="thepage" status="productstatus"/>                      
+            <apex:commandButton styleClass="cssbutton" style="margin-left:10px" value="Close" action="{!closeProductSelectorButton}" rerender="productselectorpanel" status="productstatus"/>                       
+                <apex:actionStatus id="productstatus">
+                    <apex:facet name="start">
+                        <img src="/img/loading.gif" width="16" height="16" style="padding-right: 5px;vertical-align:middle;float:right" />
+                    </apex:facet>
+                </apex:actionStatus>            
+            </div>
+            <apex:outputText value="No matching products found." styleClass="textfontBold" style="color:orange;float:left;margin-left:10px" rendered="{!!showProductSearchTable}"/>
+            <div style="float:right">            
+            <apex:pageBlockTable value="{!pageProducts}" var="prod" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;" rendered="{!showProductSearchTable}">
+                <apex:column headerValue="">
+                    <apex:commandLink action="{!addOneLineItemWithProductButton}" reRender="errorpanel,olitable" title="Add line item" style="vertical-align:middle;" status="productstatus" >
+                         <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" style="height:12px;vertical-align:middle;"/>   
+                         <apex:param name="productid" value="{!prod.Product2Id}"/>                           
+                    </apex:commandLink>
+                </apex:column>
+                <apex:column headerValue="Product" width="200px">
+                    <apex:outputLink style="vertical-align:text-top" styleClass="textfontNormal" value="/{!prod.Product2.Id}" target="_blank">{!prod.Product2.Name}</apex:outputLink>                            
+                </apex:column>
+                <apex:column headerValue="Product Code" styleClass="textfontNormal" width="100px">
+                    <apex:outputField style="vertical-align:text-top" value="{!prod.Product2.ProductCode}"/>                     
+                </apex:column>  
+                <apex:column headerValue="Product Family" styleClass="textfontNormal" width="130px">
+                    <apex:outputField style="vertical-align:text-top" value="{!prod.Product2.Family}"/>                     
+                </apex:column>                                   
+                <apex:column headerValue="Giving" styleClass="textfontNormal" width="50px">
+                    <apex:outputField style="vertical-align:text-top" value="{!prod.Product2.s360a__IncludeInGivingStatistics__c}"/>                     
+                </apex:column>                
+            </apex:pageBlockTable>
+            <apex:outputText value="More Products available - use the filter options to narrow your search." styleClass="textfontBold" style="color:orange;float:left;margin-left:10px" rendered="{!moreThanMaxProducts}"/>            
+            </div>                
+        </apex:outputPanel>
+    </apex:outputPanel>         
+        <apex:tabPanel inactiveTabClass="inactiveTab">
+        <apex:tab switchType="client" label="Data Entry" name="dataentry" id="dataentrytab">          
+        <apex:outputPanel id="tophalf">                
+            <apex:actionFunction name="rerenderPage" reRender="errorpanel,thepage"/>                       
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/collapse_arrow.png')}" width="25px" style="vertical-align:middle;float:left" onclick="toggle_visibility('settingsbox')"/>
+
+<!-- Settings Box -->            
+            <div id="settingsbox" class="roundbox" style="width:700px;float:left;margin-right:10px;margin-left:5px;display:none">       
+              <div style="width:450px;float:left"><apex:outputText styleClass="textfontBold" style="color:orange" value="Quick Settings:"/>
+              </div>
+              <div style="width:200px;float:right"><apex:outputText styleClass="textfontBold" style="color:orange" value="Templates:"/>
+              <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/workflow.png')}" width="18px" style="vertical-align:middle;float:right" /></div>
+              <div style="clear:both;height:0;line-height:0;display:block;"/>
+              <hr/>
+              <div style="float:left" class="vertical-line">
+                  <table style="width:490px">
+                     <tr>
+                          <td style="width:120px"><apex:outputText value="Account Lookup:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showAccountLookup}"/></td> 
+                          <td style="width:150px"><apex:outputText value="Show Record Type:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showRecordType}"/></td> 
+                          <td style="width:150px"><apex:outputText value="Show Quantity:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showQuantity}"/></td> 
+                     </tr>
+                     <tr>
+                          <td style="width:120px"><apex:outputText value="Multi-Product:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showMultiProduct}"/></td> 
+                          <td style="width:150px"><apex:outputText value="Show Price Book:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showPriceBook}"/></td> 
+                          <td style="width:150px"><apex:outputText value="Show Frequency:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showFrequency}" disabled="true"/></td> 
+                     </tr>
+                     <tr>
+                          <td style="width:120px"><apex:outputText value="Member Status:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showMemberStatus}"/></td>                  
+                          <td style="width:150px"><apex:outputText value="Show Codes:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.showCodes}"/></td> 
+                          <td style="width:150px"><apex:outputText value="UID Search:" styleClass="textfontBold" /></td>
+                          <td style="width:30px"><apex:inputCheckbox value="{!mySettings.enableUIDSearch}"/></td> 
+                     </tr>
+                     <tr>
+                          <td style="width:150px"><apex:outputText value="Window Width:" styleClass="textfontBold" /></td>
+                          <td style="width:50px"><apex:inputText value="{!mySettings.mainDivWidth}" style="width:30px"/></td>                   
+                          <td><apex:commandButton style="height:15px;vertical-align:middle;margin-right:10px;float:right;box-shadow: 1px 1px 1px #888" title="Save" image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" action="{!saveDefaultSettings}" status="generalpagestatus" reRender="errorpanel,thepage" /></td>
+                          <td><apex:commandButton style="height:15px;vertical-align:middle;margin-right:10px;box-shadow: 1px 1px 1px #888" title="Refresh page with new settings" image="{!URLFOR($Resource.s360a__s360Images, '/refresh.png')}" status="generalpagestatus" reRender="errorpanel,thepage" /></td>
+                     </tr>                                                         
+               </table> 
+           </div>   
+           <div style="margin-left:10px;">
+                  <table style="width:170px">
+                     <tr>
+                          <td><apex:inputField html-placeholder="Open Template" value="{!inputBatchEntry.s360a__BatchEntry__c}" style="width:100px;margin-left:2px"/></td>
+                          <td><apex:commandButton style="height:15px;vertical-align:middle;box-shadow: 1px 1px 1px #888" image="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" title="Open Template" action="{!openTemplateButton}" status="generalpagestatus"/></td> 
+                     </tr>
+                     <tr>
+                          <td><apex:inputText html-placeholder="Enter Template Name" value="{!thisFieldSet.fieldSetName}" style="vertical-align:middle;" /></td>
+                          <td><apex:commandButton style="height:15px;vertical-align:middle;box-shadow: 1px 1px 1px #888" title="Save Template" image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" action="{!saveTemplateButton}" status="generalpagestatus" reRender="errorpanel,thepage" /></td> 
+                     </tr>                            
+                  </table>
+           </div>       
+        </div>   
+<!-- Batch Entry -->        
+            <div id="batchbigbox" class="roundbox" style="width:30%;float:right;margin-right:10px;background: #eeeeee;">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/fundAus.png')}" width="40px" style="vertical-align:middle;float:right" rendered="{!supporter360settings.s360a__DefaultCurrencySymbol__c != '£'}"/> 
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/funduk.png')}" width="40px" style="vertical-align:middle;float:right" rendered="{!supporter360settings.s360a__DefaultCurrencySymbol__c == '£'}"/>                                    
+                <table>
+                <tr>
+                    <td style="width:100px"><apex:outputText escape="false" styleClass="textfontBold" value="Batch Details:" style="margin-right:5px"/></td>
+                    <td><apex:outputText styleClass="textfontNormal" style="color:orange" value="<No Batch Loaded>" rendered="{!thisBatchEntry.Id == null}"/>
+                    <apex:outputLink style="vertical-align:text-top" styleClass="textfontNormal" value="/{!thisBatchEntry.Id}" target="_blank" rendered="{!thisBatchEntry.Id != null}">{!thisBatchEntry.Name}</apex:outputLink></td>            
+                </tr><tr>
+                    <td><apex:outputText escape="false" styleClass="textfontBold" value="Status:" style="margin-right:5px"  rendered="{!thisBatchEntry.Id != null}"/></td>
+                    <td><apex:outputPanel styleClass="textfontNormal" style="color:orange"><apex:outputField value="{!thisBatchEntry.s360a__BatchStatus__c}" rendered="{!thisBatchEntry.Id != null}"/></apex:outputPanel></td>
+                </tr></table>                                                          
+                <apex:outputPanel rendered="{!thisBatchEntry.Id != null}">
+                <hr/>                
+                <table>
+                <tr>
+                    <td style="width:110px"><apex:outputText style="margin-right:5px" styleClass="textfontBold" value="Actual Items:"/></td>
+                    <td style="width:50px"><apex:outputPanel styleClass="textfontNormal" style="color:orange"><apex:outputField value="{!thisBatchEntry.s360a__ActualItemsinBatch__c}"/></apex:outputPanel></td>                
+                    <td style="width:110px"><apex:outputText style=";margin-right:5px" styleClass="textfontBold" value="Actual Value:"/></td>        
+                    <td style="width:80px"><apex:outputPanel styleClass="textfontNormal" style="color:orange"><apex:outputField value="{!thisBatchEntry.s360a__ActualValueinBatch__c}"/></apex:outputPanel></td>
+                </tr><tr>                
+                    <td style="width:110px"><apex:outputText style="margin-right:5px" styleClass="textfontBold" value="Expected Items:"/></td>     
+                    <td style="width:50px"><apex:outputPanel styleClass="textfontNormal" style="color:orange"><apex:outputField value="{!thisBatchEntry.s360a__ExpectedItemsinBatch__c}"/></apex:outputPanel></td>     
+                    <td style="width:110px"><apex:outputText style="margin-right:5px" styleClass="textfontBold" value="Expected Value:"/></td>           
+                    <td style="width:80px"><apex:outputPanel styleClass="textfontNormal" style="color:orange"><apex:outputField value="{!thisBatchEntry.s360a__ExpectedValueinBatch__c}"/></apex:outputPanel></td>                     
+                </tr></table>
+                </apex:outputPanel> 
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/collapse_arrow.png')}" width="20px" style="vertical-align:middle;float:left" onclick="toggle_visibility('batchbox')"/>                                   
+                <div id="batchbox" style="display:none;">         
+                    <br/><hr/>
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Expected # Opportunities:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisBatchEntry.s360a__ExpectedItemsinBatch__c}" style="width:150px"/></td> 
+                            </tr>                         
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Expected Income:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisBatchEntry.s360a__ExpectedValueinBatch__c}" style="width:150px"/></td> 
+                            </tr>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Description:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisBatchEntry.s360a__BatchDescription__c}" style="width:150px"/></td> 
+                            </tr>    
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Batch Template:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisBatchEntry.s360a__BatchEntryTemplate__c}" style="width:150px"/></td> 
+                            </tr>                                                     
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Batch Status:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisBatchEntry.s360a__BatchStatus__c}" style="width:150px"/></td> 
+                                <td><apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" value="Create Batch" action="{!upsertBatch}" rendered="{!thisBatchEntry.Id == null}" status="generalpagestatus" reRender="errorpanel,tophalf" style="height:15px;vertical-align:middle;margin-left:3px;float:right"/>         
+                                    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" value="Update Batch" action="{!upsertBatch}" rendered="{!thisBatchEntry.Id != null}" status="generalpagestatus" reRender="errorpanel,tophalf" style="height:15px;vertical-align:middle;margin-left:3px;float:right"/></td>
+                            </tr>                            
+                        </table>
+                        <hr/>                          
+                        <apex:inputField html-placeholder="Open Existing Batch" value="{!opportunity.s360a__BatchEntry__c}" style="vertical-align:middle;margin-left:10px"/>
+                        <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" value="Open Batch" action="{!openBatch}" status="generalpagestatus" reRender="errorpanel,thepage" style="height:15px;vertical-align:middle;margin-left:3px;"/>                        
+                       
+
+                    </div>
+                </div>
+              </apex:outputPanel>
+<!-- INPUTFORM -->
+            <apex:actionFunction name="campaignChangedAF" reRender="errorpanel,inputform" action="{!campaignChanged}" status="generalpagestatus"/>   
+            <apex:actionFunction name="doSaveOnEnter" action="{!saveAction}"  status="generalpagestatus" /> <!-- reRender="errorpanel,thepage" -->
+            <apex:actionFunction name="doCreateNewContact" action="{!newObjectButton}" reRender="errorpanel,thepage" status="generalpagestatus" />
+            <apex:outputPanel id="inputform">     
+                <div class="bar" style="width:97%;margin-top:10px">Process Income</div><br/>                  
+                <br/>               
+                <apex:pageBlockTable value="{!alist}" var="dc" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-left:0px;width:auto;box-shadow: 5px 5px 5px #888;"> 
+                    <apex:column headerClass="headerclass" style="vertical-align:middle;min-width:170px">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:bottom;float:left;padding-bottom:0px;margin-bottom:0px" value="Account" />
+                            <!--    turned off due to strange vf results / rendering of account 6/10/13
+                                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" onclick="fetchrelateddata();">
+                                        <apex:param name="header" value="Account"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Account']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Account']}"/>
+                                    </apex:commandLink>                                                      
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div> -->
+                            </apex:outputPanel>
+                        </apex:facet>                        
+                        <apex:outputPanel >
+                        <apex:inputText html-placeholder="Type name.." tabindex="0" styleClass="autoComplete" style="width:128px" value="{!cacheField}" onchange="$j('.hiddenFieldAutoComplete').val($j(this).val());" onblur="fetchrelateddata();" rendered="{!!mySettings.showAccountLookup}" />                        
+                        <apex:outputPanel id="hiddenPanel">
+                            <apex:inputText value="{!autoCompleteAccount}" id="hiddenField" styleClass="hiddenFieldAutoComplete" style="display:none"/>
+                        </apex:outputPanel>                          
+                        <apex:inputField value="{!opportunity.AccountId}" required="false" style="width:100px" onkeypress="return noenter(event);" onchange="fetchrelateddata();" rendered="{!mySettings.showAccountLookup}" />
+                        <apex:outputField rendered="{!showNewContact || mysettings.lockedValues['Account']}" value="{!account.Name}"/>
+                        </apex:outputPanel>   
+                        <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                            <apex:commandButton action="{!newObjectButton}" image="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" title="Add new contact" status="generalpagestatus" reRender="errorpanel,thepage" style="margin-left:5px;height:14px;vertical-align:middle;"/>                  
+                            <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">                                          
+                                <table>                                                                   
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="First Name:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['FirstName']}" style=";vertical-align:middle;"/></td>
+                                        </tr>   
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="Last Name:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['LastName']}" required="false" style=";vertical-align:middle;"/></td>                                            
+                                        </tr>  
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="Inital Source:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['InitialContactSource__c']}" required="false" style=";vertical-align:middle;"/></td>                                            
+                                        </tr>  
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="Personal Email:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['EmailAddressPersonalEmailAddress__c']}" style=";vertical-align:middle;"/></td>                                            
+                                        </tr>      
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="Work Email:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['EmailAddressWorkEmailAddress__c']}" style=";vertical-align:middle;"/></td>                                            
+                                        </tr>   
+                                        <tr>
+                                            <td style="width:150px"><apex:outputText value="Preferred Email:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                                            <td><apex:inputField value="{!newObject ['EmailAddressPreferredType__c']}" style=";vertical-align:middle;"/></td>                                            
+                                        </tr>                                                                                                                                                                            
+                                </table>
+                                <apex:commandButton styleClass="cssbutton" value="Save" action="{!saveNewObject}" reRender="errorpanel,thepage, reviewpanel" status="generalpagestatus"/> 
+                                <apex:commandButton styleClass="cssbutton" value="Cancel" action="{!newObjectButton}" immediate="true" reRender="errorpanel,thepage"/>                                     
+                            </div>
+                        </div>
+               <!--         <apex:outputPanel style="font-size:10px;color:orange;font-weight:bold" rendered="{!showNoAccountFoundMessage}">
+                            <br/><apex:outputText value="No account selected"/>
+                        </apex:outputPanel>                      -->
+                    </apex:column>                                                      
+                    <apex:column headerClass="headerclass" style="vertical-align:middle" rendered="{!!mySettings.showMultiProduct}">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >   
+                                <apex:outputText style="vertical-align:bottom;float:left;padding-bottom:0px;margin-bottom:0px" value="Amount" />                             
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                                    <apex:commandLink styleClass="mybutton" action="{!headerButton}" style="float:right;box-shadow:-2px -2px -2px #888;" reRender="errorpanel,inputform">
+                                        <apex:param name="header" value="Amount"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Amount']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Amount']}"/>
+                                    </apex:commandLink>                                                      
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                        
+                        <div class = "requiredInput">
+                        <div class = "requiredBlock"></div>                              
+                            <apex:inputfield value="{!opportunity.Amount}" style="width:70px" onkeypress="return noenter(event);"/>
+                        </div>
+                    </apex:column>                    
+                    <apex:column headerClass="headerclass" style="vertical-align:middle;min-width:80px" rendered="{!mySettings.showQuantity && !mySettings.showMultiProduct}">  
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:bottom;float:left;padding-bottom:0px;margin-bottom:0px" value="Quantity" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;box-shadow:-2px -2px -2px #888;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Quantity"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Quantity']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Quantity']}"/>
+                                    </apex:commandLink>                                                    
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                                              
+                        <apex:inputText value="{!productQuantity}" style="width:40px" onkeypress="return noenter(event);"/>
+                    </apex:column>                               
+                        <apex:column headerClass="headerclass" style="vertical-align:middle" rendered="{!mySettings.showFrequency}">
+                        <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle" value="Frequency" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform">
+                                        <apex:param name="header" value="Frequency"/>
+                                        <apex:image id="frequencypin" value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" />
+                                    </apex:commandLink>                                                         
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>  
+                        <apex:selectList size="1" id="frequency" value="{!selectedDonationFrequency}" onkeypress="return noenter(event);">
+                            <apex:selectOptions value="{!donationFrequencies}" />
+                        </apex:selectList>                        
+                    </apex:column>                        
+                    <apex:column headerClass="headerclass" style="vertical-align:middle">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="Date" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform">
+                                        <apex:param name="header" value="Date"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Date']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Date']}"/>
+                                    </apex:commandLink>                                                     
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>       
+                        <div class = "requiredInput">
+                        <div class = "requiredBlock"></div>                
+                            <div class="hideCurrDate">
+                                <apex:inputField value="{!opportunity.CloseDate}" required="false" rendered="{!!mysettings.lockedValues['Date']}" onkeypress="return noenter(event);" style="margin-left:0px"/>
+                            </div>
+                        </div>
+                        <apex:outputField value="{!opportunity.CloseDate}" rendered="{!mysettings.lockedValues['Date']}">
+                            <apex:inlineEditSupport showOnEdit="saveButton, cancelButton" 
+                                hideOnEdit="editButton" event="ondblclick" 
+                                changedStyleClass="textfontBold" resetFunction="resetInlineEdit"/>
+                        </apex:outputField>                        
+                    </apex:column>                     
+                    <apex:column headerClass="headerclass" style="vertical-align:middle;min-width:150px" styleClass="textfontNormal">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >                          
+                                <apex:outputText style="vertical-align:middle;float:left" value="Campaign" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                                    
+                                    <apex:commandLink id="campaignpin" action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Campaign"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Campaign']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Campaign']}"/>
+                                    </apex:commandLink> 
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>     
+                        <apex:inputField value="{!opportunity.CampaignId}" rendered="{!!mysettings.lockedValues['Campaign']}" onkeypress="return noenter(event);" onchange="campaignChangedAF();"/>
+                        <apex:outputField value="{!opportunity.CampaignId}" rendered="{!mysettings.lockedValues['Campaign']}">
+                            <apex:inlineEditSupport showOnEdit="saveButton, cancelButton" 
+                                hideOnEdit="editButton" event="ondblclick" 
+                                changedStyleClass="textfontBold" resetFunction="resetInlineEdit"/>
+                            </apex:outputField>                        
+                    </apex:column> 
+                    <apex:column headerClass="headerclass" style="vertical-align:middle;min-width:100px" rendered="{!mySettings.showMemberStatus}">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="Member Status" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="float:right">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;display:inline-block;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Member Status"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Member Status']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Member Status']}"/>
+                                    </apex:commandLink> 
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>     
+                        <apex:selectList size="1" value="{!selectedCampaignMemberStatus}" required="false" style="min-width:80px" onkeypress="return noenter(event);">
+                            <apex:selectOptions value="{!campaignMemberStatus}" />
+                        </apex:selectList>                        
+                    </apex:column>                                                        
+                    <apex:column headerClass="headerclass" style="vertical-align:middle" rendered="{!mySettings.showPriceBook}">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="Price Book" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Price Book"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Price Book']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Price Book']}"/>
+                                    </apex:commandLink>                                                    
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                           
+                        <apex:selectList size="1" id="pricebook" value="{!opportunity.Pricebook2Id}" required="false" style="width:150px" onkeypress="return noenter(event);">
+                            <apex:selectOptions value="{!pricebookSelectOptions}" />
+                        </apex:selectList>                        
+                    </apex:column>    
+                    <apex:column headerClass="headerclass" style="vertical-align:middle;min-width:125px"  rendered="{!!mySettings.showMultiProduct}" styleClass="textfontNormal">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:bottom;float:left;padding-bottom:0px;margin-bottom:0px" value="Product" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">
+                                    <apex:commandLink action="{!headerButton}" style="float:right" reRender="errorpanel,inputform">
+                                        <apex:param name="header" value="Product"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Product']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Product']}"/>
+                                    </apex:commandLink>                                                     
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>     
+                        <div class = "requiredInput">
+                        <div class = "requiredBlock"></div>                
+                            <apex:inputField value="{!pricebookEntry.Product2Id}" required="false" rendered="{!!mysettings.lockedValues['Product']}" onkeypress="return noenter(event);" style="margin-left:0px"/>
+                        </div>
+                        <apex:outputField value="{!pricebookEntry.Product2Id}" rendered="{!mysettings.lockedValues['Product']}">
+                            <apex:inlineEditSupport showOnEdit="saveButton, cancelButton" 
+                                hideOnEdit="editButton" event="ondblclick" 
+                                changedStyleClass="textfontBold" resetFunction="resetInlineEdit"/>
+                            </apex:outputField>                   
+                    </apex:column>                     
+                    <apex:column headerClass="headerclass" style="vertical-align:bottom;text-align:center;min-width:70px" rendered="{!mySettings.showCodes}">
+                        <apex:facet name="header">     
+                            <apex:outputPanel style="vertical-align:bottom;">
+                                <apex:outputText style="vertical-align:bottom;float:left" value="Codes" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}"  style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Codes"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Codes']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Codes']}"/>
+                                    </apex:commandLink>                                                     
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right;padding-bottom: 3px;" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                          
+                        <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/promotion.png')}" width="25px" style="vertical-align:middle" />
+                            <div style="display: none; opacity: 0;width:500px;position:absolute;top:10px;height:{!divCodesHeight}px;" class="mouseOverInfo">                                          
+                                <apex:outputText styleClass="textfontBold" style="color:orange" value="Select codes to add or remove:"/><br/>
+                                <apex:outputText value="Add  / Remove" styleClass="textfontBold"/><br/>
+                                <apex:repeat value="{!contactCodes}" var="concode">
+                                    <apex:inputCheckbox value="{!concode.addCode}" style="width:30px"/>
+                                    <apex:inputCheckbox value="{!concode.removeCode}" style="width:30px"/>
+                                    <apex:outputText value="{!concode.code}" style="width:150px" styleClass="textfontNormal" /> &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+                                    (<apex:outputText value="{!concode.field}" style="width:150px"  styleClass="textfontBold" />)
+                                    <br/>
+                                </apex:repeat>
+                            </div>
+                        </div>                             
+                    </apex:column>                           
+                    <apex:column headerClass="headerclass" style="vertical-align:middle" rendered="{!mySettings.showRecordType}">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="Record Type" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Record Type"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Record Type']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Record Type']}"/>
+                                    </apex:commandLink>                                                      
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                           
+                        <apex:selectList size="1" value="{!opportunityRecordTypeId}" style="width: 150px;" onkeypress="return noenter(event);">
+                             <apex:selectOptions value="{!opportunityRecordTypeSelectOptions}" />
+                        </apex:selectList>
+                    </apex:column>       
+                    <apex:column headerClass="headerclass" style="vertical-align:middle">
+                        <apex:facet name="header">     
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="Payment Method" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="Payment Method"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues['Payment Method']}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues['Payment Method']}"/>
+                                    </apex:commandLink>                                                  
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                        </apex:facet>                     
+                        <apex:selectList size="1" value="{!transactionObject.s360a__PaymentMethod__c}" style="width:150px" onchange="rerenderPayments();" onkeypress="return noenter(event);"> <!--reRender="errorpanel,thepage"-->
+                            <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+                        </apex:selectList>                        
+                    </apex:column>
+<!-- custom fields begin -->                    
+                    <apex:repeat value="{!thisFieldSet.fields}" var="cf">
+                        <apex:column style="vertical-align:middle" rendered="{!cf.displayOnRow = 0}">
+                            <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="{!cf.label}" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="{!cf.label}"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues[cf.label]}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues[cf.label]}"/>
+                                    </apex:commandLink>                                                  
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>
+                            </apex:facet>                        
+                            <apex:inputField value="{!cf.inputObj[cf.fieldName]}" required="false" rendered="{!cf.displayOnRow = 0}"/>
+                    </apex:column>                       
+                    </apex:repeat>                                                                                                                                                                   
+                </apex:pageBlockTable>
+<!-- Row 1 if needed -->                
+                <apex:pageBlockTable value="{!alist}" var="dc" style="width:auto">
+                    <apex:repeat value="{!thisFieldSet.fields}" var="cf">
+                        <apex:column style="vertical-align:middle" rendered="{!cf.displayOnRow = 1}">
+                            <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="{!cf.label}" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="{!cf.label}"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues[cf.label]}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues[cf.label]}"/>
+                                    </apex:commandLink>                                                  
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel> 
+                            </apex:facet>        
+                            <apex:inputField value="{!cf.inputObj[cf.fieldName]}" required="false" rendered="{!!mysettings.lockedValues[cf.label]}" onkeypress="return noenter(event);" style="margin-left:0px"/>
+                            <apex:outputField value="{!cf.inputObj[cf.fieldName]}" rendered="{!mysettings.lockedValues[cf.label]}">
+                                <apex:inlineEditSupport showOnEdit="saveButton, cancelButton" 
+                                hideOnEdit="editButton" event="ondblclick" 
+                                changedStyleClass="textfontBold" resetFunction="resetInlineEdit"/>
+                            </apex:outputField>                                       
+                    </apex:column>                       
+                    </apex:repeat>  
+                </apex:pageBlockTable>     
+<!-- Row 2 if needed -->                
+                <apex:pageBlockTable value="{!alist}" var="dc" style="width:auto">
+                    <apex:repeat value="{!thisFieldSet.fields}" var="cf">
+                        <apex:column style="vertical-align:middle" rendered="{!cf.displayOnRow = 2}">
+                            <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:outputText style="vertical-align:middle;float:left" value="{!cf.label}" />
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                    <apex:commandLink action="{!headerButton}" style="float:right;" reRender="errorpanel,inputform" >
+                                        <apex:param name="header" value="{!cf.label}"/>
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/pin.png')}" height="14px" rendered="{!!mysettings.lockedValues[cf.label]}" />
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/lock.png')}" height="14px" rendered="{!mysettings.lockedValues[cf.label]}"/>
+                                    </apex:commandLink>                                                  
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        Click the icon to lock / unlock the value for this batch. If you save this in your template the column will remain locked next time.
+                                    </div>
+                                </div>
+                            </apex:outputPanel> 
+                            </apex:facet>                  
+                            <apex:inputField value="{!cf.inputObj[cf.fieldName]}" required="false"/>
+                    </apex:column>                       
+                    </apex:repeat>  
+                </apex:pageBlockTable>                                                                                                      
+            </apex:outputPanel>
+            <apex:commandButton styleClass="cssbutton" style="margin-left:10px;float:left;margin-top:7px;margin-bottom:5px;" value="Submit" action="{!saveAction}" rendered="{!transactionObject.s360a__PaymentMethod__c == 'Cash'}" status="generalpagestatus" />               
+<!-- Payment method box -->  
+            <apex:actionFunction name="rerenderPayments" reRender="errorpanel,paymentMethodDetails, thepage"/>             
+                              
+            <apex:outputPanel id="paymentMethodDetails">       
+            <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c != 'Cash'}">                                                                
+            <div id="paymentmethodbox" class="roundbox" style="width:320px;float:right;margin-right:2px;margin-left:15px;margin-top:10px;display:block" draggable="true">                                                   
+                <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'BPAY'}">
+                    <apex:outputText escape="false" styleClass="textfontBold" value="BPAY Details:"/><br/>        
+                    <hr/>   
+                    <table>
+                       <tr>
+                           <td style="width:150px"><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                           <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}"/></td> 
+                       </tr>
+                    </table>
+                </apex:outputPanel>                  
+                <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Cheque'}" >
+                    <apex:outputText escape="false" styleClass="textfontBold" value="Cheque Details:"/><br/>        
+                    <hr/>                          
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Cheque Date:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ChequeDate__c}"/></td> 
+                            </tr>                         
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Bank:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__Bank__c}"/></td> 
+                            </tr>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Branch:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__Branch__c}"/></td> 
+                            </tr>                            
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Drawer's Name:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__DrawersName__c}"/></td> 
+                            </tr>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Cheque Number:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ChequeNumber__c}"/></td> 
+                            </tr>   
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="ABN:" escape="false" styleClass="textfontBold" rendered="{!supporter360Settings.s360a__TransactionFieldConfiguration__c == 'Australia'}"/></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ABN__c}"/></td> 
+                            </tr>  
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="ACN:" escape="false" styleClass="textfontBold" rendered="{!supporter360Settings.s360a__TransactionFieldConfiguration__c == 'Australia'}" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ACN__c}"/></td> 
+                            </tr>    
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="BSB:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__BSB__c}"/></td> 
+                            </tr>    
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Account Number:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__AccountNumber__c}"/></td> 
+                            </tr>                                                                                                                                                                                                                           
+                        </table>                                         
+                    </apex:outputPanel>   
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Credit Card'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Credit Card Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Credit Card Type:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__CardType__c}"/></td> 
+                            </tr><tr>
+                                <td><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Card # (Last 4 Digits):" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__CardNumberLastFourDigits__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Name On Card:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__NameOnCard__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Expiry Month:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ExpiryMonth__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Expiry Year:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" rendered="{!creditCardExpiryYearError == false}">   
+                                        <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                    </apex:selectList>
+                                    <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" styleClass="error" rendered="{!creditCardExpiryYearError == true}">
+                                        <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                    </apex:selectList>
+                                    <apex:outputText StyleClass="errorMsg" value="Error: You must enter a value" rendered="{!creditCardExpiryYearError == true}"/>
+                                </td>
+                            </tr></table>
+                    </apex:outputPanel>
+<!-- DD -->                    
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Debit'}">
+
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Direct Debit Details:"/><br/>        
+                        <hr/>
+                        <table>                               
+                        <apex:repeat value="{!DirectDebitFields}" var="f">
+                        <tr>
+                            
+                            <td style="width:150px"><apex:outputText value="{!f.Label}:" escape="false" style="vertical-align:middle;font-weight:bold;font-size:11px" /></td>
+                            <td><apex:inputField value="{!transactionObject [f.fieldPath]}"   style=";vertical-align:middle;"/></td>  <!--required="{!OR(f.required, f.dbrequired)}"-->
+
+                        </tr>             
+                        </apex:repeat>
+                        </table>
+                    
+                    </apex:outputPanel>
+<!-- Direct Deposit -->
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Direct Deposit'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Direct Deposit Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Bank Statement Date:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__BankStatementDate__c}" /></td> 
+                            </tr><tr>
+                                <td style="width:150px"><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- Bank Transfer -->         
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Bank Transfer'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Bank Transfer Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Bank Statement Date:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__BankStatementDate__c}" /></td> 
+                            </tr><tr>
+                                <td style="width:150px"><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- Online Fundraising -->  
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Online Fundraising'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Online Fundraising Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Online Fundraising:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__OnlineFundraising__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- CAF -->
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Charities Aid Foundation (CAF)'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Charities Aid Foundation (CAF) Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Cheque Number:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ChequeNumber__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- EFT -->
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Electronic Funds Transfer (EFT)'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Electronic Funds Transfer (EFT) Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- Money Order -->
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Money Order'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Money Order Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Money Order #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__MoneyOrderNumber__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- Web -->                    
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Web'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Money Order Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Transaction Reference #:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TransactionReference__c}" /></td> 
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+<!-- Credit Card with Processing -->
+                    <apex:outputPanel rendered="{!transactionObject.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                        <apex:outputText escape="false" styleClass="textfontBold" value="Credit Card To Be Processed Details:"/><br/>        
+                        <hr/>   
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Process:" escape="false" styleClass="textfontBold" /></td>
+                                <td style="width:150px"><apex:selectList value="{!transactionObject.s360a__PaymentGatewayProcessType__c}" size="1" onchange="rerenderPayments();">
+                                        <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+                                        <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" rendered="{!hasActiveCreditCards}" />
+                                    </apex:selectList></td>
+                           </tr>
+                        </table>
+                        <apex:outputPanel rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card'}">
+                        <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Credit Card Type:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__CardType__c}"/></td> 
+                            </tr><tr>
+                                <td><apex:outputText value="Name On Card:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__NameOnCard__c}" /></td>
+                            </tr><tr>                            
+                                <td><apex:outputText value="Card Number:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__CreditCardNumber__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Expiry Month:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__ExpiryMonth__c}" /></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Expiry Year:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" rendered="{!creditCardExpiryYearError == false}">   
+                                        <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                    </apex:selectList>
+                                    <apex:selectList size="1" value="{!transactionObject.s360a__ExpiryYear__c}" styleClass="error" rendered="{!creditCardExpiryYearError == true}">
+                                        <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                                    </apex:selectList>
+                                    <apex:outputText StyleClass="errorMsg" value="Error: You must enter a value" rendered="{!creditCardExpiryYearError == true}"/>
+                                </td>
+                            </tr><tr> 
+                                <td><apex:outputText value="CVV:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__CVV__c}"/></td>
+                            </tr><tr>
+                                <td><apex:outputText value="Tokenise & Save Card:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!transactionObject.s360a__TokeniseCard__c}" rendered="{!AND(transactionObject.s360a__PaymentGatewayProcessType__c == 'New Credit Card', paymentGatewaySupportsTokenisation)}" /></td>
+                            </tr>
+                            </table>
+                       </apex:outputPanel>
+                    </apex:outputPanel>
+                            <apex:outputPanel rendered="{!transactionObject.s360a__PaymentGatewayProcessType__c == 'Existing Credit Card'}">
+                                    <apex:outputLabel value="Credit Card" />
+                                    <apex:outputPanel >
+                                            <apex:inputHidden value="{!transactionObject.s360a__CreditCard__c}" id="selectedCreditCard" />
+                                            <apex:dataTable id="table" value="{!displayActiveCreditCardList}" var="creditCard" rowClasses="odd, even" styleClass="tableClass" style="width: auto;" >
+                                                    <apex:column width="20" headerValue="" rendered="{!transactionObject.s360a__CreditCard__c == creditCard.cardId}">
+                                                <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" checked="checked" />
+                                                    </apex:column>
+                                                    <apex:column width="20" headerValue="" rendered="{!transactionObject.s360a__CreditCard__c != creditCard.cardId}">
+                                                <input id="radioId" type="radio" name="creditcard" value="{!creditCard.cardId}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" />
+                                                    </apex:column>
+                                                    <apex:column width="180" headerValue="Card Type" >
+                                                <apex:outputText value="{!creditCard.CardType}" />
+                                                    </apex:column>
+                                                    <apex:column width="250" headerValue="Name On Card" >
+                                                <apex:outputText value="{!creditCard.CardHolderName}" />
+                                                    </apex:column> 
+                                                    <apex:column width="200" headerValue="Credit Card Number" >
+                                                <apex:outputText value="{!creditCard.CreditCardNumber}" />
+                                                    </apex:column>                                                                                                                                     
+                                                    <apex:column width="100" headerValue="Expiry Date" >
+                                                <apex:outputText value="{!creditCard.ExpiryDate}" />
+                                                    </apex:column>                                                  
+                                            </apex:dataTable>
+                                    </apex:outputPanel>
+                            </apex:outputPanel>
+
+                    <br/>   
+                     <apex:commandButton styleClass="cssbutton" value="Submit" action="{!saveAction}" status="generalpagestatus" style="float:right;margin-right:10px"/>                   
+                </div>  
+            </apex:outputPanel>                               
+        </apex:outputPanel>
+            
+<!-- OLI TABLE -->
+        <apex:outputPanel id="olitable">
+        <apex:outputPanel rendered="{!mySettings.showMultiProduct}">
+            <div id="olitablebox" class="roundbox" style="width:560px;margin-right:2px;margin-left:105px;margin-top:10px;display:block" draggable="true">                                                                              
+                <apex:outputText styleClass="textfontBold" value="Add Line Items:" style="margin-left:10px"/>
+                <apex:selectList value="{!addLineItemCount}" size="1" onchange="rerenderPayments();" style="margin-left:10px">
+                    <apex:selectOption itemLabel="1" itemValue="1" />
+                    <apex:selectOption itemLabel="2" itemValue="2" />
+                    <apex:selectOption itemLabel="3" itemValue="3" />
+                    <apex:selectOption itemLabel="4" itemValue="4" />
+                    <apex:selectOption itemLabel="5" itemValue="5" />
+                </apex:selectList>     
+                    <apex:commandbutton title="Add line item" action="{!addLineItemButton}" image="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" reRender="errorpanel,thepage" status="oliaddstatus" style="margin-left:5px;height:15px;vertical-align:middle;padding:2px;box-shadow: 1px 1px 1px #888;"/> 
+                    <apex:outputText styleClass="textfontBold" value="Pricebook:" style="margin-left:35px;"/>
+                    <apex:outputText styleClass="textfontNormal" value="{!pricebookMap[opportunity.Pricebook2Id]}" style="margin-left:5px;"/>
+                    <apex:outputText styleClass="textfontBold" value="Product Selector:" style=";margin-left:35px;"/>
+                    <apex:commandbutton title="Product Selector" action="{!initProductSelector}" image="{!URLFOR($Resource.s360a__s360Images, '/open_in_new_window.png')}" reRender="errorpanel,productselectorpanel" status="oliaddstatus" style="margin-left:10px;height:15px;vertical-align:bottom;padding:2px;box-shadow: 1px 1px 1px #888;"/>
+                <hr/>  
+                <apex:dataTable value="{!opportunityLineItems}" var="olis">
+                    <apex:column headerValue="Product" headerClass="textfontBold" styleClass="textfontNormal">
+                        <apex:inputField value="{!olis.productInput.Product2Id}" required="false" rendered="{!olis.OLi.Id == null}"/>
+                        <apex:outputField value="{!olis.productInput.Product2Id}" rendered="{!olis.OLi.Id != null}"/>
+                    </apex:column>
+                    <apex:column headerValue="Quantity" headerClass="textfontBold" width="58px">
+                        <apex:inputField value="{!olis.OLi.Quantity}" style="width:50px" required="false">
+                            <apex:actionSupport event="onchange" rerender="linetotaloutput"/> 
+                        </apex:inputField>                         
+                    </apex:column>                    
+                    <apex:column headerValue="Price" headerClass="textfontBold" width="105px">
+                        <apex:inputField value="{!olis.OLi.UnitPrice}" style="width:50px" required="false">
+                            <apex:actionSupport event="onchange" rerender="linetotaloutput"/> 
+                        </apex:inputField>                       
+                    </apex:column>  
+                    <apex:column headerClass="textfontBold" width="101px">
+                        <apex:facet name="header">
+                            <apex:outputPanel >
+                                <apex:outputText styleClass="textfontBold" value="Pay Amount"/>
+                                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                                    <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="15px" style="vertical-align:bottom" />                                                                                               
+                                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                        By default the amount being paid will be <b>Quantity * Price</b>, assuming a full payment. You can take part payment by clicking the Partial Payment (<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/50_percent_off.png')}" style="height:20px;vertical-align:middle;"/>) button on any line item - this will display an input box to enter the amount to be paid in this transaction.
+                                    </div>
+                                </div>
+                            </apex:outputPanel>                            
+                        </apex:facet>                          
+                        <apex:inputText id="linetotal" value="{!olis.partPayAmount}" style="width:50px" required="false" rendered="{!olis.partPay}"/>
+                        <apex:outputText style="margin-left:10px" styleClass="textfontNormal" id="linetotaloutput" rendered="{!!olis.partPay}" value="{0, number, {!supporter360Settings.s360a__DefaultCurrencySymbol__c}###,###.##}"><apex:param value="{!olis.OLi.UnitPrice * olis.OLi.Quantity}"/></apex:outputText>
+                    </apex:column> 
+                    <apex:column headerValue="Action" headerClass="textfontBold" >
+                        <apex:commandLink action="{!addOneLineItemButton}" reRender="errorpanel,olitable" styleClass="btn" title="Add line item" style="vertical-align:middle;margin-right:3px;padding:1px;" status="oliaddstatus" >
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" style="height:14px;vertical-align:middle;"/>                            
+                        </apex:commandLink>
+                        <apex:commandLink action="{!toggleLineItemPartPay}" reRender="errorpanel,olitable" styleClass="btn" title="Turn on / off part pay this item" style="vertical-align:middle;margin-right:3px;padding:1px;" status="oliaddstatus" >
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/50_percent_off.png')}" style="height:15px;vertical-align:middle;padding-bottom:2px"/>                            
+                            <apex:param name="oliposition" value="{!olis.position}"/>
+                        </apex:commandLink>                        
+                        <apex:commandLink action="{!removeLineItemButton}" reRender="errorpanel,olitable" styleClass="btn" title="Remove line item" style="margin-left:10px;vertical-align:middle;margin-right:3px;padding:1px;" status="oliaddstatus"> <!--box-shadow: 1px 1px 1px #888;-->
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" style="height:14px;vertical-align:middle;"/>
+                            <apex:param name="oliposition" value="{!olis.position}"/>
+                        </apex:commandLink>                                                
+                    </apex:column>  
+                    <apex:column >
+                        <apex:outputPanel rendered="{!olis.showError}">
+                        <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/warning.png')}" height="20px" style="vertical-align:bottom;margin-left:15px" />                                                                                               
+                            <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/warning.png')}" height="13px" style="float:right" />                                          
+                                {!olis.errorMessage}
+                            </div>
+                        </div> 
+                        </apex:outputPanel> 
+                    </apex:column>                                                                                                                
+                </apex:dataTable>
+                <hr/>                
+                <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/calculator.png')}" title="Calculate Totals" action="{!calculateTotalsButton}" reRender="errorpanel,olitable" style="height:15px;vertical-align:middle;margin-right:13px;" status="oliaddstatus"/>                         
+                <apex:outputText styleClass="textfontBold" value="Line Item Total:" style="margin-right:10px"/>
+                <apex:outputPanel styleClass="textfontBold"><apex:outputField styleClass="textfontBold" value="{!opportunity.Amount}" style="margin-right:10px"/></apex:outputPanel>
+                <apex:outputText styleClass="textfontBold" value="Transaction Total:" style="margin-left:30px;margin-right:10px"/>
+                <apex:outputPanel styleClass="textfontBold"><apex:outputField styleClass="textfontBold" value="{!transactionTotal.Amount}" style="margin-left:10px"/></apex:outputPanel>                
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" >                                    
+                    <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="12px" style="vertical-align:middle" />                                                                                               
+                    <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                        Transaction total is the amount, taking into account any part payments, that will be paid in this transaction.
+                    </div>
+                </div>                
+                <apex:actionStatus id="oliaddstatus">
+                    <apex:facet name="start">
+                        <img src="/img/loading.gif" width="16" height="16" style="padding-right: 5px;vertical-align:middle;float:right" />
+                    </apex:facet>
+                </apex:actionStatus>
+                <apex:commandButton styleClass="cssbutton" value="Submit" action="{!saveAction}" status="generalpagestatus" style="float:right;margin-right:10px"/>                   
+            </div>           
+        </apex:outputPanel>   
+        </apex:outputPanel> <!-- end OLI Table -->
+        
+<!-- SUMMARY TABLE -->         
+        <apex:actionFunction action="{!loadRelatedData}" reRender="errorpanel,summarytable" name="fetchrelateddata"/>   
+        <apex:outputPanel id="summarytable">
+            <apex:outputPanel rendered="{!opportunity.AccountId != null || showLastOpportunityDetails}"> 
+            <div id="summarybox" tabindex="-1" class="roundbox" style="width:750px;margin-top:37px;margin-right:5px;margin-left:0px;display:block;background-color:#EBF5FF">                                                   
+                <apex:outputPanel rendered="{!opportunity.Id == null && !showLastOpportunityDetails}"> 
+                    <apex:dataTable value="{!alist}" var="dc" width="100%" >                 
+                        <apex:column style="vertical-align:top">   
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/fundAus.png')}" title="Income" height="20px" width="20px" style="float:right;margin-right:5px" />            
+                            <table style="vertical-align:top">
+                                <apex:repeat value="{!recentOpportunities}" var="ro">
+                                <tr>
+                                    <td class="textfontNormal">
+                                        <apex:outputLink tabindex="-1" style="vertical-align:text-top"  value="/{!ro.Id}" target="_blank">{!ro.Name}</apex:outputLink>
+                                        (<apex:outputfield value="{!ro.Amount}"/>)
+                                        <apex:commandLink tabindex="-1" action="{!useOpportunityButton}" reRender="errorpanel,inputform, thepage" styleClass="btn" title="Open Opportunity" rendered="{!ro.s360a__BalanceDue__c > 0 && ro.IsClosed == false}" status="generalpagestatus"  style="vertical-align:middle;margin-right:3px;padding:1px;box-shadow: 1px 1px 1px #888;" >
+                                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept.png')}" style="height:7px;vertical-align:middle;"/>
+                                            <apex:param name="passedoppid" value="{!ro.Id}"/>
+                                        </apex:commandLink>                                         
+                                    </td>
+                                </tr>
+                                </apex:repeat>
+                                <apex:outputText styleClass="textfontNormal"  value="No Opportunities found." rendered="{!recentOpportunityCount = 0}"/>
+                            </table>      
+                        </apex:column>
+                        <apex:column style="vertical-align:top;width:30%">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/campaigns.png')}" title="Camapaigns" height="20px" width="20px" style="float:right;margin-right:5px" />
+                                <table style="vertical-align:top">
+                                    <apex:repeat value="{!recentCampaigns}" var="rc">
+                                        <tr>
+                                            <td class="textfontNormal"> 
+                                            <apex:commandLink action="{!useCampaignButton}" tabindex="-1" reRender="errorpanel,inputform" styleClass="btn" title="Use campaign" status="generalpagestatus"  style="vertical-align:middle;margin-right:3px;padding:1px;box-shadow: 1px 1px 1px #888;" >
+                                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept.png')}" style="height:7px;vertical-align:middle;"/>
+                                                <apex:param name="passedcampid" value="{!rc.CampaignId}"/>
+                                            </apex:commandLink>                                                                                             
+                                            <apex:outputLink style="vertical-align:text-top" tabindex="-1"  value="/{!rc.Id}" target="_blank">{!rc.Campaign.Name}</apex:outputLink>
+                                                (<apex:outputfield value="{!rc.Status}"/>)</td>      
+                                        </tr>
+                                    </apex:repeat>
+                                    <apex:outputText styleClass="textfontNormal" value="No Campaigns found." rendered="{!recentCampaignsCount = 0}"/>
+                                </table> 
+                        </apex:column>     
+                        <apex:column >   
+                            <td style="width:25%;vertical-align:top" class="textfontNormal">    
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" title="Info" height="20px" width="20px" style="float:right;margin-right:5px" />                                                     
+                                <apex:outputLink tabindex="-1" style="vertical-align:text-top"  value="/{!account.Id}" target="_blank">{!account.Name}</apex:outputLink><br/>
+                                <apex:outputText escape="false" styleClass="textfontBold" value="Address:"/>
+                                <apex:outputField value="{!account.s360a__AddressPrimaryMultiLine__c}"/><br/>
+                                <apex:outputText escape="false" styleClass="textfontBold" value="Recent Products:"/>
+                                <apex:outputField value="{!account.One2OneContact__r.s360a__FundsProducts__c}"/><br/>
+                                <apex:outputText escape="false" styleClass="textfontBold" value="Initial Source:"/>
+                                <apex:outputField value="{!account.One2OneContact__r.s360a__InitialContactSource__c}"/>
+                                <apex:outputField value="{!account.One2OneOrganisation__r.s360a__InitialContactSource__c}"/><br/>
+                                <apex:outputText escape="false" styleClass="textfontBold" value="Codes:"/>
+                                <apex:outputField value="{!account.One2OneContact__r.s360a__ContactCodes__c}"/> 
+                                <apex:outputField value="{!account.One2OneOrganisation__r.s360a__OrganisationCodes__c}"/>                                                       
+                            </td>
+                        </apex:column>                                                                   
+                    </apex:dataTable>
+                 </apex:outputPanel>
+                 
+<!-- Opp just created summary -->            
+     
+                 <apex:outputPanel rendered="{!showLastOpportunityDetails}">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept.png')}" style="height:15px;vertical-align:middle;float:left;margin-right:5px"/>
+                     <apex:outputText escape="false" styleClass="textfontBold" value="Opportunity Successfully Created:"/><br/><hr/>
+                     <table>
+                         <td class="textfontNormal"><apex:outputLink styleClass="textfontNormal" style="vertical-align:text-top"  value="/{!lastOpportunity.Id}" target="_blank">{!lastOpportunity.Name}</apex:outputLink></td>
+                         <td class="textfontBold"><apex:outputField value="{!lastOpportunity.StageName}"/></td>
+                         <td class="textfontBold"><apex:outputField value="{!lastOpportunity.CloseDate}"/></td>
+                     </table>
+                     <br/>
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/green_button.png')}" style="height:15px;vertical-align:middle;float:left;margin-right:5px"/>
+                     <apex:outputText escape="false" styleClass="textfontBold" value="Soft Credits Automatically Created:"/><br/><hr/>
+                     <table>
+                         <apex:repeat value="{!foundSoftCredits}" var="sc">
+                             <tr>
+                             <td class="textfontNormal"><apex:outputLink style="vertical-align:text-top" value="/{!sc.Id}" target="_blank">{!sc.Name}</apex:outputLink></td>
+                             <td class="textfontNormal"><apex:outputLink style="vertical-align:text-top" value="/{!sc.s360a__Account__c}" target="_blank">{!sc.Account__r.Name}</apex:outputLink></td>
+                             <td class="textfontNormal"><apex:outputField style="vertical-align:text-top" value="{!sc.s360a__Amount__c}" /></td>
+                             </tr>
+                         </apex:repeat>
+                     </table>                                          
+                 </apex:outputPanel> 
+                </div>
+              </apex:outputPanel>
+            </apex:outputPanel> 
+                      
+<!-- Submitted Opportunities Table -->
+            <apex:actionFunction action="{!reloadBatchOpportunities}" name="reloadBatchOpportunitiesAF" status="generalpagestatus" reRender="errorpanel,thepage"/>
+            <apex:outputPanel id="savedoppspanel" rendered="{!showSavedOpportunities}">
+            <div style="width:100%;margin-top:45px"> 
+                <hr/>      
+                <apex:outputPanel id="softcreditpanel" rendered="{!showSoftCreditBox}">
+                    <div id="softcreditbox" class="roundbox" style="width:330px;margin-bottom:7px;margin-left:500px;margin-top:5px;display:block" draggable="true">                             
+                      <apex:outputText styleClass="textfontBold" style="color:orange" value="Create Soft Credit:"/>
+                      <apex:outputText value="Saved: " styleClass="textfontBold" rendered="{!thisSoftCredit.Id != null}" />
+                      <apex:outputLink style="vertical-align:text-top" styleClass="textfontNormal" value="/{!thisSoftCredit.Id}" target="_blank" rendered="{!thisSoftCredit.Id != null}">{!thisSoftCredit.Name}</apex:outputLink>                                     
+                      <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/green_button.png')}" width="18px" style="vertical-align:middle;float:right" />
+                      <hr/>                        
+                         <table>
+                            <tr>
+                                <td style="width:150px"><apex:outputText value="Against Opportunity:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisSoftCredit.s360a__Opportunity__c}"/></td> 
+                            </tr><tr>
+                                <td style="width:150px"><apex:outputText value="For Account:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisSoftCredit.s360a__Account__c}"/></td> 
+                            </tr><tr>
+                                <td style="width:150px"><apex:outputText value=" Amount:" escape="false" styleClass="textfontBold" /></td>
+                                <td><apex:inputField value="{!thisSoftCredit.s360a__Amount__c}"/></td> 
+                            </tr>
+                         </table>
+                         <apex:commandButton styleClass="cssbutton" value="Close" action="{!closeSoftCreditButton}" immediate="true" reRender="errorpanel,savedoppspanel" style="float:right;margin-left:5px"/>                                                                         
+                         <apex:commandButton styleClass="cssbutton" value="Save" action="{!saveSoftCreditButton}" reRender="errorpanel,savedoppspanel" style="float:right;margin-left:5px"/> 
+                         <br/><br/>
+                    </div>
+                </apex:outputPanel>                        
+                <apex:outputText style="color:orange;margin-top:5px;vertical-align:middle;margin-left:5px" styleClass="textfontBold" value="All Opportunities Created In:"/>
+                <apex:outputText style=";margin-top:5px;vertical-align:middle" styleClass="textfontBold" value=" This Session" rendered="{!!showAllBatchOpportunities}"/>   
+                <apex:outputText style=";margin-top:5px;vertical-align:middle" styleClass="textfontBold" value=" This Batch" rendered="{!showAllBatchOpportunities}"/>                                
+                <apex:inputCheckbox value="{!showAllBatchOpportunities}" style="margin-top:5px;margin-left:70px;margin-right:5px;vertical-align:middle" disabled="{!thisBatchEntry.Id == null}" onchange="reloadBatchOpportunitiesAF();"/>
+                <apex:outputText style=";margin-top:5px;vertical-align:middle" styleClass="textfontNormal" value="Toggle Batch / Session View"/><br/>
+                <apex:pageBlockTable value="{!savedOpportunities}" var="so" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:5px;margin-left:0px;width:80%;box-shadow: 5px 5px 5px #888;">
+                    <apex:column headerClass="textfontBold" headerValue="Opportunity" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputLink tabindex="-1" style="vertical-align:text-top"  value="/{!so.Id}" target="_blank">{!so.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column headerClass="textfontBold" headerValue="Account Name" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.AccountId}"/>
+                    </apex:column>                    
+                    <apex:column headerClass="textfontBold" headerValue="Stage" style="vertical-align:middle;"  styleClass="textfontNormal">
+                       <apex:outputField value="{!so.StageName}"/>
+                    </apex:column>
+                    <apex:column headerClass="textfontBold" headerValue="Total Amount" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.Amount}"/>
+                    </apex:column>                    
+                    <apex:column headerClass="textfontBold" headerValue="Balance Due" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.s360a__BalanceDue__c}"/>
+                    </apex:column>
+                    <apex:column headerClass="textfontBold" headerValue="Campaign Name" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.CampaignId}"/>
+                    </apex:column>    
+                    <apex:column headerClass="textfontBold" headerValue="Receipt Status" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.s360a__ReceiptStatus__c}"/>
+                    </apex:column>  
+                    <apex:column headerClass="textfontBold" headerValue="Batch Name" style="vertical-align:middle;" styleClass="textfontNormal">
+                       <apex:outputField value="{!so.s360a__BatchEntry__c}"/>
+                    </apex:column>
+                    <apex:column headerClass="textfontBold" headerValue="Action" style="vertical-align:middle;text-align:center" styleClass="textfontNormal">
+                        <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">
+                            <apex:commandLink styleClass="btn" action="{!newSoftCreditButton}" reRender="errorpanel,savedoppspanel" style="vertical-align:middle;padding:2px;box-shadow: 1px 1px 1px #888;">
+                                <apex:param name="softoppid" value="{!so.Id}"/>
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/green_button.png')}" style="height:15px;vertical-align:middle;padding-bottom:2px" />  
+                            </apex:commandLink>                                                 
+                            <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                                <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                                Click to quick add a soft credit for another person or organisation in supporter360, linked back to this opportunity.
+                            </div>
+                        </div>                        
+                    </apex:column>                      
+                </apex:pageBlockTable>                
+            </div> 
+            </apex:outputPanel>                                               
+        </apex:tab>
+        <apex:tab switchType="client" label="Review Entries" name="datareview" id="datareviewtab" rendered="false">
+            <apex:outputPanel id="reviewpanel">
+            <apex:pageBlockTable value="{!savedObjects}" var="so">
+              <!--   <apex:column headerValue="Name" value="{!so ['Name']}"/>
+                 <apex:column headerValue="Id" value="{!so ['Id']}"/>   -->
+            </apex:pageBlockTable>
+            </apex:outputPanel>
+        </apex:tab>
+<!-- Fields & Templates -->        
+        <apex:tab switchType="client" label="Fields & Templates" name="templates">
+           <apex:outputPanel id="templatestab">           
+              <apex:actionFunction name="checkFields" action="{!reloadAllFields}" status="generalpagestatus" reRender="errorpanel,templatestab"/>
+              <div class="bar" style="width:97%;margin-top:10px">Select Fields / Create Templates</div><br/>    
+              <apex:actionRegion >
+              <div id="getfieldsbox" class="roundbox" style="width:700px;margin-right:10px;margin-left:5px;margin-top:10px">       
+              <table style="margin-top:10px">
+              <tr>
+                <td><apex:outputText escape="false" value="Object to get fields from:" style="font-weight:bold;font-size:11px"/></td>
+                <td><apex:outputText escape="false" value="Select Field:" style="font-weight:bold;font-size:11px"/>&nbsp;&nbsp; </td>
+                <td><apex:outputText escape="false" value="Show On Row:" style="font-weight:bold;font-size:11px"/>&nbsp;&nbsp; </td>                
+              </tr><tr>
+                <td><apex:selectList size="1" value="{!currentObject}" onchange="checkFields();">
+                        <apex:selectOptions value="{!customFieldObjects}"/>
+                    </apex:selectList></td>
+                <td><apex:selectList size="1" value="{!currentField}">
+                        <apex:selectOptions value="{!availableFields}"/>
+                    </apex:selectList></td>
+                <td style="text-align:center"><apex:inputText value="{!showOnRow}" style="width:20px" /></td>
+                <td>&nbsp;&nbsp; 
+                    <apex:commandbutton title="Add input field" action="{!addFieldButton}" image="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" reRender="errorpanel,templatestab, inputform" status="fieldaddstatus" style="height:15px;vertical-align:middle;padding:2px;box-shadow: 1px 1px 1px #888;"/>
+                                <apex:actionStatus id="fieldaddstatus">
+                                    <apex:facet name="start">
+                                        <img src="/img/loading.gif" width="16" height="16" style="padding-left: 10px; padding-right: 5px;vertical-align:middle;" />
+                                    </apex:facet>
+                                </apex:actionStatus>                    
+ 
+                    <apex:outputPanel rendered="{!formChanged}">
+                        &nbsp;&nbsp;<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/warning.png')}" title="Unsaved changes"  height="20px" width="20px" style="vertical-align:text-bottom;"  />           
+                    </apex:outputPanel></td>
+              </tr>
+              </table>  
+              </div>
+                </apex:actionRegion>
+                <apex:outputPanel rendered="{!showCustomFieldsTable}">
+                <br/><br/><hr/>
+                <apex:pageBlockTable value="{!thisFieldSet.fields}" var="cf" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:15px;margin-left:0px;width:800px;box-shadow: 5px 5px 5px #888;">
+                    <apex:column headerValue="Obejct">
+                        <apex:outputText value="{!cf.objectType}"/>
+                    </apex:column>
+                    <apex:column headerValue="Field">
+                        <apex:outputText value="{!cf.fieldName}"/>
+                    </apex:column>                
+                    <apex:column headerValue="Label">
+                        <apex:inputText value="{!cf.label}"/>
+                    </apex:column>                  
+                    <apex:column headerValue="Row">
+                        <apex:inputText value="{!cf.displayOnRow}" style="width:20px"/>
+                    </apex:column>       
+                    <apex:column headerValue="Default Value">
+                        <apex:inputField value="{!cf.inputObj[cf.fieldName]}"/>
+                    </apex:column>                                            
+                    <apex:column headerValue="Required">
+                        <apex:inputCheckbox value="{!cf.isRequired}"/>
+                    </apex:column>               
+                
+                </apex:pageBlockTable>
+                <br/>
+                      <apex:outputText styleClass="textfontBold" value="Template / Fieldset Name:" style="margin-right:5px;vertical-align:middle;"/>
+                      <apex:inputText value="{!thisFieldSet.fieldSetName}" style="vertical-align:middle;" />  
+                      <apex:outputText styleClass="textfontBold" value="Description:" style="margin-right:5px;vertical-align:middle;"/>
+                      <apex:inputField value="{!templateBatchRecord.s360a__TemplateDescription__c}" style="vertical-align:middle;margin-left:10px" /> 
+                      <apex:commandButton style="height:15px;vertical-align:middle;margin-right:10px;box-shadow: 1px 1px 1px #888" title="Save" image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" action="{!saveTemplateButton}" status="generalpagestatus" reRender="errorpanel,thepage" />                      
+                </apex:outputPanel>
+                
+           </apex:outputPanel>
+      </apex:tab>        
+      </apex:tabPanel>   
+      </apex:pageBlock> 
+       <apex:actionStatus id="generalpagestatus">
+            <apex:facet name="start">
+                <apex:outputPanel styleClass="popupBackground" layout="block" />        
+                <apex:outputPanel styleClass="customPopup" layout="block" style="opacity:0.85;background-color:#FCFCFC;width:300px;height:65px;padding:2px;left:57%" >        <!-- style="bottom: 250px;left: 54%;right: 54%;" -->
+                    <br/>
+                    <table width="100%">
+                        <tr><td align="center"><apex:outputText style="font-size:15px;font-weight:bold;color:grey;" value="Working - please wait."/></td></tr>
+                        <tr><td align="center"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loadingbar.gif')}" style="margin-top:5px"/></td>
+                        </tr>
+                    </table>
+                    <br/>                              
+                 </apex:outputPanel> 
+             </apex:facet>
+             <apex:facet name="stop">
+             </apex:facet>                           
+         </apex:actionStatus>                                
+    </apex:form>
+    </div> 
+</apex:page>

@@ -1,0 +1,46 @@
+<apex:component controller="s360a.GenericHistoryComponentController">
+
+    <!-- Attribute Definition -->
+    <apex:attribute name="passedObject" description="Object we wish to view the history of" type="SObject" required="true" assignTo="{!myObject}" />
+    <apex:attribute name="passedRecordLimit" description="Number of lines of history to display" type="Integer" required="false" assignTo="{!recordLimit}" />
+    <apex:attribute name="passedisStageHistory" description="Is this Stage History on Opportunity?" type="Boolean" required="false" default="false" assignTo="{!isStageHistory}" />
+    
+    <apex:form >
+        <!-- Object History Related List -->
+        <apex:pageBlock id="historyTable" >    <!--title="{!objectLabel} History"-->
+            <apex:outputPanel rendered="{!!isStageHistory}">
+                <apex:pageBlockTable value="{!ObjectHistory}" var="History" >
+                    <apex:column headerValue="Date"  value="{!History.thedate}"/>
+                    <apex:column headerValue="User">
+                        <apex:outputLink value="/{!History.userId}"> {!History.who} </apex:outputLink> 
+                    </apex:column>
+                    <apex:column headerValue="Action"><apex:outputText escape="false" value="{!History.action}"/></apex:column>
+                </apex:pageBlockTable>
+            </apex:outputPanel>
+            
+            <apex:outputPanel rendered="{!isStageHistory}">
+                <apex:pageBlockTable value="{!stageHistoryList}" var="History" >
+                    <apex:column headerValue="Stage"  value="{!History.StageName}"/>
+                    <apex:column headerValue="Amount"  value="{!History.Amount}"/>
+                    <apex:column headerValue="Expected Revenue"  value="{!History.ExpectedRevenue}"/>
+                    <apex:column headerValue="Probability"  value="{!History.Probability}"/>                      
+                    <apex:column headerValue="Close Date"  value="{!History.CloseDate}"/>                      
+                    <apex:column headerValue="Last Modified"  value="{!History.CreatedDate}"/>                                                                                
+                </apex:pageBlockTable>
+                <apex:outputPanel rendered="{!notFullList}">
+                    <br/>
+                    <apex:outputText escape="false" value="<b>Note: There are additional history items - scroll down to the full stage history to view them.</b>"/>
+                </apex:outputPanel>  
+            </apex:outputPanel>            
+            
+            <apex:outputPanel rendered="{!!isStageHistory && tableSize > rowCount}">
+               <div class="pShowMore">
+                    <apex:commandLink value="Show more »" rerender="historyTable" action="{!refreshObjectHistory}">
+                    </apex:commandLink>
+                    &nbsp;|&nbsp;
+                    <a href="/_ui/common/history/ui/EntityHistoryFilterPage?id={!myObjectId}">Go to list&nbsp;»</a>
+               </div>
+            </apex:outputPanel>
+        </apex:pageBlock>
+    </apex:form>
+</apex:component>

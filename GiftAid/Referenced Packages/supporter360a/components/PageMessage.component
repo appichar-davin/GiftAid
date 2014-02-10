@@ -1,0 +1,31 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: PageMessage.component                              *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:component access="global">
+    <apex:attribute name="icon" description="This is the icon to be displayed. It can be: confirm, error, info, or warning." type="String" required="true" access="global" />
+    <apex:attribute name="header" description="This is header to be displayed." type="String" required="true" access="global" />
+    <apex:attribute name="body" description="This is body to be displayed." type="String" required="true" access="global" />
+    <apex:outputPanel layout="block" style="width: auto; border: 1px solid #000000; padding: 10px; background-color: #FFFFCC; margin-bottom: 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td width="32"><apex:image value="/img/msg_icons/{!icon}32.png" /></td>
+                <td width="20"></td>
+                <td>
+                    <apex:outputPanel layout="block" style="margin-bottom: 5px;">
+                        <apex:outputText style="font-weight: bold;" value="{!header}" />
+                    </apex:outputPanel>
+                    <apex:outputText escape="false" value="{!body}" />
+                </td>
+                
+            </tr>
+        </table>
+    </apex:outputPanel>
+</apex:component>

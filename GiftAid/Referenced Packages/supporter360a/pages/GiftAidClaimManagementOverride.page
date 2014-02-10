@@ -1,0 +1,14 @@
+<!--
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: GiftAidClaimManagementOverride.page                *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page standardController="s360a__GiftAidClaim__c" extensions="s360a.GiftAidClaimManagementOverride">
+    Removed 07/13 IJR 
+</apex:page>

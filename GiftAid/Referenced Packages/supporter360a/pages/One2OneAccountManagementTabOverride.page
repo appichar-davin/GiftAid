@@ -1,0 +1,15 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: One2OneAccountManagementTabOverride.page           *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page tabStyle="Account">
+	<apex:sectionHeader title="supporter360" subtitle="One-2-One Account Management"></apex:sectionHeader>
+	<c:PageMessage icon="error" header="Direct access to Account records has been disabled" body="Due to supporter360's data model direct access to Account records is no longer required and has been disabled. If you require direct access to an account record please contact your System Administrator." />
+</apex:page>

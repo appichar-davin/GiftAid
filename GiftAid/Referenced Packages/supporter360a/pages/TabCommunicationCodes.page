@@ -1,0 +1,75 @@
+<apex:page Controller="s360a.CommunicationCodeClass" showHeader="false" sidebar="false">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+<apex:form >
+  <div style="float:left">
+    <apex:chart height="140" width="800" data="{!chartDataSet}">    
+        <apex:legend position="right"/>
+        <apex:axis type="Numeric" position="left" fields="commsCount,actCount,campInCount,campRespondedCount" steps="1"
+            title="Interactions" grid="true"/>
+        <apex:axis type="Category" position="bottom" fields="week" />
+        <apex:lineSeries axis="left" fill="true" xField="week" yField="commsCount" title="Planned Comms"
+          markerType="circle" markerSize="2" markerFill="#FF0000">
+            <apex:chartTips height="70" width="250" valueField="tips" labelField="label"/>
+        </apex:lineSeries>
+        <apex:lineSeries axis="left" fill="true" xField="week" yField="actCount" title="Activities"
+          markerType="cross" markerSize="2" markerFill="#CC00FF">  
+            <apex:chartTips height="70" width="250" valueField="tips" labelField="label"/>  
+        </apex:lineSeries>
+        <apex:barSeries orientation="vertical" axis="left" xField="week" yField="campInCount" title="Campaign (No Response)">
+            <apex:chartTips height="70" width="250" valueField="tips" labelField="label"/>          
+        </apex:barSeries>
+        <apex:barSeries orientation="vertical" axis="left" colorSet="#FF9933" xField="week" yField="campRespondedCount" title="Campaign (Responded)">                              
+            <apex:chartTips height="70" width="250" valueField="tips" labelField="label"/>      
+        </apex:barSeries>
+     </apex:chart> 
+   </div>
+       <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="float:right">
+        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" width="20px" height="20px" />
+        <div style="display: none; opacity: 0;height:75px" class="mouseOverInfo">                                          
+            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />
+            <apex:outputText escape="false" value="'Planned Comms' is calculated by looking at your pre-existing campaigns that have been assigned corresponding Comms Codes and then matching against this contact. Other interactions include activities attached to the contact record and campaign memberships."/>                                
+        </div>
+    </div>
+    <div style="float:left">
+    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/back.png')}" action="{!backYearButton}" style="height:20px;vertical-align:middle"/> &nbsp;&nbsp;
+    <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images,'/next.png')}" action="{!forwardYearButton}" style="height:20px;vertical-align:middle"/>    
+    <apex:outputText style="font-weight:bold;margin-left:20px;font-size:13px;vertical-align:middle" value="Showing Interactions from {!startDateString} to {!endDateString} by week (Current week is {!thisWeek})"/>
+    </div>
+</apex:form>
+</apex:page>
+
+<!-- OLD CODE
+<apex:form >
+<apex:pageblock >
+<apex:outputPanel >
+<table width="60%"><tr><td><center><apex:outputLink value="{!urlFor($Page.CommunicationNew,null,[Id=ide])}"  target="_blank" styleClass="btn" style="text-decoration: none;height:22px;">New Communication Code</apex:outputLink></center><br/></td></tr></table>
+            
+             </apex:outputPanel>
+<apex:pageblocktable value="{!displayrec}" var="ah" width="100%">
+<apex:column headerValue="Action" width="10%">
+<apex:outputLink title="Edit code" value="{!urlFor($Page.CommunicationView,null,[id=ide,mode='edit',sno=ah.unno])}" target="_blank"><apex:image url="{!URLFOR($Resource.s360Images, '/edit.png')}" width="12px" height="12px"/></apex:outputLink>
+<apex:outputLabel value="" >&nbsp; | &nbsp;</apex:outputLabel> 
+<apex:commandlink title="Delete code" action="{!Deletefunction}" onclick="if(confirm('Are you sure you want to delete this code?')) return true; else return false;" target="_top" ><apex:image url="{!URLFOR($Resource.s360Images, '/deletex.png')}" width="12px" height="12px"/>
+                      <apex:param name="deleteno" value="{!ah.unno}"/> 
+                    </apex:commandlink>
+</apex:column>
+<! -- <apex:column headerValue="Communication Code ID" ><apex:outputLink value="{!urlFor($Page.CommunicationView,null,[id=ide,mode='view',sno=ah.unno])}" target="_blank">{!ah.unno} </apex:outputLink></apex:column>  -- >
+<apex:column headerValue="Type" ><apex:outputLink value="{!urlFor($Page.CommunicationView,null,[id=ide,mode='view',sno=ah.unno])}" target="_blank">{!ah.cType}</apex:outputLink></apex:column>
+<apex:column headerValue="Date From">
+<apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    <apex:param value="{!ah.fromdate}" /> 
+</apex:outputText>
+</apex:column>
+<apex:column headerValue="Date To" >
+<apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    <apex:param value="{!ah.todate}" /> 
+</apex:outputText>
+</apex:column>
+<apex:column headerValue="Comments" value="{!ah.Comment}">
+</apex:column>
+</apex:pageblocktable><br/>
+ 
+
+</apex:pageblock>
+</apex:form>
+-->

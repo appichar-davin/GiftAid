@@ -1,0 +1,239 @@
+<apex:page controller="s360a.CampaignBatchEntry" tabStyle="Contact" sidebar="false" showHeader="true" id="thepage">
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+<style>
+.header {
+    font-weight:bold;
+}    
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 2px;
+        padding:10px;
+        position: fixed; 
+        z-index: 9999;  
+        width: 400px;
+        box-shadow: 10px 10px 5px #888;
+   
+/* get the pop up in the middle of the screen */
+        top: 40%;
+        left: 54%;
+        margin-top: -10px;
+        margin-left: -250px;      
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;        
+    }
+.popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+}
+.bar {
+    display: inline-block;
+    line-height: 1;
+    padding: 7px 10px;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+    height: 14px;
+    background-color: #39c;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #888;
+}
+body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+.evenRow { background-color: #FFFFFF; }
+.oddRow { background-color: #EEEEEE; }
+
+.centered { text-align: center; }
+.centeredOrange { text-align: center; color: orange; }
+.normalOrange { color: orange; }
+.centered-table {
+   margin-left: auto;
+   margin-right: auto;
+}
+    div.hideCurrDate span.dateInput span.dateFormat{
+       display:none;
+}
+.mouseOverInfo {
+    background-color: #F8FBFF;
+    text-align: left;
+    left: 0px;
+    box-shadow: 3px 3px 3px #888;    
+}   
+</style>    
+    <apex:form id="thepage">
+         <apex:pageBlock >                   
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/s360CommsMgr.png')}" height="70px" style="margin-left:auto;margin-right:auto"/>           
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/campaigns.png')}" width="50px" style="vertical-align:middle;float:right"/>        
+            <apex:actionFunction name="rerenderPage" reRender="thepage"/>
+            <br/><br/>
+            <apex:outputPanel rendered="{!!isStarted}">     
+                <div class="bar" style="width:97%">Set Campaign Defaults:</div><br/>                  
+                <br/>               
+                <apex:pageBlockTable value="{!defaultsCampaigns}" var="dc" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-left:10px;width: auto;box-shadow: 5px 5px 5px #888;"> 
+                    <apex:column headerValue="Owner / Parent" style="vertical-align:middle">
+                        <br/>
+                        <apex:inputField value="{!dc.OwnerId}" required="false"/>
+                        <br/><br/>
+                        <apex:inputField value="{!dc.ParentId}"/><br/><br/>                        
+                    </apex:column>                     
+                    <apex:column headerValue="Campaign Record Type / Type " style="vertical-align:middle">
+                        <br/>
+                        <apex:inputfield value="{!dc.RecordTypeId}" onchange="rerenderPage();"/>
+                        <br/><br/>
+                        <apex:inputField value="{!dc.Type}" onchange="rerenderPage();"/><br/><br/>
+                    </apex:column>
+                    <apex:column headerValue="Sub-Type / Status" style="vertical-align:middle">
+                        <br/>
+                        <apex:inputField value="{!dc.s360a__SubType__c}"/>
+                        <br/><br/>
+                        <apex:inputField value="{!dc.Status}"/><br/><br/>
+                    </apex:column>                     
+                    <apex:column headerValue="Active / Calendar" style="vertical-align:middle;text-align:center">
+                        <br/>
+                        <apex:inputField value="{!dc.isActive}"/>
+                        <br/><br/>
+                        <apex:inputField value="{!dc.s360a__ShowOnEventCalendar__c}"/><br/><br/>
+                    </apex:column>                     
+                    <apex:column headerValue="Product / Price Book" style="vertical-align:middle">
+                        <br/>
+                        <apex:inputField value="{!dc.s360a__Product__c}"/><br/>
+                        <br/>
+                        <apex:inputField value="{!dc.s360a__Pricebook__c}"/><br/><br/>
+                    </apex:column>                                                                                
+                </apex:pageBlockTable>
+                <br/>
+            </apex:outputPanel>
+            <apex:commandButton styleClass="cssbutton" value="Next >" action="{!nextButton}" status="generalpagestatus" rerender="thepage" rendered="{!!isStarted}"/>
+            <apex:commandButton styleClass="cssbutton" value="< Edit Defaults" action="{!editDefaultsButton}" status="generalpagestatus" rerender="thepage" rendered="{!isStarted}"/>
+            
+            
+            <br/><hr/>
+            <apex:outputPanel rendered="{!isStarted}">    
+                <div class="bar" style="width:97%">Enter Campaign Details and Click '+':</div><br/><br/> 
+                 <apex:pageBlockTable value="{!editEntry}" var="ee" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-left:10px;width: auto;box-shadow: 5px 5px 5px #888;"> 
+                    <apex:column headerValue="Campaign Name / Parent" style="vertical-align:top">
+                        <br/>
+                        <apex:inputfield value="{!ee.thisCampaign.Name}" required="false"/><br/><br/>
+                        <apex:inputField value="{!ee.thisCampaign.ParentId}"/>
+                    </apex:column>
+                    <apex:column headerValue="Record Type / Type" style="vertical-align:top">
+                        <br/>
+                        <apex:inputField value="{!ee.thisCampaign.RecordTypeId}" onchange="rerenderPage();"/>
+                        <br/><br/>
+                        <apex:inputField value="{!ee.thisCampaign.Type}" onchange="rerenderPage();"/>
+                    </apex:column>                         
+                    <apex:column headerValue="Start / End Date" style="vertical-align:top">
+                        <br/>
+                        <div class="hideCurrDate">
+                        <apex:inputField value="{!ee.thisCampaign.StartDate}"/><br/><br/>
+                        <apex:inputField value="{!ee.thisCampaign.EndDate}"/>
+                        </div>                    
+                    </apex:column>  
+                    <apex:column headerValue="Active / Calendar" style="vertical-align:top;text-align:center">
+                        <br/>
+                        <apex:inputField value="{!ee.thisCampaign.isActive}"/><br/><br/>
+                        <apex:inputField value="{!ee.thisCampaign.s360a__ShowOnEventCalendar__c}"/>
+                    </apex:column>                         
+                    <apex:column headerValue="Comms Codes" style="vertical-align:top">
+                        <c:MultiselectPicklist leftOptions="{!pickOptions}"
+                        leftLabel="" rightLabel=""
+                        rightOptions="{!selectedPickOptions}"
+                        size="5"
+                        width="125px"/>    
+                    </apex:column>
+                    <apex:column headerValue="Action" style="vertical-align:top">
+                        <br/><br/>
+                        <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" value="Add To List" action="{!addButton}" status="generalpagestatus" rerender="thepage"/>
+                    </apex:column>                                                      
+                </apex:pageBlockTable>          
+                <br/><hr/>
+                <apex:outputPanel rendered="{!showList}">
+                    <div class="bar" style="width:97%">Campaign(s) To Create:</div><br/>                          
+                    <br/>   
+                     <apex:pageBlockTable value="{!commsEntries}" var="ce" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-left:10px;width: 95%;box-shadow: 5px 5px 5px #888;" rendered="{!commsEntries != null}"> 
+                        <apex:column headerValue="Clone" style="text-align:center">    
+                            <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                                <apex:commandLink action="{!cloneButton}" styleClass="btn" style="vertical-align:middle;padding:4px;box-shadow: 1px 1px 1px #888;" status="generalpagestatus" rerender="thepage" >     
+                                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add_pages.png')}" style="height:20px;vertical-align:middle;"/>
+                                    <apex:param name="cloneitem" value="{!ce.position}"/>
+                                </apex:commandLink>                                
+                                <div style="display: none; opacity: 0;" class="mouseOverInfo">                                          
+                                    <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />   
+                                    Make a copy of this Campaign record where you can changes names, dates etc before saving.
+                                </div>
+                            </div>                            
+                        </apex:column>
+                        <apex:column headerValue="Select" style="text-align:center">    
+                            <apex:inputCheckbox value="{!ce.selected}" title="Select this comms entry" disabled="{!ce.thisCampaign.Id != null}"/>        
+                        </apex:column>              
+                        <apex:column headerValue="Name">
+                            <apex:inputField value="{!ce.thisCampaign.Name}" rendered="{!ce.thisCampaign.Id == null}"/>
+                            <apex:outputLink value="/{!ce.thisCampaign.Id}" rendered="{!ce.thisCampaign.Id != null}">{!ce.thisCampaign.Name}</apex:outputLink>
+                        </apex:column>
+                        <apex:column headerValue="Record Type">
+                            <apex:inputField value="{!ce.thisCampaign.RecordTypeId}" rendered="{!ce.thisCampaign.Id == null}" onchange="rerenderPage();"/>
+                            <apex:outputField value="{!ce.thisCampaign.RecordTypeId}" rendered="{!ce.thisCampaign.Id != null}"/>
+                        </apex:column>     
+                        <apex:column headerValue="Type">
+                            <apex:inputField value="{!ce.thisCampaign.Type}" rendered="{!ce.thisCampaign.Id == null}"/>
+                            <apex:outputField value="{!ce.thisCampaign.Type}" rendered="{!ce.thisCampaign.Id != null}"/>
+                        </apex:column>       
+                        <apex:column headerValue="Parent">
+                            <apex:inputField value="{!ce.thisCampaign.ParentId}" rendered="{!ce.thisCampaign.Id == null}"/>
+                            <apex:outputField value="{!ce.thisCampaign.ParentId}" rendered="{!ce.thisCampaign.Id != null}"/>
+                        </apex:column>                                              
+                        <apex:column headerValue="Start">
+                            <div class="hideCurrDate">  
+                                <apex:inputField value="{!ce.thisCampaign.StartDate}" rendered="{!ce.thisCampaign.Id == null}"/>  
+                            </div>
+                            <apex:outputField value="{!ce.thisCampaign.StartDate}" rendered="{!ce.thisCampaign.Id != null}"/> 
+                        </apex:column>  
+                        <apex:column headerValue="End">
+                            <div class="hideCurrDate">  
+                                <apex:inputField value="{!ce.thisCampaign.EndDate}" rendered="{!ce.thisCampaign.Id == null}" />
+                            </div>
+                            <apex:outputField value="{!ce.thisCampaign.EndDate}" rendered="{!ce.thisCampaign.Id != null}" />
+                        </apex:column> 
+                        
+                        <apex:column headerValue="Comms Codes">
+                            <apex:outputField value="{!ce.thisCampaign.s360a__CommunicationsCodes__c}"/>
+                        </apex:column>                            
+                    </apex:pageblockTable>      
+                    <br/> 
+                    <apex:commandButton styleClass="cssbutton" value="Select All" action="{!selectAllButton}" status="generalpagestatus" rerender="thepage"/>  
+                    <apex:commandButton styleClass="cssbutton" value="Delete Selected" action="{!deleteSelectedButton}" status="generalpagestatus" rerender="thepage"/>  
+                    <apex:commandButton styleClass="cssbutton" value="Create All" action="{!saveButton}" status="generalpagestatus" rerender="thepage"/>
+                </apex:outputPanel>
+            </apex:outputPanel>    
+        </apex:pageBlock>  
+    </apex:form>  
+        <apex:actionStatus id="generalpagestatus">
+            <apex:facet name="start">
+                <apex:outputPanel styleClass="popupBackground" layout="block" />        
+                <apex:outputPanel styleClass="customPopup" layout="block" style="opacity:0.85;background-color:#FCFCFC;width:350px;padding:2px;left:57%" > 
+                    <br/>
+                    <table width="100%">
+                        <tr><td align="center"><apex:outputText style="font-size:20px;font-weight:bold;color:grey;" value="Working - please wait.."/></td></tr>
+                        <tr><td><br/></td></tr>
+                        <tr><td align="center"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loadingbar.gif')}"/></td>
+                        </tr>
+                    </table>
+                    <br/>                              
+                 </apex:outputPanel> 
+             </apex:facet>
+             <apex:facet name="stop">
+             </apex:facet>                           
+         </apex:actionStatus>   
+</apex:page>

@@ -1,0 +1,33 @@
+<apex:page Controller="s360a.EmailInlineClass" showHeader="false" sidebar="false">
+
+<apex:form >
+<apex:pageblock >
+<apex:outputPanel id="phline">
+<table width="60%"><tr><td><center><apex:outputLink value="{!urlFor($Page.s360a__EmailNew,null,[Id=ide])}"  target="_blank" styleClass="btn" style="text-decoration: none;height:22px;">New Email Address</apex:outputLink></center><br/></td></tr></table>
+            
+             </apex:outputPanel>
+<apex:pageblocktable value="{!disrecs}" var="ah" width="100%">
+<apex:column headerValue="Action">
+<apex:outputLink title="Edit email" value="{!urlFor($Page.s360a__EmailView,null,[id=ide,mode='edit',sno=ah.unqNumber])}" target="_blank"><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" width="12px" height="12px"/> </apex:outputLink>
+<apex:outputLabel value="" >&nbsp; | &nbsp;</apex:outputLabel> 
+<apex:commandlink title="Delete email" action="{!Deletefunction}" onclick="if(confirm('Are you sure you want to delete?')) return true; else return false;" target="_top" ><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" width="12px" height="12px"/>
+                      <apex:param name="deleteno" value="{!ah.unqNumber}"/> 
+                    </apex:commandlink>
+</apex:column>
+<apex:column headerValue="Email Address Type" ><apex:outputLink value="{!urlFor($Page.s360a__EmailView,null,[id=ide,mode='view',sno=ah.unqNumber])}" target="_blank">{!ah.oTypeDes} </apex:outputLink></apex:column>
+<apex:column headerValue="Description" value="{!ah.oTypeDes}" ></apex:column>
+<apex:column headerValue="Email Address" value="{!ah.oValue}"></apex:column>
+<apex:column headerValue="Email Address Status"  >{!ah.activeStatus}</apex:column>
+<apex:column headerValue="Preferred Email Address">
+<apex:inputCheckbox value="{!ah.isPreferred}" disabled="true"/>
+</apex:column>
+<apex:column headerValue="Show On Contact Record">
+<apex:inputCheckbox value="{!ah.showOnAccountRecord}" disabled="true"/></apex:column> 
+<apex:column headerValue="Active">
+<apex:inputCheckbox value="{!ah.isActive}" disabled="true"/></apex:column>
+</apex:pageblocktable><br/>
+
+
+</apex:pageblock>
+</apex:form>
+</apex:page>

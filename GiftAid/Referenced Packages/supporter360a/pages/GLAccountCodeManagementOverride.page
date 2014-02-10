@@ -1,0 +1,100 @@
+<!-- 
+/*****************************************************************
+ *                                                               *
+ *   Product: supporter360                                       *
+ *      File: GLAccountCodeManagementOverride.page               *
+ *   Version: 1.0                                                *
+ * Copyright: ©2013 appiChar Pty. Ltd. All rights reserved       *
+ *                                                               *
+ * Primary purpose of this is to allow payment method data to be *
+ * written to the GL record using the transaction picklists      *
+ *****************************************************************/
+ -->
+<apex:page standardcontroller="s360a__GLAccountCode__c" extensions="s360a.GLAccountCodeManagementOverride">
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+    <apex:sectionHeader title="GL Account Code Edit" subtitle="{!GLAccountCode.Name}" />
+    <!-- <apex:outputLink target="_blank" value="http://www.supporter360.net/support" style="float:right;"><apex:image value="{!URLFOR($Resource.s360Images,'/s360Help.png')}"/></apex:outputLink> -->
+    <apex:form >
+        <apex:actionFunction name="rerenderPage" rerender="thisPage" status="pageStatus"/>       
+        <apex:outputPanel id="thisPage">
+        <apex:pageBlock >
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!saveButton}" value="Save" status="pageStatus"/>
+                <apex:commandButton action="{!cancelButton}" value="Cancel" status="pageStatus" immediate="true"/>
+                &nbsp;&nbsp;
+                <apex:actionStatus id="pageStatus">
+                    <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                    </apex:facet>
+                </apex:actionStatus>                 
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="General" columns="2">
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.Name.InlineHelpText}">
+                    <apex:outputPanel >GL Code Name</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.Name}" required="true"/>
+                </apex:pageBlockSectionItem>    
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__Active__c.InlineHelpText}">
+                    <apex:outputPanel >Active</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__Active__c}"/>
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__Value__c.InlineHelpText}">
+                    <apex:outputPanel >Value</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__Value__c}"/>
+                </apex:pageBlockSectionItem>  
+                <apex:pageBlockSectionItem />                              
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__Type__c.InlineHelpText}">
+                    <apex:outputPanel >Type</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__Type__c}" onchange="rerenderPage();"/>
+                </apex:pageBlockSectionItem>   
+                <apex:pageBlockSectionItem />           
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__AvailableOn__c.InlineHelpText}" rendered="{!GLAccountCode.s360a__Type__c == 'Prefix' || GLAccountCode.s360a__Type__c == 'Middle' || GLAccountCode.s360a__Type__c == 'Suffix'}">
+                    <apex:outputPanel >Available On</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__AvailableOn__c}"/>
+                </apex:pageBlockSectionItem>                                                                             
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Tax" columns="2" rendered="{!GLAccountCode.s360a__Type__c == 'Tax Code'}">
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__TaxRate__c.InlineHelpText}">
+                    <apex:outputPanel >Tax Rate</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__TaxRate__c}"/>
+                </apex:pageBlockSectionItem>
+            <!-- Custom fields -->              
+            <apex:repeat value="{!InformationSectionCustomFields}" var="cfField" >
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Payment Method</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode[cfField.customFieldName]}" required="{!cfField.displayAsRequired}" /> 
+                </apex:pageBlockSectionItem>
+            </apex:repeat> 
+            <!-- Custom fields -->                              
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Payment Method" columns="2" rendered="{!GLAccountCode.s360a__Type__c == 'Payment Method'}">        
+                <apex:pageBlockSectionItem helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__PaymentMethod__c.InlineHelpText}">
+                    <apex:outputPanel >Payment Method</apex:outputPanel>
+                    <apex:inputField value="{!trans.s360a__PaymentMethod__c}" onchange="rerenderPage();"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!trans.s360a__PaymentMethod__c == 'Payment Gateway' && manualProvider == false}" helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__PaymentMethodProvider__c.InlineHelpText}">
+                    <apex:outputPanel >Card Type</apex:outputPanel>
+                    <apex:inputField value="{!trans.s360a__CardType__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!trans.s360a__PaymentMethod__c == 'Direct Debit' && manualProvider == false}" helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__PaymentMethodProvider__c.InlineHelpText}">
+                    <apex:outputPanel >Bank</apex:outputPanel>
+                    <apex:inputField value="{!trans.s360a__Bank__c}" />
+                </apex:pageBlockSectionItem>   
+                <apex:pageBlockSectionItem rendered="{!trans.s360a__PaymentMethod__c == 'Online Fundraising' && manualProvider == false}" helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__PaymentMethodProvider__c.InlineHelpText}">
+                    <apex:outputPanel >Online Fundraising</apex:outputPanel>
+                    <apex:inputField value="{!trans.s360a__OnlineFundraising__c}" />                    
+                </apex:pageBlockSectionItem> 
+                <apex:pageBlockSectionItem rendered="{!manualProvider == true}" helpText="{!$ObjectType.s360a__GLAccountCode__c.Fields.s360a__PaymentMethodProvider__c.InlineHelpText}">
+                    <apex:outputPanel >Manual Provider Name</apex:outputPanel>
+                    <apex:inputField value="{!GLAccountCode.s360a__PaymentMethodProvider__c}" />                    
+                </apex:pageBlockSectionItem>   
+                <apex:pageBlockSectionItem rendered="{!trans.s360a__PaymentMethod__c != 'Direct Debit' && trans.s360a__PaymentMethod__c != 'Payment Gateway' && trans.s360a__PaymentMethod__c != 'Online Fundraising' && manualProvider == false}"/>
+                <apex:pageBlockSectionItem helpText="Tick this to manually enter the payment method provider name.">
+                    <apex:outputPanel >Manual Override Provider</apex:outputPanel>
+                    <apex:inputCheckbox value="{!manualProvider}" onchange="rerenderPage();" />                    
+                </apex:pageBlockSectionItem>                                                                                   
+            </apex:pageBlockSection>        
+        </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+
+</apex:page>
