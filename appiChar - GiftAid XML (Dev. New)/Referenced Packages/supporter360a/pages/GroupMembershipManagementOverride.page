@@ -1,0 +1,13 @@
+<!-- 
+/*****************************************************************
+ *                                                               *
+ *   Product: supporter360                                       *
+ *      File: GroupMembershipManagementOverride.page             *
+ *   Version: 1.0                                                *
+ * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+ *                                                               *
+ *****************************************************************/
+ -->
+
+<apex:page standardcontroller="s360a__GroupMembership__c" extensions="s360a.GroupMembershipManagementOverride" action="{!autoForward}">
+</apex:page>

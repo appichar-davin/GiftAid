@@ -1,0 +1,294 @@
+<apex:component controller="s360a.GLCodeManagement" allowDML="true"  id="theComponent">
+<apex:attribute name="passedRecord" description="Passing the sObject to the controller" assignTo="{!record}" type="sObject" />
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+ <style>
+    .label{
+    font-size: 91%;
+    font-weight: bold;
+    vertical-align:text-bottom;
+    text-align: right; border-color: #ECECEC; vertical-align: top;font-family: Arial,Helvetica,sans-serif;padding: 2px 10px 2px 2px;
+    }
+    .label1{
+    font-size: 91%;
+    font-weight: bold;
+    vertical-align:text-bottom;    
+    text-align: right; border-color: #ECECEC; vertical-align: top;font-family: Arial,Helvetica,sans-serif;padding: 2px 10px 2px 2px;
+    }
+    .textcol{
+    vertical-align:text-bottom;    
+    text-align: left;font-family: Arial,Helvetica,sans-serif;font-size: 75%;
+    }
+    .rich-tab-inactive {
+            background-color: #CCCCCC;
+            font-weight: bold;
+            background: url("/img/alohaSkin/grid_headerbg.gif") repeat-x scroll 0 bottom #FFFFFF;
+    }
+    .rich-tab-active {
+            background-color: #F1F1F1;
+            background-image: none;
+            font-weight: bold;
+    }
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 1px;
+        left: 20%;
+        padding:10px;
+        position: absolute;
+        z-index: 9999;
+        
+        /* These are the 3 css properties you will need to tweak so the pop 
+        up displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can also add 
+        the height property for a fixed size pop up.*/
+        
+        width: 400px;
+        margin-left: -50px;
+        top:0px;
+}
+.popupBackground{
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 20);
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+}  
+
+ </style>
+ <apex:form id="form">
+ <apex:outputPanel id="topbutton">
+    <table>   
+        <td><apex:commandButton styleClass="cssbutton" value="Recalculate GL Codes" title="Recalculate GL Codes" action="{!save}"  id="theButton1" status="loading" reRender="tbl1,summary1,topbutton"/>
+            <apex:actionStatus id="loading">
+                <apex:facet name="start">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                </apex:facet>
+            </apex:actionStatus></td>
+            <td><apex:outputText id="error" value="Error: {!errorMsg}" style="color:orange;font-weight:bold" rendered="{!showError}"/>
+                <apex:outputText id="message" value="{!infoMsg}" style="color:orange;font-weight:bold" rendered="{!showMessage}"/></td>
+        <apex:outputLink target="_blank" value="http://www.supporter360.net/" style="float:right;"><apex:image value="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>    
+    </table>    
+    </apex:outputPanel>
+    <apex:outputPanel id="glouter">
+        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showLookup}"/>
+        <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showLookup}">
+        <apex:pageBlock >
+            <apex:pageBlockTable value="{!GLEntries}" var="g" id="gltable">
+                <apex:column value="{!g.gl.name}" width="200px"/> 
+                <apex:column headerValue="Select">
+                    <apex:inputCheckbox value="{!g.selected}">
+                        <apex:actionSupport event="onchange" rerender="glouter,editpage" action="{!selectGLCode}" status="selectgl"/>
+                    </apex:inputCheckbox>
+                </apex:column>
+            </apex:pageBlockTable> 
+            <apex:inputText value="{!GLsearchBox}" style="float:left"/> 
+            <apex:commandButton styleClass="cssbutton" value="Search" action="{!searchGLCode}" rerender="glouter" style="float:left;height:21px"/>&nbsp;&nbsp;                   
+            <apex:outputText value="   {!GLOffset+1} - {!GLMaxRange} / {!GLSize}" style="vertical-align:text-bottom;font-size:10px;font-weight:bold;"/>
+
+            <apex:commandButton styleClass="cssbutton"  value="Next" action="{!nextGL}" rerender="glouter" style="float:right;height:21px"/>&nbsp;&nbsp;            
+            <apex:commandButton styleClass="cssbutton"  value="Prev" action="{!prevGL}" rerender="glouter" style="float:right;height:21px"/>&nbsp;&nbsp;  
+            <apex:commandButton styleClass="cssbutton"  value="Cancel" action="{!cancelLookup}" rerender="glouter" style="float:right;height:21px"/>&nbsp;&nbsp;
+            <apex:actionStatus id="selectgl">
+                <apex:facet name="start">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                </apex:facet>
+            </apex:actionStatus>
+
+        </apex:pageBlock> 
+        </apex:outputPanel> 
+    </apex:outputPanel>             
+    <apex:pageblock >
+    <apex:tabPanel switchType="client" inactiveTabClass="inactiveTab">
+       <apex:tab label="Overview" name="home" id="home"  style="background: white;">
+
+         <apex:outputPanel id="summary1" rendered="{!isTransactionItem}"> 
+          <table  width="100%"  cellspacing="2" cellpadding="2" border="0" id="tb1l">
+          <tr>
+          <td  class="label" style="padding-top:10px;">Full GL Code </td>
+          <td style="padding-top:10px;">
+          <apex:OutputField value="{!TItem.s360a__GLConcatenated__c}" > 
+          <apex:inlineEditSupport showOnEdit="saveButton, cancelButton"  
+            hideOnEdit="editButton" event="ondblclick"  
+            changedStyleClass="myBoldClass" resetFunction="resetInlineEdit"/>  
+         </apex:OutputField>
+         </td>
+         </tr>
+         </table> 
+        </apex:outputPanel>
+ 
+  <apex:outputPanel id="summary" rendered="{!!isTransactionItem}">    
+    <table width="100%" cellspacing="2" cellpadding="2" border="0" id="tbl">
+    <tr>
+    <td width="80px" class="label"><apex:outputText value="{!prefixName}"/></td>
+    <td width="80px"> <a target="_blank" href="/{!prefixGL.id}" id="lookup{!prefixGL.id}" onblur="LookupHoverDetail.getHover('lookup{!prefixGL.id}').hide();" onfocus="LookupHoverDetail.getHover('lookup{!prefixGL.id}', '/{!prefixGL.id}/m?isAjaxRequest=1&nocache=1').show();" onmouseout="LookupHoverDetail.getHover('lookup{!prefixGL.id}').hide();" onmouseover="LookupHoverDetail.getHover('lookup{!prefixGL.id}', '/{!prefixGL.id}/m?isAjaxRequest=1&nocache=1').show();"><apex:outputField value="{!prefixGL.name}" /></a>
+    </td>
+        <td class="label"  width="50px">Prefix Value</td>
+        <td  width="80px">
+         <apex:OutputField value="{!opp.s360a__GLPrefixValue__c}" rendered="{!isOpportunity}" > 
+         </apex:OutputField>
+        <apex:OutputField value="{!camp.s360a__GLPrefixValue__c}"  rendered="{!isCampaign}" />     
+        <apex:OutputField value="{!product.s360a__GLPrefixValue__c}"  rendered="{!isProduct2}"/> 
+        <apex:OutputField value="{!regularGiving.s360a__GLPrefixValue__c}"  rendered="{!isRegularGiving}"/>
+        <apex:OutputField value="{!oppLine.s360a__GLPrefixValue__c}" rendered="{!isOpportunityLineItem}" /> 
+        </td>
+
+        </tr>
+        <tr>
+        <td  class="label"><apex:outputText value="{!middleName}" /></td>
+        <td ><a target="_blank" href="/{!MiddleGL.id}" id="lookup{!MiddleGL.id}" onblur="LookupHoverDetail.getHover('lookup{!MiddleGL.id}').hide();" onfocus="LookupHoverDetail.getHover('lookup{!MiddleGL.id}', '/{!MiddleGL.id}/m?isAjaxRequest=1&nocache=1').show();" onmouseout="LookupHoverDetail.getHover('lookup{!MiddleGL.id}').hide();" onmouseover="LookupHoverDetail.getHover('lookup{!MiddleGL.id}', '/{!MiddleGL.id}/m?isAjaxRequest=1&nocache=1').show();"><apex:outputField value="{!MiddleGL.name}" /></a>
+        </td>
+
+         <td class="label">Middle Value</td>
+        <td >
+        <apex:OutputField value="{!camp.s360a__GLMiddleValue__c}"/>
+        <apex:OutputField value="{!opp.s360a__GLMiddleValue__c}"/> 
+        <apex:OutputField value="{!product.s360a__GLMiddleValue__c}" /> 
+        <apex:OutputField value="{!regularGiving.s360a__GLMiddleValue__c}" /> 
+        <apex:OutputField value="{!oppLine.s360a__GLMiddleValue__c}"/>  
+        </td>
+        </tr>
+        <tr><td  class="label"><apex:outputText value="{!suffixName}" /></td><td >
+          <a target="_blank" href="/{!SuffixGL.id}" id="lookup{!SuffixGL.id}" onblur="LookupHoverDetail.getHover('lookup{!SuffixGL.id}').hide();" onfocus="LookupHoverDetail.getHover('lookup{!SuffixGL.id}', '/{!SuffixGL.id}/m?isAjaxRequest=1&nocache=1').show();" onmouseout="LookupHoverDetail.getHover('lookup{!SuffixGL.id}').hide();" onmouseover="LookupHoverDetail.getHover('lookup{!SuffixGL.id}', '/{!SuffixGL.id}/m?isAjaxRequest=1&nocache=1').show();"><apex:outputField value="{!SuffixGL.name}" /></a>
+        </td>
+        <td class="label">Suffix Value</td>       
+            <td >
+            <apex:OutputText value="{!camp.s360a__GLSuffixValue__c}">  </apex:OutputText>
+            <apex:OutputText value="{!opp.s360a__GLSuffixValue__c}">  </apex:OutputText>
+            <apex:OutputText value="{!product.s360a__GLSuffixValue__c}" >  </apex:OutputText>
+            <apex:OutputText value="{!regularGiving.s360a__GLSuffixValue__c}" >  </apex:OutputText> 
+            <apex:OutputText value="{!oppLine.s360a__GLSuffixValue__c}" >  </apex:OutputText>
+            </td> 
+        </tr><tr>
+            <td  class="label">Job Code Name </td>
+            <td><a target="_blank" href="/{!JobCodeNameGL.id}" id="lookup{!JobCodeNameGL.id}" onblur="LookupHoverDetail.getHover('lookup{!JobCodeNameGL.id}').hide();" onfocus="LookupHoverDetail.getHover('lookup{!JobCodeNameGL.id}', '/{!JobCodeNameGL.id}/m?isAjaxRequest=1&nocache=1').show();" onmouseout="LookupHoverDetail.getHover('lookup{!JobCodeNameGL.id}').hide();" onmouseover="LookupHoverDetail.getHover('lookup{!JobCodeNameGL.id}', '/{!JobCodeNameGL.id}/m?isAjaxRequest=1&nocache=1').show();"><apex:outputField value="{!JobCodeNameGL.name}" /></a></td>
+            <td class="label">Job Code Value</td>
+         
+            <td>
+            <apex:OutputText value="{!camp.s360a__GLJobCodeValue__c}">  </apex:OutputText>
+            <apex:OutputText value="{!opp.s360a__GLJobCodeValue__c}">  </apex:OutputText>
+            <apex:OutputText value="{!product.s360a__GLJobCodeValue__c}" >  </apex:OutputText>
+            <apex:OutputText value="{!regularGiving.s360a__GLJobCodeValue__c}" >  </apex:OutputText>
+            <apex:OutputText value="{!oppLine.s360a__GLJobCodeValue__c}" >  </apex:OutputText> 
+            </td>
+        </tr>
+        </table>
+        <hr/>
+        <table>                
+        <tr><td><b>Full GL Code:</b></td>
+        <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        
+         <apex:OutputText value="{!camp.s360a__GLConcatenated__c}" >  </apex:OutputText>
+         <apex:OutputText value="{!opp.s360a__GLConcatenated__c}">  </apex:OutputText>
+         <apex:OutputText value="{!product.s360a__GLConcatenated__c}" >  </apex:OutputText>
+         <apex:OutputText value="{!regularGiving.s360a__GLConcatenated__c}" >  </apex:OutputText> 
+         <apex:OutputText value="{!oppLine.s360a__GLConcatenated__c}" >  </apex:OutputText> 
+        </td></tr>
+        </table>
+        </apex:outputPanel>
+      </apex:tab>          
+<!-- ////////////////////////////// Next Tab //////////////////////////// -->                  
+      <apex:tab label="Edit" name="gledit" id="gledit" style="background: white;" rendered="{!!isTransactionItem}">         
+         
+      <apex:outputPanel id="editpage">
+      
+      <table width="100%" cellpadding="2" cellspacing="2" border="0"> 
+      <tr><td class="label1" style="vertical-align:text-bottom;" width="150px"><apex:outputText escape="false" value="{!HTMLENCODE(prefixName)}" /></td>
+      <td style="vertical-align:text-bottom;"><apex:inputText value="{!inputGL.PrefixName}"/><apex:commandLink title="Lookup {!prefixName} entry" action="{!newLookup}" rerender="editpage, glouter">                            
+        <apex:image height="15" width="15" url="{!URLFOR($Resource.s360a__s360Images, '/lookup.png')}"  />
+        <apex:param name="lookup" value="prefix"/></apex:commandLink>
+            <apex:commandLink title="Clear this {!prefixName} entry" action="{!delGL}" rerender="editpage">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/s360delete.png')}" />
+            <apex:param name="delete" value="prefix"/></apex:commandLink>
+        </td> 
+        <td style="vertical-align:text-bottom;" width="150px" class="label"><apex:outputText escape="false" value="Prefix Value"/></td>
+        <td style="vertical-align:text-bottom;" width="150px">
+            <apex:outputField style="width:150px" value="{!camp.s360a__GLPrefixValue__c}" rendered="{!isCampaign}">  </apex:outputField>
+            <apex:outputField value="{!opp.s360a__GLPrefixValue__c}" rendered="{!isOpportunity}">  </apex:outputField>
+            <apex:outputField value="{!product.s360a__GLPrefixValue__c}" rendered="{!isProduct2}">  </apex:outputField>
+            <apex:outputField value="{!regularGiving.s360a__GLPrefixValue__c}" rendered="{!isRegularGiving}">  </apex:outputField>
+            <apex:outputField value="{!oppLine.s360a__GLPrefixValue__c}" rendered="{!isOpportunityLineItem}">  </apex:outputField>
+        </td>
+        </tr><tr>
+        <td style="vertical-align:text-bottom;" class="label1"><apex:outputText value="{!middleName}" /></td>
+        <td style="vertical-align:text-bottom;">
+            <apex:inputText value="{!inputGL.MiddleName}"/><apex:commandLink title="Lookup {!middleName} entry" action="{!newLookup}" rerender="editpage, glouter">                            
+            <apex:image height="15" width="15" url="{!URLFOR($Resource.s360a__s360Images, '/lookup.png')}" />
+            <apex:param name="lookup" value="middle"/></apex:commandLink> 
+            <apex:commandLink title="Clear this {!middleName} entry" action="{!delGL}" rerender="editpage">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/s360delete.png')}" />
+            <apex:param name="delete" value="middle"/></apex:commandLink>                   
+        </td>
+        <td style="vertical-align:text-bottom;" class="label">Middle Value</td>
+        <td style="vertical-align:text-bottom;">
+            <apex:outputField value="{!camp.s360a__GLMiddleValue__c}" rendered="{!isCampaign}">  </apex:outputField>
+            <apex:outputField value="{!opp.s360a__GLMiddleValue__c}" rendered="{!isOpportunity}">  </apex:outputField>
+            <apex:outputField value="{!product.s360a__GLMiddleValue__c}" rendered="{!isProduct2}">  </apex:outputField>
+            <apex:outputField value="{!regularGiving.s360a__GLMiddleValue__c}" rendered="{!isRegularGiving}">  </apex:outputField> 
+            <apex:outputField value="{!oppLine.s360a__GLMiddleValue__c}" rendered="{!isOpportunityLineItem}">  </apex:outputField>
+        </td>
+         
+        </tr>
+        <tr>
+        <td style="vertical-align:text-bottom;" class="label1"><apex:outputText value="{!suffixName}" /></td>
+        <td style="vertical-align:text-bottom;"> 
+            <apex:inputText value="{!inputGL.SuffixName}"/><apex:commandLink title="Lookup {!suffixName} entry" action="{!newLookup}" rerender="editpage, glouter">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/lookup.png')}" />
+            <apex:param name="lookup" value="suffix"/></apex:commandLink>
+            <apex:commandLink title="Clear this {!suffixName} entry" action="{!delGL}" rerender="editpage">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/s360delete.png')}" />
+            <apex:param name="delete" value="suffix"/></apex:commandLink>         
+        </td>
+        <td class="label" style="vertical-align:text-bottom;"><apex:outputText value="Suffix Value" /></td>
+        <td style="vertical-align:text-bottom;">
+            <apex:outputField value="{!camp.s360a__GLSuffixValue__c}" rendered="{!isCampaign}">  </apex:outputField>
+            <apex:outputField value="{!opp.s360a__GLSuffixValue__c}" rendered="{!isOpportunity}">  </apex:outputField>
+            <apex:outputField value="{!product.s360a__GLSuffixValue__c}"  rendered="{!isProduct2}">  </apex:outputField>
+            <apex:outputField value="{!regularGiving.s360a__GLSuffixValue__c}" rendered="{!isRegularGiving}">  </apex:outputField> 
+            <apex:outputField value="{!oppLine.s360a__GLSuffixValue__c}" rendered="{!isOpportunityLineItem}">  </apex:outputField>
+        </td> 
+        
+        </tr><tr>
+        <td class="label1" style="vertical-align:text-bottom;">Job Code</td>
+        <td style="vertical-align:text-bottom;">
+            <apex:inputText value="{!inputGL.JobName}"/><apex:commandLink title="Lookup Job Code entry" action="{!newLookup}" rerender="editpage, glouter">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/lookup.png')}" />
+            <apex:param name="lookup" value="job"/></apex:commandLink>
+            <apex:commandLink title="Lookup" action="{!delGL}" rerender="editpage">                            
+            <apex:image height="15" width="15"  url="{!URLFOR($Resource.s360a__s360Images, '/s360delete.png')}" />
+            <apex:param name="delete" value="job"/></apex:commandLink>      
+        </td>
+         <td class="label" style="vertical-align:text-bottom;">Job Code Value</td>
+         
+        <td style="vertical-align:text-bottom;">
+            <apex:outputField value="{!camp.s360a__GLJobCodeValue__c}" rendered="{!isCampaign}">  </apex:outputField>
+            <apex:outputField value="{!opp.s360a__GLJobCodeValue__c}" rendered="{!isOpportunity}">  </apex:outputField>
+            <apex:outputField value="{!product.s360a__GLJobCodeValue__c}" rendered="{!isProduct2}">  </apex:outputField>
+            <apex:outputField value="{!regularGiving.s360a__GLJobCodeValue__c}" rendered="{!isRegularGiving}" >  </apex:outputField>
+            <apex:outputField value="{!oppLine.s360a__GLJobCodeValue__c}" rendered="{!isOpportunityLineItem}">  </apex:outputField> 
+        </td>
+        </tr>
+        </table>
+        <hr/>
+         <table width="100%" cellpadding="2" cellspacing="2"> 
+        <tr><td  class="label">Full GL Code </td>
+        <td style="vertical-align:text-bottom;">
+        
+         <apex:outputField value="{!camp.s360a__GLConcatenated__c}" rendered="{!isCampaign}" /> 
+         <apex:outputField value="{!opp.s360a__GLConcatenated__c}" rendered="{!isOpportunity}"/>  
+         <apex:outputField value="{!product.s360a__GLConcatenated__c}" rendered="{!isProduct2}"/>  
+         <apex:outputField value="{!regularGiving.s360a__GLConcatenated__c}" rendered="{!isRegularGiving}" />  
+         <apex:outputField value="{!oppLine.s360a__GLConcatenated__c}" rendered="{!isOpportunityLineItem}"/> 
+        </td><td/>
+        <td align="left"><apex:commandButton styleClass="cssbutton"  action="{!Save}" rerender="editpage,summary" value="Save" status="loading" />&nbsp;&nbsp;&nbsp;<apex:outputText value="*Unsaved Changes*" style="color:orange;font-weight:bold" rendered="{!needToSave}"/></td>       
+        </tr>
+        </table>
+        </apex:outputPanel>
+        </apex:tab>
+        </apex:tabpanel>
+        </apex:pageblock>
+ </apex:form>
+</apex:component>

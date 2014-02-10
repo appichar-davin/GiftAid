@@ -1,0 +1,134 @@
+<apex:page controller="s360a.LeadConvertController">   
+<style>
+.bar {
+    display: inline-block;
+    line-height: 1;
+    padding: 7px 10px;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+    height: 14px;
+    background-color: #39c;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #888;
+}
+</style>
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+    <apex:sectionHeader title="Convert Lead (supporter360)" subtitle="{!thisLead.Name}" />
+    <apex:outputLink target="_blank" value="http://www.supporter360.net/how-to-lead-conversion" style="float:right;"><apex:image value="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>  
+    <apex:form >
+    <apex:pagemessages />
+Leads can be converted to accounts, contacts, opportunities, and followup tasks.<br/>
+You should only convert a lead once you have identified it as qualified.<br/>
+After this lead has been converted, it can no longer be viewed or edited as a lead, but can be viewed in lead reports.<br/>
+<br/>
+    <apex:pageblock mode="edit" >
+        <apex:pageBlockButtons >
+            <apex:commandButton styleClass="cssbutton" value="Convert" action="{!convertLead}"/>
+            <apex:commandButton styleClass="cssbutton" value="Cancel" action="{!cancelConvert}" immediate="true"/>
+        </apex:pageBlockButtons>
+    
+        <!--<apex:pageBlockSection title="Convert Lead">-->
+        <div class="bar" style="width:97%">Convert Lead</div><br/><br/> 
+            <apex:outputPanel >
+            <table width="700px">
+                <tr>
+                    <td width="35%" align="right"><apex:outputLabel style="font-size:11px;vertical-align:text-bottom;" escape="false" value="<b>Record Owner</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="65%" align="left"><apex:inputfield value="{!thisLead.s360a__User__c}" required="true" /></td>
+                </tr>                
+                <tr>       
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Email Owner</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:inputCheckbox value="{!sendEmail}"/></td>            
+                </tr>   
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Contact</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedContact}" required="true">
+                        <apex:selectOptions value="{!contactOptions}"/>
+                        </apex:selectList></td>         
+                </tr>                                             
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Organisation</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedOrg}" required="true">
+                        <apex:selectOptions value="{!orgsOptions}"/>
+                        </apex:selectList></td>         
+                </tr>                
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Converted Status</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedStatus}" required="true">
+                        <apex:selectOptions value="{!statusOptions}"/>
+                        </apex:selectList></td>         
+                </tr>                 
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Email Type</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedEmail}" required="true">
+                        <apex:selectOptions value="{!emailTypes}"/>
+                        </apex:selectList></td>         
+                </tr>               
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Phone Type</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedPhone}" required="true">
+                        <apex:selectOptions value="{!phoneTypes}"/>
+                        </apex:selectList></td>         
+                </tr>                                  
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Address Type</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedAddress}" required="true">
+                        <apex:selectOptions value="{!addressTypes}"/>
+                        </apex:selectList></td>         
+                </tr>                     
+                <tr>       
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Quick Opportunity</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:inputCheckbox value="{!doQuickOpp}"/></td>            
+                </tr>       
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Opportunity Campaign</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:selectList size="1" value="{!selectedCampaign}" required="true">
+                        <apex:selectOptions value="{!oppCampaings}"/>
+                        </apex:selectList></td>         
+                </tr>                                                     
+            </table>
+            </apex:outputPanel>    
+            <apex:outputPanel ></apex:outputPanel>      
+    <!--    </apex:pageBlockSection>  -->
+    <!--    <apex:pageBlockSection title="Lead Overview">  -->
+        <br/>
+        <div class="bar" style="width:97%">Lead Overview</div><br/><br/>  
+            <apex:outputPanel >
+            <table width="700px">
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Email Address</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.Email}" /></td>         
+                </tr>              
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Phone</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.Phone}" /></td>         
+                </tr>       
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Street</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.Street}" /></td>         
+                </tr>       
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Town / City</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.City}" /></td>         
+                </tr>     
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>State</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.State}" /></td>         
+                </tr>           
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Postal Code</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.PostalCode}" /></td>         
+                </tr>   
+                <tr>   
+                    <td width="30%" align="right"><apex:outputLabel style="font-size:11px;" escape="false" value="<b>Lead Source</b>"/>&nbsp;&nbsp;&nbsp;</td>
+                    <td width="70%" align="left"><apex:outputfield value="{!thisLead.LeadSource}" /></td>         
+                </tr>                                                                                                       
+            </table>    
+            </apex:outputPanel> 
+       <!-- </apex:pageBlockSection> -->
+    </apex:pageblock>
+    </apex:form> 
+</apex:page>

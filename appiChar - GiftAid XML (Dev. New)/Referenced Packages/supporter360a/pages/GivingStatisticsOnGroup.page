@@ -1,0 +1,14 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: GivingStatisticsOnGroup.page		                  *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page id="page" standardController="s360a__Group__c" >
+	<c:GivingStatistics record="{!s360a__Group__c}" />
+</apex:page>

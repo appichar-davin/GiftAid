@@ -1,0 +1,38 @@
+<apex:page Controller="s360a.ConactCodeClass" showHeader="false" sidebar="false">
+<apex:form >
+<apex:pageblock >
+<apex:outputPanel >
+<table width="60%"><tr><td><center><apex:outputLink value="{!urlFor($Page.s360a__ContactCodeNew,null,[Id=ide])}"  target="_blank" styleClass="btn" style="text-decoration: none;height:22px;">New Code</apex:outputLink></center><br/></td></tr></table>
+            
+             </apex:outputPanel>
+<apex:pageblocktable value="{!displayrec}" var="ah" width="100%">
+<apex:column headerValue="Action" width="10%">
+<apex:outputLink title="Edit code" value="{!urlFor($Page.s360a__ContactCodeView,null,[id=ide,mode='edit',sno=ah.unno])}" target="_blank"><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" width="12px" height="12px"/> </apex:outputLink>
+<apex:outputLabel value="" >&nbsp; | &nbsp;</apex:outputLabel> 
+<apex:commandlink title="Delete code" action="{!Deletefunction}" onclick="if(confirm('Are you sure you want to delete this code?')) return true; else return false;" target="_top" ><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" width="12px" height="12px"/>
+                      <apex:param name="deleteno" value="{!ah.unno}"/> 
+                    </apex:commandlink>
+</apex:column>
+<!-- <apex:column headerValue="Code ID" ><apex:outputLink value="{!urlFor($Page.s360a__ContactCodeView,null,[id=ide,mode='view',sno=ah.unno])}" target="_blank">{!ah.unno} </apex:outputLink></apex:column> -->
+<apex:column headerValue="Type" ><apex:outputLink value="{!urlFor($Page.s360a__ContactCodeView,null,[id=ide,mode='view',sno=ah.unno])}" target="_blank">{!ah.cType}</apex:outputLink></apex:column>
+<apex:column headerValue="Date From">
+<apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    <apex:param value="{!ah.fromdate}" /> 
+</apex:outputText>
+</apex:column>
+<apex:column headerValue="Date To" >
+<apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+    <apex:param value="{!ah.todate}" /> 
+</apex:outputText>
+</apex:column>
+<apex:column headerValue="Comments" value="{!ah.Comment}">
+</apex:column>
+<apex:column headerValue="Status" value="{!ah.status}"> 
+</apex:column>
+
+</apex:pageblocktable><br/>
+ 
+
+</apex:pageblock>
+</apex:form>
+</apex:page>

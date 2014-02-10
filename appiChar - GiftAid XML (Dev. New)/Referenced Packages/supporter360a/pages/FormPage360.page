@@ -1,0 +1,634 @@
+<apex:page id="page" controller="s360a.FormPage360" showHeader="false" sidebar="false" standardStylesheets="false" docType="html-5.0">
+<apex:outputText escape="false" value="{!'<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">'}" />
+<!--
+  *****************************************************************
+  *                                                               *
+  *   Product: FormPage360                                        *
+  *      File: FormPage360.page                                   *
+  *   Version: 1.0                                                *
+  * Copyright: ©2013 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+            <title>{!HTMLENCODE(PaymentPage.PageTitle__c)}</title>
+            <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+<style type="text/css">
+* {margin:0;padding:0;}
+/* fix  ff bugs */
+form:after, div:after, ol:after, ul:after, li:after, dl:after {
+    content:".";
+    display:block;
+    clear:both;
+    visibility:hidden;
+    height:0;
+    overflow:hidden;
+}
+body {
+    background: #{!HTMLENCODE(thisForm.formSettings.pageBackgroundColour)}; font: normal 10px/1.1em Arial,Sans-Serif;margin:0;padding:0;
+    background:url({!HTMLENCODE(thisForm.formSettings.backgroundImageURL)})  repeat-y left top;
+    background-size: 100%;              
+}
+form {clear:both;}
+    .container {margin:0 auto; height:100%;padding:0 40px;}
+    .footer, .footer a {color:#fff;}
+    .left {float:left;}
+    .right {float:right;}
+    .topbar {
+    background: transparent;
+    padding: 10px 30px;
+    border-bottom:1px solid #e9e9e9;
+}
+.topbar a{
+    color:#777;
+    font-size:1.4em;
+    text-decoration: none;
+}
+.topbar a:hover{
+    color:#69a4d0;
+    text-decoration: underline;
+}
+.formeebar {
+    background: #f5f5f5;
+    padding:30px;
+    border-bottom:1px solid #e9e9e9;
+    margin-bottom:40px;
+}
+    .formeebar a {color:#fff;font-size:1.4em;text-decoration: none;}
+    .formeebar h1 {
+    clear:both;
+    float:left;
+}
+    .formeebar h2 {
+    color:#520026;
+    font-size:2.4em;
+    font-weight:normal;
+    float:right;
+    display:inline;
+    margin-top:20px;
+}
+
+.link-to {
+    font-size:2.4em;
+    letter-spacing:-.02em;
+    line-height:1em;
+    color:#EA0076;
+    float:right;
+    margin-bottom:2em;
+}
+    /* footer */
+    .footer {background: #520026;padding:30px 0;margin-top:40px;color:#fff;}
+    .footer p {line-height:1.1em; font-size:1.2em; margin-bottom:.3%;}
+    .footer a {color:#F0CF73;font-size:1.4em;text-decoration: none;}
+</style>
+<script>
+function selectCardType(ccnum) {
+    var first = ccnum.charAt(0);
+    var second = ccnum.charAt(1);
+    var third = ccnum.charAt(2);
+    var fourth = ccnum.charAt(3);
+
+    if (first == "4") {
+<!-- Visa -->
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";
+    }
+    else if ( (first == "3") && ((second == "4") || (second == "7")) ) {
+<!-- American Express -->
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";    
+    }
+    else if ( (first == "5") ) {
+<!-- Mastercard -->
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";    
+    }
+    else if ( (first == "6") && (second == "0") && (third == "1") && (fourth == "1") ) {
+<!-- Discover -->
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";    
+    }
+    else if ( (first == "3") && ((second == "0") || (second == "8") || (second == "6")) ) {
+<!-- Diners -->
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";    
+    }    
+    else if ( (first == "3") && ((second == "5") ) ) {
+<!-- JCB -->
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512.png')}";    
+    }        
+    else if (first == "") {
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512.png')}";
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512.png')}";    
+    }
+    else {
+        document.getElementById('amex').src="{!URLFOR($Resource.s360images,'/american_express_512_bw.png')}";
+        document.getElementById('visa').src="{!URLFOR($Resource.s360images,'/visa_512_bw.png')}";
+        document.getElementById('mastercard').src="{!URLFOR($Resource.s360images,'/mastercard_512_bw.png')}";
+        document.getElementById('discover').src="{!URLFOR($Resource.s360images,'/discover_512_bw.png')}";
+        document.getElementById('diners').src="{!URLFOR($Resource.s360images,'/diners_512_bw.png')}";
+        document.getElementById('jcb').src="{!URLFOR($Resource.s360images,'/jcb_512_bw.png')}";    
+    }
+    rerenderCardLogos();
+}
+</script>       
+</head>    
+<apex:stylesheet value="{!URLFOR($Resource.s360a__s360jQuery, 'Form360/formee/css/formee-structure.css')}" /> 
+<apex:stylesheet value="{!URLFOR($Resource.s360a__s360jQuery, 'Form360/formee/css/formee-style.css')}" />       
+<script type="text/javascript" src="{!URLFOR($Resource.s360jQuery, 'Form360/formee/js/jquery-1.6.4.min.js')}"></script>
+<script type="text/javascript" src="{!URLFOR($Resource.s360jQuery, 'Form360/formee/js/formee.js')}"></script>    
+
+<style>
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 2px;
+        padding:10px;
+        position: fixed; 
+        z-index: 9999;  
+        width: 400px;
+   
+/* get the pop up in the middle of the screen */
+        top: 50%;
+        left: 54%;
+        margin-top: -100px;
+        margin-left: -250px;      
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;        
+    }
+    .popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+    }    
+
+    .errorMsg {
+        font-size:1.2em !important;
+        color:#{!HTMLENCODE(thisForm.formSettings.errorColour)} !important;
+        margin-top: -2px !important;
+        margin-lef:5px;
+    }
+    .dateFormat {    
+        color:grey !important;
+        font-size:1.2em !important; 
+        margin: 1%;
+    }        
+    a:link {
+        color:grey;
+        font-size:1em;  
+    } 
+/* ----------- configurable css ----------- */    
+    .formee-msg-info {
+        background: #{!HTMLENCODE(thisForm.formSettings.pageHeadingColour)}; /*url(../img/form-ic-info.png) no-repeat 12px 23px;*/
+        border-color:#bcdfef;
+    }
+    .formee fieldset {
+        background: transparent; /* #{!HTMLENCODE(thisForm.formSettings.pageBackgroundColour)}; */
+        /*corner*/
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+    }    
+    /* form buttons */
+    .formee-button, .formee input[type="submit"], .formee input[type="button"], .formee input[type="reset"] {
+        font-size:#{!HTMLENCODE(thisForm.formSettings.buttonFontSize)};      
+        line-height:#{!HTMLENCODE(thisForm.formSettings.buttonFontSize)};
+        font-weight:bolder;
+        text-transform: uppercase;
+        letter-spacing: -.015em;
+        color: #{!HTMLENCODE(thisForm.formSettings.buttonFontColour)};
+        border-color: #{!HTMLENCODE(thisForm.formSettings.buttonBorderColour)};
+        background: #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour1)};
+        /* gradient */
+        background: -moz-linear-gradient(top, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour1)} 40%, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour2)});
+        background: -webkit-linear-gradient(top, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour1)} 40%, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour2)});
+        filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour1)}', endColorstr='#{!HTMLENCODE(thisForm.formSettings.buttonBackgroundColour2)}');
+        /* corner */
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        /* shadow */
+        -moz-box-shadow: inset 0 1px 0 0 rgba(255,255,255,.4);
+        -webkit-box-shadow: inset 0 1px 0 0 rgba(255,255,255,.4);
+        box-shadow: inset 0 1px 0 0 rgba(255,255,255,.4);
+    }
+      .formee-button:hover, .formee input[type="submit"]:hover, .formee input[type="button"]:hover, .formee input[type="reset"]:hover {
+        background: #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour1)};
+        /* gradient */
+        background: -moz-linear-gradient(top, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour1)} 40%, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour2)});
+        background: -webkit-linear-gradient(top, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour1)} 40%, #{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour2)});
+        filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour1)}', endColorstr='#{!HTMLENCODE(thisForm.formSettings.buttonBackgroundHoverColour2)}');
+        /* shadow */
+        -moz-box-shadow: 0 1px 1px 0 rgba(0,0,0,.2), inset 0 1px 0 0 rgba(255,255,255,.4);
+        -webkit-box-shadow: inset 0 1px 0 0 rgba(255,255,255,.4);
+        box-shadow:  0 1px 1px 0 rgba(0,0,0,.2), inset 0 1px 0 0 rgba(255,255,255,.4);
+    }
+    .formee-normaltxt .formee input[type="text"], .formee input[type="password"], .formee input[type="file"], .formee textarea, .formee select {
+        font-size:1.4em; 
+        font-family:inherit;
+        /*corner*/
+    }
+    .formee legend, .formee h3 {
+        font-size:1.5em;
+        line-height:1em;
+        letter-spacing: -.035em;
+        color: #{!HTMLENCODE(thisForm.formSettings.legendFontColour)};
+        font-weight: bold;
+    }
+    .formee-lbl, .formee label {
+        color:#{!HTMLENCODE(thisForm.formSettings.labelFontColour)};
+        font-size:1.2em;    
+        line-height: 1.3em;
+        vertical-align:middle;
+        margin-right:1em;
+        margin-left:1em;
+        margin-top:0px;
+        margin-bottom:0;
+        font-weight: bold;
+        display:block;
+    }
+    .formee legend {
+        margin-left:1%;
+        padding: 0% 0% 0%;
+    }    
+    .formee select {
+        height:auto;
+        margin-left:6px;
+    }
+</style>
+        <body>       
+        <div style="width:{!HTMLENCODE(thisForm.formSettings.formWidth)};background-color:transparent;margin-left:auto;margin-right:auto;margin-top:{!HTMLENCODE(thisForm.formSettings.formTopMargin)}">     
+            <apex:form styleClass="formee">
+                <apex:outputPanel id="pagemessagewindow">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"  rendered="{!pageMessageRendered}" />        
+                    <apex:outputPanel styleClass="customPopup" layout="block" style="top: 25%;left: 54%;right: 60%;font-size:1.4em;line-height: 1.3em;vertical-align:middle;" rendered="{!pageMessageRendered}">        
+                        <apex:image value="/img/msg_icons/{!pageMessageIcon}32.png" width="20px" height="20px" style="float:right" />
+                        <b>{!pageMessageHeader}</b><br/><br/>
+                        {!pageMessageBody}<br/><br/>
+                        <apex:commandButton value="Continue" action="{!closeMessagePopup}" immediate="true" rendered="{!!formComplete || thisForm.formSettings.submitAction != 'Close Browser Window'}"/> 
+                        <apex:commandButton value="Close Form" action="{!closeMessagePopup}" immediate="true" onclick="window.close();" rendered="{!formComplete && thisForm.formSettings.submitAction == 'Close Browser Window'}"/>                             
+                    </apex:outputPanel> 
+                 </apex:outputPanel>
+                <apex:outputPanel id="errormessagewindow">
+                    <apex:outputPanel styleClass="popupBackground" layout="block"  rendered="{!pageErrorRendered}" />        
+                    <apex:outputPanel styleClass="customPopup" layout="block" style="top: 25%;left: 54%;right: 60%;font-size:1.4em;line-height: 1.3em;vertical-align:middle;" rendered="{!pageErrorRendered}">        
+                        <apex:image value="/img/msg_icons/{!pageMessageIcon}32.png" width="20px" height="20px" style="float:right" />
+                        <b>{!pageMessageHeader}</b><br/><br/>
+                        <apex:repeat value="{!errorMessages}" var="error">
+                            <apex:outputText value="{!error}" /> 
+                            <br/><br/>
+                        </apex:repeat>
+                        <apex:commandButton value="Continue" action="{!closeErrorPopup}" immediate="true"/>                             
+                    </apex:outputPanel> 
+                 </apex:outputPanel>                                                          
+                 <apex:outputPanel rendered="{!usingSSL == true}" >                      
+               <!--       <apex:pageBlock >                           -->
+                          <apex:outputPanel id="mainpanel" rendered="{!!formComplete}">
+                              <apex:outputPanel rendered="{!thisForm.pageLayouts[currentPage].showHeader}">
+                                  <div class="formee-msg-info"><h3>{!HTMLENCODE(thisForm.pageLayouts[currentPage].pageTitle)}</h3></div>                                           
+                              </apex:outputPanel>                                              
+                              <apex:repeat value="{!pageSections}" var="secs">
+<apex:outputPanel rendered="{!debugMode}">
+    <apex:outputText value="Secs = {!secs}"/><br/>
+===============================================================<br/>
+    <apex:outputText value="Opportunity = {!opportunity}"/><br/>
+    <apex:outputText value="Contact = {!contact}"/><br/>
+    <apex:outputText value="Transaction = {!transactionObject}"/><br/>   
+===============================================================<br/>
+{!debugString}<br/>
+===============================================================<br/>
+</apex:outputPanel>                         
+                                   <apex:outputPanel rendered="{!secs.rendered}" >
+                                   <fieldset ><legend>{!secs.sectionTitle}</legend>
+                                      <apex:repeat value="{!secs.pageItems}" var="pi2" >                                         
+                                         <apex:outputPanel rendered="{!!pi2.isRequired && !pi2.isHidden && pi2.rendered}">&nbsp;&nbsp;<label>{!HTMLENCODE(pi2.fieldLabel)} </label></apex:outputPanel>                    
+                                         <apex:outputPanel rendered="{!pi2.isRequired && pi2.rendered && pi2.componentType != 'namefields'}">&nbsp;&nbsp;<label>{!HTMLENCODE(pi2.fieldLabel)} <em class="formee-req">*</em></label></apex:outputPanel>                                                                                             
+                                         <apex:inputField value="{!pi2.inputObject[pi2.destField]}" style="width:{!pi2.fieldWidth};border-color:{!pi2.borderColour};{!pi2.booleanCSS}" rendered="{!pi2.componentType == 'none' && pi2.destField != 'xx' && pi2.isInputField && !pi2.isHidden && pi2.rendered}" required="false" id="thisfield" />                                                                                 
+                                         <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>
+                                         <apex:outputPanel rendered="{!pi2.destField != 'xx' && pi2.isOutputField && !pi2.isHTML && pi2.rendered && !pi2.isDate}"><fieldset style="width:{!pi2.fieldWidth};"><apex:outputText style="color:#{!thisForm.formSettings.outputTextColour};font-size:1.3em;margin-left:9px;margin-right:9px" value="{!pi2.inputObject[pi2.destField]}"/></fieldset></apex:outputPanel>                                           
+                                         <apex:outputPanel rendered="{!pi2.destField != 'xx' && pi2.isOutputField && !pi2.isHTML && pi2.rendered && pi2.isDate}"><fieldset style="width:{!pi2.fieldWidth};"><apex:outputText style="color:#{!thisForm.formSettings.outputTextColour};font-size:1.3em;margin-left:9px;margin-right:9px" value="{0,date,dd'/'MM'/'yyyy}"><apex:param value="{!pi2.inputObject[pi2.destField]}"/></apex:outputText></fieldset></apex:outputPanel>                                           
+                                         <apex:outputPanel rendered="{!pi2.destField != 'xx' && pi2.isOutputField && pi2.isHTML && pi2.rendered}"><fieldset  style="width:{!pi2.fieldWidth};"><apex:outputText escape="false" value="{!pi2.inputObject[pi2.destField]}"/></fieldset></apex:outputPanel>  <!-- styleClass="formee-lbl" -->
+                                         <apex:inputHidden value="{!pi2.inputObject[pi2.destField]}" rendered="{!pi2.isHidden == true && pi2.destField != null && pi2.isInputField && pi2.rendered}" required="false"/>
+                                         <apex:outputPanel rendered="{!pi2.componentType == 'calcfield' && pi2.rendered}"><fieldset><label>{!pi2.calcValue}</label></fieldset></apex:outputPanel>  
+                                         <apex:outputpanel rendered="{!pi2.componentType == 'horizontalline' && pi2.rendered}"><hr/></apex:outputpanel>
+                                         <apex:outputpanel rendered="{!pi2.componentType == 'blankline' && pi2.rendered}"><br/></apex:outputpanel> 
+                                         <apex:outputPanel rendered="{!pi2.componentType == 'richtextarea' && pi2.rendered}">
+                                             <apex:outputText styleClass="formee-lbl" escape="false" value="{!pi2.richtextarea}"/>
+                                         </apex:outputPanel>
+        <!-- select list -->                                          
+                                         <apex:outputPanel rendered="{!pi2.componentType == 'selectradio' && pi2.rendered}">                                         
+                                             <apex:selectRadio value="{!pi2.selectedOption}" rendered="{!!pi2.isPickList}" layout="{!pi2.radioLayout}" onchange="otherselect();" styleClass="formee-list" style="height:30px;margin-left:20px">
+                                                 <apex:selectOptions value="{!pi2.listOptions}"/>                                             
+                                             </apex:selectRadio>
+                                             <apex:selectList size="1" value="{!pi2.selectedOption}" rendered="{!pi2.isPickList}" onchange="otherselect();" style="width:{!pi2.fieldWidth};border-color:{!pi2.borderColour}">
+                                                 <apex:selectOptions value="{!pi2.listOptions}"/>                                             
+                                             </apex:selectList>
+        <!-- 'other' on list / radio -->                                              
+                                             <apex:outputPanel id="otherpanel">
+                                                 <apex:outputPanel rendered="{!pi2.selectedOption == 'other' || pi2.selectedOption == 'Other' && pi2.rendered}">
+                                                     &nbsp;&nbsp;<label>Other: </label>           
+                                                     <apex:inputField value="{!pi2.inputObject[pi2.destField]}" required="false" style="width:50%;border-color:{!pi2.borderColour}" rendered="{!pi2.destField != 'xx' && pi2.isInputField && !pi2.isHidden && pi2.rendered}"/>
+                                                 </apex:outputPanel> 
+                                             </apex:outputPanel>        
+                                         </apex:outputPanel>  
+        <!-- name fields -->                                          
+                                         <apex:outputPanel rendered="{!pi2.componentType == 'namefields' && pi2.rendered}"  > 
+                                             <label for="thissalutation">Salutation</label>                                                                                                                                                                                                               
+                                             <apex:inputField value="{!pi2.inputObject['Salutation']}" style="margin-left:7px;width:130px;border-color:{!pi2.borderColour};margin-bottom:14px" required="false" id="thissalutation" /> 
+                                             <apex:outputPanel style="font-size:small;color:orange;" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>                                
+                                             <br/>
+                                             <div style="float:left;margin-right:12px;width:49%">
+                                                 <apex:inputField html-placeholder="First Name" value="{!pi2.inputObject['FirstName']}" style="margin-left:7px;border-color:{!pi2.borderColour};" required="true" id="thisfirstname" /> 
+                                                 <apex:outputPanel rendered="{!pi2.errorFlag}"><apex:outputText style="font-size:small;color:orange !important;" value="Error: {!pi2.errorString}"/></apex:outputPanel> 
+                                             </div>
+                                             <div style="float:left;width:48%">
+                                          <!--       <label style="margin-top:8px;">Last Name <em class="formee-req">*</em></label>  -->
+                                                 <apex:inputField html-placeholder="Last Name" value="{!pi2.inputObject['LastName']}"  style="border-color:{!pi2.borderColour};" required="true" id="thislastname" /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!thisForm.formSettings.errorColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>                                                 
+                                             </div>                                                                                   
+                                         </apex:outputPanel>                                    
+        <!-- address fields -->                                          
+                                         <apex:outputPanel rendered="{!pi2.componentType == 'addressfields' && pi2.rendered}"> 
+                                             <div style="float:left;margin-right:12px;width:100%">
+                                          <!--      <label style="margin-top:8px;">Address</label> -->                                                                                                                                                                                                         
+                                                 <apex:inputField html-placeholder="Address" value="{!pi2.inputObject['addressprimarystreet__c']}" style="height:60px;border-color:{!pi2.borderColour};margin-bottom:14px" required="false" /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>                                                                                              
+                                             </div>
+                                             <div style="float:left;margin-right:6px;width:35%">
+                                          <!--       <label style="margin-top:8px;">City</label> -->
+                                                 <apex:inputField html-placeholder="City" value="{!pi2.inputObject['addressprimarycity__c']}" style="margin-left:6px;border-color:{!pi2.borderColour};" required="false"  /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>                                            
+                                             </div>
+                                             <div style="float:left;width:35%;margin-right:3px;"> 
+                                          <!--       <label  style="margin-top:8px;">State</label> -->
+                                                 <apex:inputField html-placeholder="State" value="{!pi2.inputObject['addressprimarystate__c']}" style="border-color:{!pi2.borderColour};" required="false"  /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>
+                                             </div>
+                                             <div style="float:left;width:27%"> 
+                                          <!--       <label  style="margin-top:8px;">Postcode</label> -->  
+                                                 <apex:inputField html-placeholder="Postcode" value="{!pi2.inputObject['addressprimarypostalcode__c']}" style="border-color:{!pi2.borderColour};" required="false"  /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>
+                                             </div>
+                                             <div style="float:left;width:60%">                                            
+                                             <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>
+                                                 <label style="margin-top:8px;">Country</label>
+                                                 <apex:inputField html-placeholder="Country" value="{!pi2.inputObject['addressprimarycountry__c']}" style="margin-left:6px;border-color:{!pi2.borderColour};" required="false"  /> 
+                                                 <apex:outputPanel style="font-size:small;color:{!pi2.borderColour};" rendered="{!pi2.errorFlag}">Error: {!pi2.errorString}</apex:outputPanel>                                              
+                                             </div>
+                                             <div/> <!-- force new line / block -->
+                                         </apex:outputPanel>                                                                  
+        <!-- donation panel -->                                                                                 
+                                         <apex:outputPanel id="donationpanel" >
+                                             <apex:outputPanel rendered="{!pi2.componentType == 'donationpanel' && pi2.rendered}">
+                                                 <fieldset style="border-color:none"><legend>Donation</legend>   
+                                                                                           
+                                             <apex:actionRegion >
+                                             <apex:selectRadio value="{!pi2.donType}" layout="linedirection" styleClass="formee-list" onchange="donationrefresh();" style="height:30px;margin-left:20px;">                                               
+                                                 <apex:selectOptions value="{!donationTypes}"/>                                          
+                                             </apex:selectRadio>                                                                           
+                                                     <apex:outputPanel id="dontypepanel" rendered="{!pi2.donType == 'Regular' && pi2.rendered}">                                                     
+                                                         <apex:pageMessages ></apex:pageMessages>
+                                                         <br/>
+                                                         <label>Frequency <em class="formee-req">*</em></label> 
+                                                         <apex:selectList size="1" value="{!pi2.donFreq}" style="width:175px">
+                                                             <apex:selectOptions value="{!donationFrequencies}"/>                                             
+                                                         </apex:selectList>
+                                                         <br/><br/>
+                                                         <label>Payment Method <em class="formee-req">*</em></label> 
+                                                         <apex:selectList size="1" value="{!selectedDonationMethod}" style="width:175px">
+                                                             <apex:selectOptions value="{!donationMethods}"/>                                             
+                                                         </apex:selectList>
+                                                         <br/>                                                         
+                                                     </apex:outputPanel> 
+                                                  
+                                                     <br/>
+                                                     <label>Amount <em class="formee-req">*</em></label>                                  
+                                                     <apex:selectRadio value="{!pi2.selectedOption}"  layout="{!pi2.radioLayout}" onchange="donationrefresh();" styleClass="formee-list" style="height:30px;margin-left:20px">
+                                                         <apex:selectOptions value="{!pi2.listOptions}"/>                                             
+                                                     </apex:selectRadio>  
+                                                     <apex:outputPanel rendered="{!pi2.selectedOption == 'other' || pi2.selectedOption == 'Other' && pi2.rendered}">
+                                                         &nbsp;&nbsp;<label>Other: <em class="formee-req">*</em></label>           
+                                                         <apex:inputText value="{!pi2.OLiPrice}" required="true" style="width:175px;border-color:{!pi2.borderColour}"/>
+                                                     </apex:outputPanel> 
+                                                  </apex:actionRegion>                                                                                                                                          
+                                                 </fieldset> 
+                                             </apex:outputPanel>                                           
+                                         </apex:outputPanel>                                                                                                                                               
+        <!-- credit card / dd payment -->                                          
+                                         <apex:outputPanel rendered="{!(pi2.componentType == 'payment' || pi2.componentType == 'directpayment') && pi2.rendered}">                                                 
+                                         <apex:outputPanel id="paymentpanel" rendered="{!!paymentProcessed && pi2.rendered}">
+                                         <div class="grid-12-12" > 
+                                             <apex:outputpanel rendered="{!selectedDonationMethod != 'Direct Debit'}">
+                                                 <div id="cardimagepanel">
+                                                     &nbsp;&nbsp;
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardVisa == null || thisForm.formSettings.cardVisa}"><img id="visa" src="{!URLFOR($Resource.s360a__s360Images,'/visa_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardMastercard}"><img id="mastercard" src="{!URLFOR($Resource.s360a__s360Images,'/mastercard_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardAmex}"><img id="amex" src="{!URLFOR($Resource.s360a__s360Images,'/american_express_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardDiscover}"><img id="discover" src="{!URLFOR($Resource.s360a__s360Images,'/discover_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardDiners}"><img id="diners" src="{!URLFOR($Resource.s360a__s360Images,'/diners_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                     <apex:outputPanel rendered="{!thisForm.formSettings.cardJCB}"><img id="jcb" src="{!URLFOR($Resource.s360a__s360Images,'/jcb_512.png')}" style="vertical-align:middle;height:25px"/></apex:outputPanel>
+                                                 </div>                                               
+                                                 <br/>
+                                                 <apex:inputField html-placeholder="Name on Card" value="{!transactionObject.s360a__NameOnCard__c}" required="true"/>
+                                                 <br/>
+                                                 <apex:inputField html-placeholder="Card Number" id="ccnum" value="{!transactionObject.s360a__CreditCardNumber__c}" required="true" onkeyup="selectCardType(this.value);" onblur="selectCardType(this.value);"/>
+                                                 <br/>
+                                                <label>Expiry Month / Year <em class="formee-req">*</em></label> 
+                                                 <apex:inputField style="width:60px" value="{!transactionObject.s360a__ExpiryMonth__c}"/>       
+                                                 <apex:inputField style="width:60px" value="{!transactionObject.s360a__ExpiryYear__c}"/>
+                                                 <br/><br/>                 
+                                                 <apex:inputField html-placeholder="CCV" value="{!transactionObject.s360a__CVV__c}" style="width: 75px;"/>
+                                                 <br/><br/>
+                                                 <apex:outputPanel rendered="{!proceededToPayment && !isRegularGiving}">
+                                                     <label><b>Confirm Amount</b></label>
+                                                     <apex:inputField style="width:150px" id="disabledinput"  value="{!transactionObject.s360a__Amount__c}"/>      
+
+                                                     <!-- ####### disable the inputField as it's just for display..no disabled attribute on inputField :( #######-->
+                                                     <script>document.getElementById('{!$Component.disabledinput}').disabled = true; </script>                                                 
+                                                 </apex:outputPanel>
+                                                 <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/sslLogo3.png')}" style="vertical-align:middle;margin-left:6px;margin-top:4px" height="30px"/>
+                                             </apex:outputpanel>
+                                             <apex:outputpanel rendered="{!selectedDonationMethod == 'Direct Debit'}">
+                                                 <label>Bank</label>    
+                                                 <apex:inputField html-placeholder="Bank" value="{!automatedTransaction.s360a__Bank__c}" style="width:200px;margin-bottom:10px"/>
+                                                 <br/>     
+                                         <!--        <label style="padding-top:5px">Branch</label>       --> 
+                                                 <apex:inputField html-placeholder="Branch" value="{!automatedTransaction.s360a__Branch__c}" />
+                                                 <br/><br/>                                                 
+                                         <!--        <label>Account Name <em class="formee-req">*</em></label>     -->                     
+                                                 <apex:inputField html-placeholder="Account Name" value="{!automatedTransaction.s360a__AccountName__c}" required="true"/>
+                                                 <br/>
+                                         <!--        <label>BSB <em class="formee-req">*</em></label> -->
+                                                 <apex:inputField html-placeholder="BSB"  value="{!automatedTransaction.s360a__BSB__c}" required="true" style="width:200px"/>                                                 
+                                                 <br/>
+                                         <!--        <label>Account Number <em class="formee-req">*</em></label> -->
+                                                 <apex:inputField html-placeholder="Account Number"  value="{!automatedTransaction.s360a__AccountNumber__c}" required="true" style="width:200px"/>
+                                             </apex:outputpanel>  
+                                             <apex:outputPanel rendered="{!thisForm.formSettings.showRGTerms}">
+                                                 <fieldset style="padding:5px"><legend>Regular Payment Terms</legend>
+                                                    <apex:outputText value="{!HTMLENCODE(thisForm.formSettings.regularGivingTerms)}" />          
+                                                    <br/>
+                                                    <apex:outputPanel rendered="{!thisForm.formSettings.showRGTermsURL}">
+                                                        <apex:outputLink target="blank" value="{!HTMLENCODE(thisForm.formSettings.regularGivingTermsURL)}">{!HTMLENCODE(thisForm.formSettings.rgURLText)}</apex:outputLink>
+                                                        <br/>
+                                                    </apex:outputPanel>   
+                                                    <br/>
+                                                    <apex:inputField value="{!automatedTransaction.s360a__RegularGivingTermsAccepted__c}"/>
+                                                    <b>Accept Terms and Conditions</b>
+                                                 </fieldset>                                             
+                                             </apex:outputPanel>                                           
+                                             <br/>
+                                             <apex:outputText style="font-weight:bold" value="{!firstPaymentToBeProcessed}" rendered="{!proceededToPayment && isRegularGiving}" />
+                                         </div>   
+                                     </apex:outputPanel> 
+                                     </apex:outputPanel>  
+        <!-- lineitem -->                                           
+                                     <apex:outputPanel rendered="{!pi2.componentType == 'lineitem' && !pi2.isHidden && pi2.rendered}">
+                                         <hr/><br/>
+                                         <apex:outputpanel style="" id="lineitempanel">                                                     
+                                             <apex:inputCheckbox style="width:70px;" value="{!pi2.OLiCheckBox}" title="Select this item" rendered="{!pi2.showOLiCheckBox && pi2.rendered}"/>
+                                             <apex:inputText style="width:60px" value="{!pi2.OLiQuantityInput}" title="Enter quantity" rendered="{!!pi2.showOLiCheckBox && pi2.rendered}" onchange="olirefresh();"/>
+                                             <apex:outputText id="OLiPrice" styleClass="formee-txt" escape="false" value="<b>{0, number, {!HTMLENCODE(thisForm.formsettings.currencySymbol)}#,##0.00}</b>" rendered="{!pi2.showOLiPrice && pi2.rendered}">
+                                                 <apex:param value="{!pi2.OLiPrice}" />
+                                             </apex:outputText>
+                                             <apex:outputText styleClass="formee-txt" escape="false" value="<b>{!pi2.product.s360a__ShortWebDescription__c}</b>" rendered="{!pi2.showProductShortDesc }"/>
+                                             <apex:outputText styleClass="formee-txt" escape="false" style="width:100px;float:right;padding-right:10px" value="<b>{0, number, {!HTMLENCODE(thisForm.formsettings.currencySymbol)}#,##0.00}</b>" id="OLiTotal" rendered="{!pi2.showOLiTotal && pi2.rendered}">
+                                                 <apex:param value="{!pi2.OLiPrice * pi2.OLiQuantity}"/>
+                                             </apex:outputText>
+                                             <br/>
+                                         </apex:outputpanel>                                                   
+                                         <apex:image style="max-width:300px;padding-left:10px;padding-top:10px" url="{!pi2.product.s360a__ProductImageURL__c}" rendered="{!pi2.showProductImage}" />
+                                         <br/> 
+                                         <apex:outputText styleClass="formee-lbl" escape="false" value="{!pi2.product.s360a__WebLongDescription__c}" rendered="{!pi2.showProductLongDesc}"/>
+                                         <hr/>
+                                     </apex:outputPanel>
+        <!-- payment summary panel -->                                          
+                                     <apex:outputPanel rendered="{!pi2.componentType == 'paymentsummary' && pi2.rendered}">
+                                         <fieldset><legend>Summary</legend>                                           
+                                             <apex:repeat value="{!thisForm.allOLiItems}" var="piPayment">
+                                                 <apex:outputpanel id="olipanel" style="white-space:nowrap" rendered="{!piPayment.OLiTotal > 0}">                                                                                                         
+                                                     <apex:inputText disabled="true" styleClass="formee-txt" style="width:60px" value="{!piPayment.OLiQuantityInput}"/>
+                                                     <apex:outputText style="width:100px !important;" styleClass="formee-txt" escape="false" value="<b>{0, number, {!HTMLENCODE(thisForm.formsettings.currencySymbol)}#,##0.00}</b>">
+                                                         <apex:param value="{!piPayment.OLiPrice}" />                                                               
+                                                     </apex:outputText>
+                                                     <apex:outputText style="font-size:1.4em;font-family:inherit;"  escape="false" value="<b>{!piPayment.product.s360a__ShortWebDescription__c}</b>" />
+                                                     <apex:outputText style="float:right;width:100px;padding-right:10px" styleClass="formee-txt" escape="false" value="<b>{0, number, {!HTMLENCODE(thisForm.formsettings.currencySymbol)}#,##0.00}</b>">
+                                                         <apex:param value="{!piPayment.OLiTotal}" />
+                                                     </apex:outputText>
+                                                     <br/><br/>
+                                                 </apex:outputpanel>                                                         
+                                             </apex:repeat>   
+                                             <hr/>
+                                             <apex:outputText styleClass="formee-txt" escape="false" style="width:100px;float:right;padding-right:10px" value="<b>{0, number, {!HTMLENCODE(thisForm.formsettings.currencySymbol)}#,##0.00}</b>">
+                                                  <apex:param value="{!thisForm.formTotalValue}" />
+                                             </apex:outputText>                                                                                                                       
+                                         </fieldset>                                            
+                                     </apex:outputPanel> 
+        <!-- ----------- -->                                                                                 
+                                      </apex:repeat>                                                            
+                                   </fieldset>
+                                   </apex:outputPanel>                                   
+                                </apex:repeat> 
+                                &nbsp;&nbsp;
+                               <apex:actionStatus id="processingstatus">
+                                   <apex:facet name="start">
+                                       <apex:outputPanel styleClass="popupBackground" layout="block" />        
+                                       <apex:outputPanel styleClass="customPopup" layout="block">         <!--style="top: 25%;left: 54%;right: 60%;"-->
+                                           <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                           <apex:outputText style="font-size:20px;font-weight:bold;color:grey" value="Payment processing - please wait."/>                          
+                                           <br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                           &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                           <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loadingbar.gif')}"/>
+                                           <br/><br/>
+                                       </apex:outputPanel> 
+                                   </apex:facet>
+                           <apex:facet name="stop">
+                               <script>
+                                   parent.scrollTo(0,0);
+                               </script>
+                           </apex:facet>                                     
+                               </apex:actionStatus>                                  
+                                <apex:actionFunction reRender="pagemessagewindow,errormessagewindow,otherpanel" name="otherselect" immediate="true"/> 
+                                <apex:actionFunction reRender="donationpanel" name="donationrefresh"/>
+                                <apex:actionFunction reRender="pagemessagewindow,errormessagewindow,olipanel" name="olirefresh" immediate="true"/>
+                                <apex:actionFunction name="rerenderCardLogos" rerender="cardimagepanel" />
+                                <apex:commandButton reRender="pagemessagewindow,errormessagewindow,mainpanel" value="{!HTMLENCODE(thisForm.formSettings.previousText)}" action="{!prevPageButton}" rendered="{!currentPage !=0}" immediate="true" status="otherstatus"/>                                                                                                           
+                                <apex:commandButton reRender="pagemessagewindow,errormessagewindow,mainpanel" value="{!HTMLENCODE(thisForm.formSettings.nextText)}" action="{!nextPageButton}" rendered="{!!thisForm.pageLayouts[currentPage].isLastPage && !thisForm.pageLayouts[currentPage].isPageBeforePaymentPage}" status="otherstatus"/>
+                                <apex:commandButton reRender="pagemessagewindow,errormessagewindow,mainpanel"  value="Proceed to Payment" action="{!proceedToPaymentButton}" rendered="{!thisForm.pageLayouts[currentPage].isPageBeforePaymentPage}" status="otherstatus"/>
+                                <apex:commandButton rerender="pagemessagewindow,errormessagewindow,mainpanel" value="Process Payment" action="{!submitPayment}" rendered="{!proceededToPayment && !isRegularGiving}" status="processingstatus"/>    
+                                <apex:commandButton rerender="pagemessagewindow,errormessagewindow,mainpanel" value="Submit Payment Details" action="{!submitPaymentDetails}" rendered="{!proceededToPayment && isRegularGiving}" status="processingstatus"/>    
+                                <apex:commandButton reRender="pagemessagewindow,errormessagewindow,mainpanel" value="{!HTMLENCODE(thisForm.formSettings.submitText)}" action="{!submitFormButton}" rendered="{!thisForm.pageLayouts[currentPage].isLastPage && !thisForm.pageLayouts[currentPage].isPaymentPage}" status="otherstatus"/>                                         
+                                <apex:commandButton reRender="pagemessagewindow,errormessagewindow,mainpanel" value="{!HTMLENCODE(thisForm.formSettings.cancelText)}" action="{!submitFormButton}" immediate="true" rendered="{!thisForm.formSettings.showCancel}" status="otherstatus"/>                                                                                                                   
+                            </apex:outputPanel>
+                            <apex:outputPanel rendered="{!formComplete}">
+                                <fieldset>
+                                    <table><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept32.png')}" />
+                                    &nbsp;&nbsp;</td>
+                                    <td><label>{!thisForm.formSettings.formCompleteText}</label></td></table>
+                                </fieldset>
+                            </apex:outputPanel>   
+               <!--         </apex:pageBlock>  -->
+                    
+                    <apex:actionStatus id="otherstatus">
+                          <apex:facet name="start">
+                               <apex:outputPanel styleClass="popupBackground" layout="block" />        
+                               <apex:outputPanel styleClass="customPopup" layout="block" >        <!-- style="bottom: 250px;left: 54%;right: 54%;" -->
+                                      <br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                      <apex:outputText style="font-size:20px;font-weight:bold;color:grey" value="Processing - please wait."/>                          
+                                      <br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                      <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loadingbar.gif')}"/>
+                                      <br/><br/>                               
+                                 </apex:outputPanel> 
+                           </apex:facet>
+                           <apex:facet name="stop">
+                               <script>
+                                   parent.scrollTo(0,0);
+                               </script>
+                           </apex:facet>                           
+                   </apex:actionStatus> 
+                 </apex:outputPanel>   <!-- mainpanel -->                                                                       
+              </apex:form>
+            </div>     
+        </body>             
+    </html>
+</apex:page>

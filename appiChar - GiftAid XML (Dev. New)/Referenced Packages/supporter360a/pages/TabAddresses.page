@@ -1,0 +1,31 @@
+<apex:page Controller="s360a.AddressController" showHeader="false" sidebar="false">
+<apex:form >
+    <apex:pageblock >
+    <apex:outputPanel >
+        <table width="60%">
+        <tr><td><center><apex:outputLink value="{!urlFor($Page.s360a__AddressNew,null,[Id=ide])}"  target="_blank" styleClass="btn" style="text-decoration: none;height:22px;">New Address</apex:outputLink></center><br/></td></tr></table>            
+    </apex:outputPanel>
+    <apex:pageblocktable value="{!displayrec}" var="ah" width="100%">
+        <apex:column headerValue="Action" width="100px">
+        <apex:outputLink title="Edit address" value="{!urlFor($Page.s360a__AddressView,null,[id=ide,mode='edit',sno=ah.unqNumber])}" target="_blank"><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" width="12px" height="12px"/></apex:outputLink>
+        <apex:outputLabel value="" >&nbsp; | &nbsp;</apex:outputLabel> 
+        <apex:commandlink title="Delete address" action="{!Deletefunction}" onclick="if(confirm('Are you sure you want to delete?')) return true; else return false;" target="_top" ><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" width="12px" height="12px"/>
+            <apex:param name="deleteno" value="{!ah.unqNumber}"/> 
+        </apex:commandlink>
+        </apex:column>
+        <apex:column headerValue="Address Type" ><apex:outputLink value="{!urlFor($Page.s360a__AddressView,null,[id=ide,mode='view',sno=ah.unqNumber])}" target="_blank">{!ah.AddressTypeRecordLink} </apex:outputLink></apex:column>
+        <apex:column headerValue="Address"><apex:outputLabel value="{!ah.street} {!ah.city},{!ah.state} {!ah.postcode} {!ah.country}"></apex:outputLabel></apex:column>
+        <apex:column headerValue="Display As"  >{!ah.displayAddressAs}</apex:column>
+        <apex:column headerValue="Mailing">
+            <apex:inputCheckbox value="{!ah.isPreferredMailing}" disabled="true"/>
+        </apex:column>
+        <apex:column headerValue="Street">
+            <apex:inputCheckbox value="{!ah.isPreferredStreet}" disabled="true"/>
+        </apex:column>
+        <apex:column headerValue="Active">
+            <apex:inputCheckbox value="{!ah.isActive}" disabled="true"/>
+        </apex:column>
+    </apex:pageblocktable><br/>
+    </apex:pageblock>
+</apex:form>
+</apex:page>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>supporter360 Administration and Settings area.</description>
+    <label>supporter360 Settings</label>
+    <mobileReady>false</mobileReady>
+    <motif>Custom67: Gears</motif>
+    <page>supporter360Settings</page>
+</CustomTab>

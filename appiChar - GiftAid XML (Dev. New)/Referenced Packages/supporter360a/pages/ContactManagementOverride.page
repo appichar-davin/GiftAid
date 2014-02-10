@@ -1,0 +1,13 @@
+<!-- 
+/*****************************************************************
+ *                                                               *
+ *   Product: supporter360                                       *
+ *      File: ContactManagementOverride.page                     *
+ *   Version: 1.0                                                *
+ * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+ *                                                               *
+ *****************************************************************/
+ -->
+
+<apex:page standardcontroller="Contact" extensions="s360a.ContactManagementOverride" action="{!autoForward}">
+</apex:page>

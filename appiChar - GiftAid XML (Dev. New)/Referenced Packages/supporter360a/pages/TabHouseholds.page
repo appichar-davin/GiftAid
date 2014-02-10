@@ -1,0 +1,108 @@
+<apex:page Controller="s360a.HouseholdManagementTab" showHeader="false" sidebar="false">
+<style>
+.customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 1px;
+        left: 10%;
+        padding:10px;
+        position: fixed;
+        z-index: 9999;
+        
+        /* These are the 3 css properties you will need to tweak so the pop 
+        up displays in the center of the screen. First set the width. Then set 
+        margin-left to negative half of what the width is. You can also add 
+        the height property for a fixed size pop up. */
+        
+        width: 675px;
+        margin-left: -50px;
+        top:0px; 
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;         
+}
+.popupBackground{
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 20);
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+}  
+</style>
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+<apex:form >
+    <apex:outputPanel id="hhpanel">
+    <apex:pageblock >
+
+    <apex:pageblocktable value="{!addressItems}" var="ai" width="100%">
+        <apex:column headerValue="Action" width="60px">
+            <apex:commandLink action="{!addChange}" title="Add / Change" rerender="hhpanel, popupouter" rendered="{!ai.showButton}" status="mainstatus">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" style="height:12px" />
+                <apex:param name="addchange" value="{!ai.type}"/> 
+            </apex:commandLink>
+            <apex:outputLabel value=""  rendered="{!ai.showButton}">&nbsp; | &nbsp;</apex:outputLabel> 
+            <apex:commandLink action="{!delhh}"  title="Delete" rerender="hhpanel" rendered="{!ai.showButton}" status="mainstatus">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" style="height:12px"/>            
+                <apex:param name="delhh" value="{!ai.type}"/> 
+            </apex:commandLink>                        
+        </apex:column>     
+        <apex:column headerValue="Primary / Secondary" value="{!ai.type}" />
+        <apex:column headerValue="Address Type"  >{!ai.a.s360a__AddressPrimaryAddressType__c}</apex:column>
+        <apex:column headerValue="Household Name"  ><apex:outputLink value="/{!ai.a.s360a__One2OneContact__c}" target="_blank">{!ai.a.Name} </apex:outputLink></apex:column>        
+        <apex:column headerValue="Address"  >{!ai.a.s360a__AddressPrimarySingleLine__c}</apex:column>
+        <apex:column headerValue="Role Type">
+            <apex:inputField value="{!ai.inputCon.s360a__PrimaryHouseholdRole__c}" rendered="{!ai.a.Name != null}"/>
+        </apex:column> 
+        <apex:column headerValue="Member Type">
+            <apex:inputField value="{!ai.inputCon.s360a__PrimaryHouseholdMemberType__c}" rendered="{!ai.a.Name != null}"/>
+        </apex:column>         
+    </apex:pageblocktable>
+    <br/>
+    <apex:commandButton styleClass="cssbutton" oncomplete="window.open('{!redirectURL}');"   value="Create New Household" action="{!newHousehold}" rerender="hhpanel" style="height:21px" status="mainstatus"/>&nbsp;&nbsp;            
+<!--    <apex:commandButton styleClass="cssbutton"  value="Convert To Household" action="{!prevPage}" rerender="hhpanel" style="height:21px" status="mainstatus"/>&nbsp;&nbsp;  -->
+    <apex:commandButton styleClass="cssbutton"  action="{!Save}" rerender="hhpanel" value="Save Changes" status="mainstatus" />&nbsp;&nbsp;&nbsp;<apex:outputText value="*Unsaved Changes* Note: Primary Household will overwrite contact Primary address unless overriden." style="color:orange;font-weight:bold" rendered="{!needToSave}"/> &nbsp;&nbsp;     
+    <apex:actionStatus id="mainstatus">
+         <apex:facet name="start">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+         </apex:facet>
+    </apex:actionStatus>    
+    
+    </apex:pageblock>
+    </apex:outputPanel>
+    <apex:outputPanel id="popupouter">
+        <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showLookup}"/>
+        <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showLookup}">
+        <apex:pageBlock >
+            <apex:pageBlockTable value="{!HHEntries}" var="a" id="hhtable">
+                <apex:column headerValue="Name" value="{!a.ac.name}" width="175px"/> 
+                <apex:column headerValue="Primary Address" value="{!a.ac.s360a__AddressPrimarySingleLine__c}" width="400px"/>                 
+                <apex:column headerValue="Select" width="100px">
+                    <apex:inputCheckbox value="{!a.selected}">
+                        <apex:actionSupport event="onchange" rerender="popupouter,hhpanel" action="{!selectItem}" status="selectitem"/>
+                    </apex:inputCheckbox>
+                </apex:column>
+            </apex:pageBlockTable> 
+            <apex:inputText value="{!HHsearchBox}" style="float:left"/> 
+            <apex:commandButton styleClass="cssbutton" value="Search" action="{!doLookUp}" rerender="popupouter" style="float:left;height:21px"/>&nbsp;&nbsp;                   
+            <apex:outputText value="   {!HHOffset+1} - {!HHMaxRange} / {!HHSize}" style="vertical-align:text-bottom;font-size:10px;font-weight:bold;"/>
+
+            <apex:commandButton styleClass="cssbutton"  value="Next" action="{!nextPage}" rerender="popupouter" style="float:right;height:21px"/>&nbsp;&nbsp;            
+            <apex:commandButton styleClass="cssbutton"  value="Prev" action="{!prevPage}" rerender="popupouter" style="float:right;height:21px"/>&nbsp;&nbsp;  
+            <apex:commandButton styleClass="cssbutton"  value="Cancel" action="{!cancelLookup}" rerender="popupouter" style="float:right;height:21px"/>&nbsp;&nbsp;
+            <apex:actionStatus id="selectitem">
+                <apex:facet name="start">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/><!-- Updated by shail -->
+                </apex:facet>
+            </apex:actionStatus>
+
+        </apex:pageBlock> 
+        </apex:outputPanel> 
+    </apex:outputPanel>              
+</apex:form>
+</apex:page>

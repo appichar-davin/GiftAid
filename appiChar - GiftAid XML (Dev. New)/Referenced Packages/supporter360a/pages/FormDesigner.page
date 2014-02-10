@@ -1,0 +1,1231 @@
+<apex:page controller="s360a.FormDesigner"  sidebar="false" showHeader="true" id="thepage">
+<apex:pagemessages />
+<style>
+.customPopup{
+            background-color: white;
+            border-style: solid;
+            border-width: 2px;
+            padding:10px;
+            position: fixed;
+            z-index: 9999;
+            width: 500px;
+
+/* get the pop up in the middle of the screen */
+            top: 50%;
+            left: 53%;
+            margin-top: -100px;
+            margin-left: -250px;      
+
+/* smooth corners */
+            -moz-border-radius: 6px;
+            -webkit-border-radius: 6px;
+            border-radius: 6px; 
+
+}
+.customPopupWide{
+            background-color: white;
+            border-style: solid;
+            border-width: 2px;
+
+            padding:10px;
+            position: fixed;
+            z-index: 9999;
+            width: 700px;
+/* get the pop up in the middle of the screen */
+            top: 50%;
+            left: 53%;
+            margin-top: -100px;
+            margin-left: -250px;      
+
+/* smooth corners */
+            -moz-border-radius: 6px;
+            -webkit-border-radius: 6px;
+            border-radius: 6px;             
+}
+.popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+}
+.formee .formee-txt, .formee input[type="text"], .formee input[type="password"], .formee input[type="file"], .formee textarea, .formee select {
+    border-color:#c6c6c6 #dadada #eaeaea;
+    background: #fafafa;
+    color:#999;
+    font-size:1.4em;    /* Ian - changed from 1.4 */
+    font-family:inherit;
+    /*corner*/
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    margin-bottom: 0;
+}
+body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+.evenRow { background-color: #FFFFFF; }
+.oddRow { background-color: #EEEEEE; }
+
+.centered { text-align: center; }
+.centered-table {
+   margin-left: auto;
+   margin-right: auto;
+}
+
+.bar {
+    display: inline-block;
+    line-height: 1;
+    padding: 7px 10px;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+    height: 14px;
+    background-color: #39c;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #888;
+}
+.roundbox {
+    padding: 5px;
+    padding-left: 10px;
+    background: white;
+    border: 1px solid #bbbbbb;
+    box-shadow: 6px 6px 5px #888;
+    
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+.mouseOverInfo {
+    background-color: #F8FBFF;
+    text-align: left;
+    left: 0px;
+    box-shadow: 3px 3px 3px #888;    
+}   
+</style>      
+<script>
+function allowDrop(ev)
+{
+    ev.preventDefault();
+}
+
+function drag(ev)
+{
+    ev.dataTransfer.setData("Text",ev.target.id);
+}
+
+function drop(ev)
+{
+    ev.preventDefault();
+    var targetID=ev.target.id;
+    var sourceID=ev.dataTransfer.getData("Text");
+    ev.target.appendChild(document.getElementById(sourceID));
+    dragUpdate(sourceID,targetID); 
+}
+</script>      
+<apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" /> 
+<apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/> 
+<apex:includeScript value="{!URLFOR($Resource.s360a__s360jQuery, 'jscolor/jscolor.js')}" />
+<apex:includescript value="{!URLFOR($Resource.s360a__s360jQuery, 'CkEditor/ckeditor.js')}" />
+<apex:pageBlock >
+<apex:tabPanel switchType="client" inactiveTabClass="inactiveTab">
+<apex:tab label="Form Layout" name="edit" id="edit" > 
+<apex:form id="mainform">
+<apex:outputPanel id="errorpanel">
+    <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!showError}"/>
+    <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!showError}">
+            <apex:outputText escape="false" value="<b><u>Errors have been found:</u></b><br/><br/>" />
+            <apex:pagemessages />
+            <br/><br/>
+            <apex:commandButton styleClass="cssbutton" value="Close" action="{!closeError}"/>            
+    </apex:outputPanel>
+</apex:outputPanel>
+
+<div class="roundbox" style="width:30%;float:left;margin-right:10px;margin-left:15px"> 
+    <apex:outputText escape="false" style="vertical-align:text-bottom;font-weight:bold;font-size:11px" value="Select page to work on:"/><br/>
+    <apex:inputField value="{!inputOpp.s360a__PaymentPage__c}" style="width:150px"/>
+    <apex:commandButton style="height:18px;vertical-align:middle;margin-left:3px" title="Open Page" image="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" status="generalpagestatus" action="{!loadFormPage}" rerender="inputpanelwrapper,errorpanel,previewpanel" />     
+    <hr/>
+    <apex:outputText escape="false" style="vertical-align:text-bottom;font-weight:bold;font-size:11px" value="Set form title:"/><br/>
+    <apex:inputText value="{!pageRecord.s360a__PageTitle__c}" style="width:150px;"/>       
+
+    <apex:commandButton style="height:18px;vertical-align:middle;margin-left:25px" title="Save Page" image="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" status="generalpagestatus" action="{!savePage}" rerender="inputpanelwrapper,errorpanel,previewpanel" />     
+
+    <br/>
+    <apex:outputText escape="false" style="vertical-align:text-bottom;font-weight:bold;font-size:11px" value="Enable form:"/>
+    <apex:inputCheckbox value="{!pageRecord.s360a__CustomFormEnabled__c}" style="margin-left:10px"/>
+    <br/>     
+    <apex:outputPanel rendered="{!formChanged}">
+        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/warning.png')}" title="Unsaved changes"  height="20px" width="20px" style="vertical-align:text-bottom;float:right"  />                          
+    </apex:outputPanel>                             
+</div>                  
+<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/s360FormBuilder.png')}" height="70px" style="float:right;margin-right:15px;margin-top:10px"/>      
+<apex:actionFunction name="checkFields" action="{!reloadAllFields}" status="chkfieldstatus" reRender="inputpanel,errorpanel">   
+    <apex:param name="inorout" value="input"/>
+</apex:actionFunction>
+<apex:outputPanel id="inputpanelwrapper">
+    <apex:outputPanel id="sections">
+        <div class="bar" style="width:97%;margin-top:12px">Pages and Sections</div><br/><br/>  
+        <table>
+        <tr>
+             <td>&nbsp;<apex:outputText value="Form Pages" style="font-size:15px;font-weight:bold;color:orange"/></td>
+             <td/>
+             <td>&nbsp;<apex:outputText value="Page Sections" style="font-size:15px;font-weight:bold;color:orange"/></td>
+        </tr>
+        <tr>
+        <td>
+        <apex:pageBlockTable value="{!thisForm.pageLayouts}" var="p" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;box-shadow: 5px 5px 5px #888;"> 
+            <apex:column headerValue="Position" width="30px">
+                <apex:commandLink title="Move up the order" action="{!pageUpOrder}" rendered="{!p.position != 0}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="pagechange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/up32.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="uppage"/>
+                </apex:commandLink>               
+                <apex:commandLink title="Move down the order" action="{!pageDownOrder}" rendered="{!!p.isLastPage}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="pagechange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/download.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="downpage"/>
+                </apex:commandLink>                                        
+            </apex:column>           
+            <apex:column headerValue="Page Title">
+                <apex:inputText value="{!p.pageTitle}"/>
+            </apex:column>
+            <apex:column value="{!p.sectionCount}" headerValue="Sections"  style="text-align:center"/>  
+            <apex:column headerValue="Post Submit" style="text-align:center">    
+                <apex:inputCheckbox value="{!p.postSubmit}" disabled="{!thisForm.pageCount <= 1 || p.position != thisForm.pageCount-1}" title="Check this to make it the page to display after the form is submitted" />        
+            </apex:column>
+            <apex:column headerValue="Show Header" style="text-align:center">    
+                <apex:inputCheckbox value="{!p.showHeader}" title="Show page header on this page" />        
+            </apex:column>            
+            <apex:column headerValue="Action" style="text-align:center">
+                <apex:commandLink title="Edit page" action="{!editPage}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel" status="pagechange">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="pageposition"/>
+                </apex:commandLink>
+                &nbsp;
+                <apex:commandLink title="Delete page" action="{!delPage}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="pagechange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="pageposition"/>
+                </apex:commandLink>                               
+            </apex:column> 
+            <apex:column headerValue="Open" style="text-align:center">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept.png')}" height="16px" width="15px" rendered="{!thisForm.pageLayouts[currentPage].position == p.position}"/>      
+            </apex:column>                          
+        </apex:pageBlockTable> 
+        <br/>                      
+        <apex:commandLink title="Add page" action="{!newPage}" rerender="inputpanel,inputpanelwrapper,form2,errorpanel,sections" status="pagechange">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add_pages.png')}" height="30px" width="30px"  />      
+        </apex:commandLink>  
+        &nbsp;&nbsp;                                 
+            <apex:actionStatus id="pagechange">
+                  <apex:facet name="start">
+                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                  </apex:facet>
+        </apex:actionStatus>                  
+        </td>
+        <td width="50px"/>
+        <td>
+        <apex:pageBlockTable value="{!pageSections}" var="p" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;box-shadow: 5px 5px 5px #888;">                   
+            <apex:column headerValue="Drop" width="30px">                
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                    <div id="section{!p.position}" ondrop="drop(event)" ondragover="allowDrop(event)" style="width:30px;height:16px;border:1px solid #aaaaaa;"/>
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">                                          
+                        <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;&nbsp;Drag an item and drop it onto this box to move it from one section to another.
+                    </div>
+                </div>
+            </apex:column>   
+            <apex:column headerValue="Position" width="30px">
+                <apex:commandLink title="Move up the order" action="{!sectionUpOrder}" rendered="{!p.position != 0}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="pagechange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/up32.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="uppage"/>
+                </apex:commandLink>               
+                <apex:commandLink title="Move down the order" action="{!sectionDownOrder}" rendered="{!!p.isLastSection}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="pagechange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/download.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="downpage"/>
+                </apex:commandLink>                                        
+            </apex:column>                         
+            <apex:column headerValue="Section Title">
+                <apex:inputText value="{!p.sectionTitle}"/>
+            </apex:column>
+            <apex:column value="{!p.fieldCount}" headerValue="Items" style="text-align:center"/>            
+            <apex:column headerValue="Action" style="text-align:center">
+                <apex:commandLink title="Edit section" action="{!editSection}" rerender="inputpanel, inputpanelwrapper,form2,errorpanel" status="sectionchange">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="sectitle"/>
+                </apex:commandLink>
+                &nbsp;
+                <apex:commandLink title="Delete section" action="{!delSection}" rerender="inputpanel,inputpanelwrapper, form2,errorpanel,sections" status="sectionchange">
+                     <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" height="15px" width="15px"/>      
+                    <apex:param value="{!p.position}" name="secpos"/>
+                </apex:commandLink>                             
+            </apex:column>      
+            <apex:column headerValue="Open" style="text-align:center">
+                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/accept.png')}" height="16px" width="15px" rendered="{!currentSection == p.position}"/>      
+            </apex:column> 
+            <apex:column headerValue="Select" style="text-align:center">    
+                <apex:inputCheckbox value="{!p.selected}" title="Select" />        
+            </apex:column>                 
+        </apex:pageBlockTable>
+        <br/> 
+        <apex:commandLink title="Add section" action="{!newSection}" rerender="inputpanel,inputpanelwrapper,form2,errorpanel,sections" status="sectionchange">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add_page.png')}" height="30px" width="30px"  />      
+        </apex:commandLink>  
+        &nbsp;&nbsp;
+        <apex:commandLink title="Merge sections into first selected section" action="{!mergeSections}" rerender="inputpanel,inputpanelwrapper,form2,errorpanel,sections" status="sectionchange">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/shuffle.png')}" height="27px" width="27px" style="vertical-align: top;"  />      
+        </apex:commandLink>  
+        &nbsp;&nbsp;                         
+            <apex:actionStatus id="sectionchange">
+                  <apex:facet name="start">
+                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                  </apex:facet>
+        </apex:actionStatus>        
+        </td>
+        </tr>
+        </table>
+        <br/>                        
+
+    </apex:outputPanel>    
+    <apex:outputPanel id="inputpanel" rendered="{!pageOpened}">
+
+            <div class="bar" style="width:97%">Section Edit - {!pageSections[currentSection].sectionTitle}</div><br/><br/>                     
+            <apex:outputPanel rendered="{!!showEditItem}">      
+                <table><tr>
+                <td><apex:outputText escape="false" value="Object to get fields from:" style="font-weight:bold;font-size:11px"/></td>
+                <td><apex:outputText escape="false" value="Select Field:" style="font-weight:bold;font-size:11px"/>&nbsp;&nbsp; </td>
+                </tr><tr>
+                <td><apex:selectList size="1" value="{!currentObject}" onchange="checkFields();">
+                        <apex:selectOptions value="{!availableObjects}"/>
+                    </apex:selectList></td>
+                <td><apex:selectList size="1" value="{!currentField}">
+                        <apex:selectOptions value="{!availableFields}"/>
+                    </apex:selectList></td>
+                <td>&nbsp;&nbsp; 
+                    <apex:commandLink title="Add input field" action="{!addPageItem}" rerender="inputpanel,errorpanel,sections" status="chkfieldstatus">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="20px" width="20px" style="vertical-align:text-bottom;" />      
+                    </apex:commandLink>  
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <apex:commandLink title="Save page" action="{!savePage}" rerender="inputpanelwrapper, form2,errorpanel,sections, previewpanel" status="chkfieldstatus">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" height="20px" width="20px" style="vertical-align:text-bottom;" />      
+                    </apex:commandLink>                
+                    &nbsp;&nbsp;&nbsp;&nbsp;    
+                    <apex:actionStatus id="chkfieldstatus">
+                        <apex:facet name="start">
+                          <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                        </apex:facet>
+                    </apex:actionStatus>
+                    <apex:outputPanel rendered="{!formChanged}">
+                        &nbsp;&nbsp;<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/warning.png')}" title="Unsaved changes"  height="20px" width="20px" style="vertical-align:text-bottom;"  />           
+                    </apex:outputPanel></td>
+                </tr>
+                </table> 
+                <table>
+                <tr><td><apex:outputText escape="false" value="Quick Add:" style="font-weight:bold;font-size:11px"/></td> 
+                </tr><tr>    
+                    <td><apex:selectList size="1" value="{!selectedQuickAdd}">
+                            <apex:selectOptions value="{!quickAddOptions}"/>
+                        </apex:selectList></td>
+                    <td>&nbsp;&nbsp; 
+                    <apex:commandLink title="Quick add fields" action="{!quickAddOption}" rerender="inputpanel,errorpanel,sections" status="chkfieldstatus">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="20px" width="20px" style="vertical-align:text-bottom;" />      
+                    </apex:commandLink>  
+                    &nbsp;&nbsp;&nbsp;&nbsp;    
+                    <apex:actionStatus id="quickaddstatus">
+                        <apex:facet name="start">
+                          <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                        </apex:facet>
+                    </apex:actionStatus></td>
+                </tr></table>                                   
+                <br/><br/>  
+            </apex:outputPanel>         
+<!--{!JSONItems}-->     
+        <apex:actionFunction name="dragUpdate" action="{!dragUpdate}"        
+         rerender="started,errorpanel, sections">
+            <apex:param name="sourceID" value="" />
+            <apex:param name="targetID" value="" />          
+        </apex:actionFunction>
+            <apex:outputPanel id="started" rendered="{!pageOpened}">               
+              <div style="width:750px;float:left">
+              <apex:outputPanel rendered="{!!showEditItem}">   
+                <apex:pageBlockTable value="{!pageSections[currentSection].pageItems}" var="pi" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;box-shadow: 5px 5px 5px #888;">                          
+                    <apex:column headerValue="Order">
+                        <div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)" style="width:40px;height:16px;border:0px solid #aaaaaa;">                            
+                            <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">
+                            <img id="{!pi.itemId}" src="{!URLFOR($Resource.s360images, '/draghand.png')}" draggable="true" ondragstart="drag(event)" width="15" height="15" style="margin-left:10px" />
+                            <div style="display: none; opacity: 0;" class="mouseOverInfo">                                          
+                                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;&nbsp;Drag an item and drop it onto another item to change the order of the fields on your form.
+                            </div>
+                            </div>                        
+                        </div>
+                    </apex:column>                    
+                    <apex:column headerValue="Item Id" value="{!pi.itemId}" style="text-align:center" title="Ids can be useful to know when doing calculations or rendering."/>
+                    <apex:column headerValue="Attributes">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/keyboard.png')}" title="Input field" height="17px" width="17px" rendered="{!pi.isInputField}"/>             
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/remote_desktop.png')}" title="Output field" height="16px" width="16px" rendered="{!pi.isOutputField}"/>                                      
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/favorite.png')}" title="Required" height="16px" width="16px" rendered="{!pi.isRequired}"/> 
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/link.png')}" title="Link field" height="16px" width="16px" rendered="{!pi.isLink}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/firewall.png')}" title="Hidden field" height="16px" width="16px" rendered="{!pi.isHidden}"/>             
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/event.png')}" title="Date field" height="16px" width="16px" rendered="{!pi.isDate}"/>    
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/radio.png')}" title="Radio buttons" height="16px" width="16px" rendered="{!pi.componentType == 'selectradio'}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/palette.png')}" title="Rich Text field" height="16px" width="16px" rendered="{!pi.isHTML || pi.componentType == 'richtextarea'}"/>  
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/sale.png')}" title="q item" height="17px" width="17px" rendered="{!pi.componentType == 'lineitem'}"/>  
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/shopping_cart.png')}" title="Payment summary" height="16px" width="16px" rendered="{!pi.componentType == 'paymentsummary'}"/>                                                 
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/regular.png')}" title="Payment widget" height="16px" width="16px" rendered="{!pi.componentType == 'payment'}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/newline.png')}" title="Blank line" height="16px" width="16px" rendered="{!pi.componentType == 'blankline'}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/calculator.png')}" title="Calculated field" height="16px" width="16px" rendered="{!pi.componentType == 'calcfield'}"/>                  
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/horizontal_line.png')}" title="Horizontal line" height="16px" width="16px" rendered="{!pi.componentType == 'horizontalline'}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/directpayment.png')}" title="Direct payment" height="16px" width="16px" rendered="{!pi.componentType == 'directpayment'}"/>                        
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/present.png')}" title="Direct payment" height="16px" width="16px" rendered="{!pi.componentType == 'donationpanel'}"/>                     
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/businesswoman_info.png')}" title="Name fields" height="16px" width="16px" rendered="{!pi.componentType == 'namefields'}"/>
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/home.png')}" title="Address fields" height="16px" width="16px" rendered="{!pi.componentType == 'addressfields'}"/>                                                              
+                    </apex:column>                         
+                    <apex:column headerValue="Field Label">
+                        <apex:inputText value="{!pi.fieldLabel}" rendered="{!pi.componentType != 'blankline' || pi.componentType != 'horizontalline'}"/>
+                    </apex:column>            
+                    <apex:column headerValue="Object">
+                        <apex:outputText value="{!pi.destObject}" rendered="{!pi.componentType == 'none' || pi.componentType == 'selectlist'}"/>             
+                        <apex:outputText escape="false" value="[Component]" rendered="{!pi.componentType != 'none' && pi.componentType != 'selectlist'}"/>
+                    </apex:column>   
+                    <apex:column headerValue="Field">
+                        <apex:outputPanel rendered="{!pi.componentType == 'none' || pi.componentType == 'selectlist'}">            
+                            <apex:outputText value="{!pi.destField}" rendered="{!pi.destField != 'xx' && !pi.editMe}" />                      
+                        </apex:outputPanel>
+                        <apex:outputText value="{!pi.componentType}" rendered="{!pi.componentType != 'none' && pi.componentType != 'selectlist'}"/>
+                        <apex:outputText value=" ({!pi.product.Name})" rendered="{!pi.componentType == 'lineitem' || pi.componentType == 'donationpanel'}"/>
+                    </apex:column>                            
+                    <apex:column headerValue="Action" width="65px">    
+                        <apex:commandLink title="Edit item" action="{!editItem}" status="editdel" rerender="inputpanel, itempeditopup">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/edit.png')}" height="16px" width="16px"  />      
+                            <apex:param value="{!pi.position}" name="item"/>
+                        </apex:commandLink>  &nbsp; 
+                        <apex:commandLink title="Delete item" action="{!delItem}" status="editdel" rerender="inputpanel, itempeditopup">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" height="16px" width="16px"  />      
+                            <apex:param value="{!pi.position}" name="item"/>
+                        </apex:commandLink>  
+                        &nbsp;   
+                        <apex:actionStatus id="editdel">
+                              <apex:facet name="start">
+                                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                              </apex:facet>
+                        </apex:actionStatus>                                                       
+                    </apex:column> 
+                </apex:pageBlockTable>          
+       <!--         <apex:actionFunction name="refreshField" action="{!saveItemField}" reRender="inputpanel,errorpanel" status="addref"/>       -->
+                <br/> 
+           </apex:outputPanel>
+            </div>
+            <div>
+            <apex:outputPanel rendered="{!!showEditItem}">
+            <apex:outputText value="Add Component:" style="font-size:12px;font-weight:bold;color:orange"/>&nbsp;&nbsp;
+            <apex:actionStatus id="componentstatus">
+                <apex:facet name="start">
+                   <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                </apex:facet>
+            </apex:actionStatus>    
+
+<!-- side panel -->
+
+            <table class="boxshadow roundbox" style="margin:5px;border: solid 2px grey;text-align:center;vertical-align: top;background:white"> <!--    class="centered-table" style="text-align: center; ">-->
+            <tr>
+            <td style="margin-left:auto;margin-right:auto;width:50px">            
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter"> 
+                    <apex:commandLink action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/remote_desktop.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                        <apex:param name="component" value="outputfield"/>                    
+                    </apex:commandLink>
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                        <b>Add an output field.</b><br/><br/>Remember to edit this item and set the details of the field you want to display.
+                    </div>
+                </div>                      
+            </td>            
+            <td style="margin-left:auto;margin-right:auto;width:50px">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                                      
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/businesswoman_info.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="namefields"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo"> 
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                 
+                        <b>Add name fields.</b><br/><br/>Add compact name fields to your form rather than each field on its own line.
+                    </div>
+                </div>                             
+            </td>
+            <td style="margin-left:auto;margin-right:auto;width:50px">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                                      
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/home.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="addressfields"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;margin-left:0px;" class="mouseOverInfo"> 
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                 
+                        <b>Add address fields.</b><br/><br/>Add compact address fields to your form rather than each field on its own line.
+                    </div>
+                </div>                                           
+            </td>
+            <td style="margin-left:auto;margin-right:auto;width:50px">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">             
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/calculator.png')}" height="25px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="calcoutfield"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">  
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                
+                        <b>Add a calculation field.</b><br/><br/>Calculation fields can be used to do maths within your form - add different fields together to update a form or multiply a value by another before writing to the database.
+                    </div>
+                </div>                        
+            </td>             
+            </tr>
+            <tr><td><br/></td></tr>
+            <tr>             
+             <td style="margin-left:auto;margin-right:auto;width:50px">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">              
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/horizontal_line.png')}" height="20px" width="20px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="horizontalline"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">  
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                
+                        <b>Add a horizontal line.</b><br/><br/>&nbsp;&nbsp;Use horizontal lines to break up your form sections.
+                    </div>
+                </div>                     
+            </td> 
+            <td style="margin-left:auto;margin-right:auto">   
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                  
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/newline.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="blankline"/>
+                </apex:commandLink>
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo"> 
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                 
+                        <b>Add a blank line.</b><br/><br/>Blank lines can be used to break up the fields within a section.
+                    </div>
+                </div>                  
+            </td>  
+            <td style="margin-left:auto;margin-right:auto">      
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">             
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/radio.png')}" height="25px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="selectradio"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">        
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                          
+                        <b>Add radio / dropdown select options.</b><br/><br/>Radio buttons let build your own option selection fields and can have the result written into a field in supporter360. You also have the choice of displaying your options as a drop down list.
+                    </div>
+                </div>                        
+            </td> 
+            <td style="margin-left:auto;margin-right:auto"> 
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">             
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/palette.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="richtextarea"/>
+                </apex:commandLink> 
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">  
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                                
+                        <b>Add some 'rich rext'.</b><br/><br/>You can add formatted text to your form pages, even including pictures from elsewhere in Salesforce or on the web.
+                    </div>
+                </div>
+            </td>             
+            </tr>
+            <tr><td><br/></td></tr>
+            <tr>    
+             <td style="margin-left:auto;margin-right:auto;width:50px">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">             
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/present.png')}" height="33px" width="33px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="donationpanel"/>
+                </apex:commandLink> 
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">      
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                            
+                        <b>Add a donation widget.</b><br/><br/>You can use the donation panel quickly give your supporters the ability to give money, either one of or recurring. Donations can be linked to a product / fund and also a campaign. 
+                    </div>
+                </div>                     
+            </td> 
+            <td style="margin-left:auto;margin-right:auto">   
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                                     
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/sale.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="lineitem"/>
+                </apex:commandLink> 
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">   
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                               
+                        <b>Add an Opportunity Line Item.</b><br/><br/>If you want to sell products such as merchandise or tickets, this option lets you display them on the form and allow people to select them. The amounts they pick go into the final amount due passed to the payment processing widget.
+                    </div>
+                </div>                    
+            </td>  
+            <td style="margin-left:auto;margin-right:auto">      
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                   
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/shopping_cart.png')}" height="35px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="paymentsummary"/>
+                </apex:commandLink>   
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">                  
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                
+                        <b>Add a payment summary panel.</b><br/><br/>If you're using Opportunity Line Items you can drop a payment summary onto the form - recommended on the payment page - so the user can see exactly what they're purchasing.
+                    </div>
+                </div>                       
+            </td> 
+            <td style="margin-left:auto;margin-right:auto">       
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">                                      
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/directpayment.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="directpayment"/>
+                </apex:commandLink>  
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">    
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                              
+                        <b>Add a direct payment facility.</b><br/><br/>The direct payment facility lets you send an email to someone with a link to an Opportunity in the system which they can pay directly with a credit card.
+                    </div>
+                </div>                            
+            </td>            
+            </tr>
+            <tr><td><br/></td></tr>
+            <tr>                                             
+            <td style="margin-left:auto;margin-right:auto">
+                <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter">             
+                <apex:commandLink title="" action="{!addComponentSidePanel}" rerender="started,errorpanel,inputpanel" status="componentstatus">
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/regular.png')}" height="30px" width="30px" style="vertical-align:text-bottom;margin-left:auto;margin-right:auto"/>
+                    <apex:param name="component" value="payment"/>
+                </apex:commandLink> 
+                    <div style="display: none; opacity: 0;" class="mouseOverInfo">      
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                                            
+                        <b>Add a payment widget.</b><br/><br/>The payment widget will take the balance due on the Opportunity and process a credit card transaction to pay in full against that amount using your payment gateway.
+                    </div>
+                </div>                         
+            </td>
+            <td style="margin-left:auto;margin-right:auto">       
+                    
+            </td>
+            <td style="margin-left:auto;margin-right:auto">
+                 
+            </td>
+            </tr>
+            </table>
+            </apex:outputPanel>
+            </div>
+         
+<!-- #################################    Start of Field / Component Editor ################################# -->   
+        <apex:actionFunction name="refreshFieldEditItem" action="{!saveItemFieldEditItem}" reRender="itempeditopup, errorpanel" status="chkfieldstatusitem"/>       
+        <apex:actionFunction name="checkFieldsEditItem" action="{!reloadAllFieldsEditItem}" status="chkfieldstatusitem" reRender="itempeditopup, errorpanel"/>       
+        <apex:outputPanel id="itempeditopup">
+            <apex:outputPanel rendered="{!showEditItem}"> 
+
+            <apex:outputText escape="false" value="<b>Edit Item {!thisEditItem.itemId}</b>" style="font-size:15px;color:orange"/>&nbsp;&nbsp;
+            <apex:outputPanel rendered="{!thisEditItem.isInputField}">
+            <br/><br/>
+                <table><tr>
+                    <td><apex:outputText escape="false" value="<b>Change Object:</b>"/>&nbsp;&nbsp; </td> 
+                    <td><apex:selectList size="1" value="{!thisEditItem.destObject}" onchange="checkFieldsEditItem();"> 
+                            <apex:selectOptions value="{!availableObjects}"/>
+                        </apex:selectList>
+                        &nbsp;&nbsp;
+                        <apex:actionStatus id="chkfieldstatusitem">
+                            <apex:facet name="start">
+                              <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                            </apex:facet>
+                        </apex:actionStatus></td>
+                </tr><tr>
+                    <td><apex:outputText escape="false" value="<b>Change Field:</b>"/>&nbsp;&nbsp; </td> 
+                    <td><apex:selectList size="1" value="{!thisEditItem.destField}" onchange="refreshFieldEditItem();">
+                            <apex:selectOptions value="{!availableFieldsEditItem}"/>
+                        </apex:selectList></td>
+                </tr><tr>
+                    <td width="100px"><apex:outputText escape="false" value="<b>Default Value:</b>"/></td>
+                    <td><apex:inputField value="{!thisEditItem.inputObject[thisEditItem.destField]}" rendered="{!thisEditItem.destField != 'xx' && !thisEditItem.isLink && thisEditItem.isInputField}" required="false"/></td>
+                </tr></table>  
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!thisEditItem.componentType == 'donationpanel' }">  
+                    <table>
+                    <tr>
+                        <td width="205px"><apex:outputText style="font-weight:bold" value="Select Donation Product: "/>&nbsp;&nbsp;</td>
+                        <td><apex:inputField value="{!inputCampaign.s360a__Product__c}" required="true"/></td>
+                    </tr><tr>
+                        <td><apex:outputText style="font-weight:bold" value="Select Donation Campaign: "/>&nbsp;&nbsp;</td>
+                        <td><apex:inputField value="{!inputCampaign.ParentId}" required="false"/></td>
+                    </tr><tr>                    
+                        <td><apex:outputText style="font-weight:bold" value="Default Amount: "/></td>
+                        <td><apex:inputText value="{!thisEditItem.selectedOption}"/></td>                    
+                    </tr><tr> 
+                        <td width="205px"><apex:outputText style="font-weight:bold" value="Enable Payment Methods: "/>&nbsp;&nbsp;</td>
+                        <td><apex:selectCheckboxes layout="lineDirection" value="{!thisForm.formSettings.donationPaymentMethods}">
+                                <apex:selectOption itemlabel="Credit Card" itemvalue="Credit Card"/> 
+                                <apex:selectOption itemlabel="Direct Debit" itemvalue="Direct Debit"/>                                    
+                            </apex:selectCheckboxes>                            
+                        </td>
+                    </tr><tr>                    
+                        <td><apex:outputText style="font-weight:bold" value="Regular Giving Terms: "/>
+                        <apex:inputCheckbox title="Enable / Disable" value="{!thisForm.formSettings.showRGTerms}"/></td>
+                        <td style="vertical-align:top"><apex:inputTextarea rows="5" style="width:250px" value="{!thisForm.formSettings.regularGivingTerms}"/></td>                    
+                    </tr><tr>                    
+                        <td><apex:outputText style="font-weight:bold" value="Regular Giving Terms URL: "/>
+                        <apex:inputCheckbox title="Enable / Disable" value="{!thisForm.formSettings.showRGTermsURL}"/></td>
+                        <td style="vertical-align:top"><apex:inputText style="width:250px" value="{!thisForm.formSettings.regularGivingTermsURL}"/></td>                    
+                    </tr><tr>                    
+                        <td><apex:outputText style="font-weight:bold" value="URL Text: "/></td>
+                        <td style="vertical-align:top"><apex:inputText style="width:250px" value="{!thisForm.formSettings.rgURLText}"/></td>                    
+                    </tr>  
+                           
+                    </table>
+                    <apex:outputText value="Use different Product / Campaign for Regular Giving" style="color:orange"/>&nbsp;&nbsp;
+                    <apex:inputCheckbox value="{!thisEditItem.diffRG}" onchange="checkrgdiff();"/><br/>
+                    <apex:outputPanel rendered="{!thisEditItem.diffRG}">
+                        <hr/>
+                        <table>
+                        <tr>
+                            <td width="205px"><apex:outputText style="font-weight:bold" value="Regular Giving Product: "/>&nbsp;&nbsp;</td>
+                            <td><apex:inputField value="{!inputCampaign2.s360a__Product__c}" required="true"/></td>
+                        </tr><tr>
+                            <td><apex:outputText style="font-weight:bold" value="Regular Giving Campaign: "/>&nbsp;&nbsp;</td>
+                            <td><apex:inputField value="{!inputCampaign2.ParentId}" required="false"/></td>
+                        </tr>                                         
+                        </table>                    
+                    </apex:outputPanel>
+                    <br/>Next add donation amount 'radio' options to your donation widget (and remember to set an 'Other' option):
+                </apex:outputPanel>
+                <apex:actionFunction name="checkrgdiff" reRender="itempeditopup"/>
+                <apex:outputPanel rendered="{!thisEditItem.componentType != 'donationpanel' && thisEditItem.componentType != 'directpayment' }">                        
+                    <table><tr>    
+                        <td width="100px"><apex:outputText escape="false" value="<b>Required:</b>"/></td>
+                        <td width="30px"><apex:inputCheckbox value="{!thisEditItem.isRequired}" disabled="{!!thisEditItem.isInputField}"/></td>                   
+                        <td width="60px"><apex:outputText escape="false" value="<b>Hidden:</b>"/></td>
+                        <td width="30px"><apex:inputCheckbox value="{!thisEditItem.isHidden}"/></td>                                           
+                        <td width="60px"><apex:outputText escape="false" value="<b>Link:</b>"/> </td>
+                        <td width="30px"><apex:inputCheckbox value="{!thisEditItem.isLink}" onchange="refreshFieldEditItem();" disabled="{!thisEditItem.fieldType != 'REFERENCE' || !thisEditItem.isInputField}"/></td>                         
+                    </tr></table>
+                    <table>                  
+                    <tr><td width="100px"><apex:outputText escape="false" value="<b>Field Label:</b>"/></td>
+                        <td><apex:inputText value="{!thisEditItem.fieldLabel}"/></td>
+                    </tr>
+                    </table>
+                    <table><tr>    
+                        <td width="100px"><apex:outputText escape="false" value="<b>Width:</b>"/></td>
+                        <td><apex:inputText value="{!thisEditItem.fieldWidth}" style="width:60px"/>
+                            &nbsp; [Examples: <b><i>30%</i></b> or <b><i>150px</i></b>]</td>
+                    </tr></table>
+                </apex:outputPanel> 
+                <apex:outputPanel rendered="{!(thisEditItem.isLink && (thisEditItem.destField != 'xx' || thisEditItem.componentType == 'payment')) || thisEditItem.isDate}">               
+                    <table><tr>        
+                    <td><apex:outputText escape="false" value="<b>Link Item:</b>"/></td>
+                    <td><apex:selectList size="1" value="{!thisEditItem.linkObject}"  rendered="{!thisEditItem.isLink && (thisEditItem.destField != 'xx' || thisEditItem.componentType == 'payment')}">
+                        <apex:selectOptions value="{!objectSelectList}"/>
+                        </apex:selectList></td>
+                    </tr><tr>      
+                        <td><apex:outputText escape="false" value="<b>Date = Today:</b>"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.setToday}" title="Set to today whenever the form is submittied." rendered="{!thisEditItem.isDate}"/></td>
+                    </tr></table>
+                </apex:outputPanel> 
+                
+                <apex:outputPanel id="payment" rendered="{!thisEditItem.componentType == 'payment'}">
+                     
+                    <hr/><br/>
+                    <apex:outputText escape="false" value="<b>Enable / Disable Card Type Images</b>"/>
+                    <br/><br/>
+                    <table>
+                    <tr>
+                        <td><apex:image id="visa" url="{!URLFOR($Resource.s360a__s360Images,'/visa_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                        <td><apex:image id="mastercard" url="{!URLFOR($Resource.s360a__s360Images,'/mastercard_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                        <td><apex:image id="amex" url="{!URLFOR($Resource.s360a__s360Images,'/american_express_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                        <td><apex:image id="discover" url="{!URLFOR($Resource.s360a__s360Images,'/discover_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                        <td><apex:image id="diners" url="{!URLFOR($Resource.s360a__s360Images,'/diners_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                        <td><apex:image id="jcb" url="{!URLFOR($Resource.s360a__s360Images,'/jcb_512.png')}" style="vertical-align:middle;height:25px"/></td>
+                    </tr><tr>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardVisa}"/></td>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardMastercard}"/></td>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardAmex}"/></td>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardDiscover}"/></td>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardDiners}"/></td>
+                        <td align="center"><apex:inputCheckbox value="{!thisForm.formSettings.cardJCB}"/></td>
+                    </tr>                           
+                    </table>                     
+                </apex:outputPanel>    <!--payment-->                  
+                
+                
+                
+                <apex:outputPanel id="addlineitem" rendered="{!thisEditItem.componentType == 'lineitem'}">
+                    <hr/>
+                    <table>
+                    <tr>
+                        <td><apex:outputText value="Select Product"/></td>
+                        <td><apex:inputField value="{!inputCampaign.s360a__Product__c}" required="true"/></td>
+                    </tr><tr>
+                        <td><apex:outputText value="Show Checkbox Select (or Quantity)"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showOLiCheckBox}"/></td>
+                    </tr><tr>
+                        <td><apex:outputText value="Show Product Short Description"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showProductShortDesc}"/></td>
+                    </tr><tr>
+                        <td><apex:outputText value="Show Product Long Description"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showProductLongDesc}"/></td>
+                    </tr><tr>
+                        <td><apex:outputText value="Show Product Image"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showProductImage}"/></td>
+                    </tr><tr>
+                        <td>Show Line Price</td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showOLiPrice}"/></td>
+                    </tr><tr>
+                        <td>Show Line Total</td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.showOLiTotal}"/></td>
+                    </tr><tr>
+                        <td>Calculate Line Price</td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.isOLICalc}" onchange="rerenderthispanel();"/></td>
+                    </tr>                           
+                    </table>
+                    <apex:actionFunction reRender="itempeditopup" name="rerenderthispanel"/>                     
+                </apex:outputPanel>    <!--addlineitem-->  
+                <br/>                 
+                <apex:outputPanel id="addselectlist" rendered="{!thisEditItem.componentType == 'selectradio' || thisEditItem.componentType == 'donationpanel'}">
+                    <hr/>
+                    <table>
+                    <tr>
+                        <td><apex:outputText style="width:200px" escape="false" value="<b>Label (Show on Form)</b>"/>&nbsp;&nbsp;</td>                    
+                        <td><apex:inputText value="{!thisEditItem.defaultValue}"/></td>
+                    </tr><tr>
+                        <td><apex:outputText style="width:200px" escape="false" value="<b>Value (Returned if Selected)</b>"/>&nbsp;&nbsp;</td>
+                        <td><apex:inputText value="{!thisEditItem.OLiQuantityInput}"/>
+                        &nbsp;&nbsp;
+                        <apex:commandLink title="Add option" action="{!addSelectOption}" rerender="addselectlist" status="addoption">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="15px" width="15px"/>
+                        </apex:commandLink>&nbsp;&nbsp;
+                        <apex:actionStatus id="addoption">
+                            <apex:facet name="start">
+                              <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                            </apex:facet>
+                        </apex:actionStatus>                        
+                        </td>
+                    </tr>
+                    </table>                 
+                    <br/>       
+                    <apex:pageBlockTable value="{!thisEditItem.OptionsMapKeys}" var="g" rowClasses="oddRow, evenRow" styleClass="tableClass" style="width:50%;box-shadow: 5px 5px 5px #888;" >
+                        <apex:column headerValue="Position" width="30px">
+                            <apex:commandLink title="Move up the order" action="{!selectOptionUpOrder}" rerender="addselectlist" status="addoption">
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/up32.png')}" height="15px" width="15px"/>      
+                                <apex:param value="{!thisEditItem.listOptionsMap[g]}" name="upselect"/>
+                            </apex:commandLink>               
+                            <apex:commandLink title="Move down the order" action="{!selectOptionDownOrder}" rerender="addselectlist" status="addoption">
+                                <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/download.png')}" height="15px" width="15px"/>      
+                                <apex:param value="{!thisEditItem.listOptionsMap[g]}" name="downselect"/>
+                            </apex:commandLink>                                       
+                        </apex:column>                         
+                        <apex:column headerValue="Label (Shown on Form)" value="{!g}" width="100px"/>
+                        <apex:column headerValue="Value (Returned from Form)" value="{!thisEditItem.listOptionsMap[g]}" width="100px"/>                        
+                        <apex:column headerValue="Action">
+                            <apex:commandLink title="Delete select option" action="{!delSelectOption}" rerender="addselectlist" status="componentstatus">
+                                 <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/deletex.png')}" height="15px" width="15px"/>      
+                                 <apex:param value="{!g}" name="selecttoremove"/>
+                            </apex:commandLink>
+                        </apex:column>                                           
+                    </apex:pageBlockTable>
+                    <br/>
+                    <apex:outputText style="width:200px" escape="false" value="<b>Display as a Picklist:</b>"/>&nbsp;&nbsp;
+                    <apex:inputCheckbox value="{!thisEditItem.isPickList}"/><br/><br/>
+                    <apex:outputText style="width:200px" escape="false" value="<b>Radio Buttons Direction:</b>"/>&nbsp;&nbsp;
+                    <apex:selectList value="{!thisEditItem.radioLayout}" size="1">
+                            <apex:selectOption itemValue="lineDirection" itemLabel="Across (lineDirection)"/>
+                            <apex:selectOption itemValue="pageDirection" itemLabel="Down (pageDirection)"/>
+                        </apex:selectList>&nbsp;&nbsp;
+                </apex:outputpanel> <!--addselectlist-->
+                <apex:outputPanel id="addrichtextarea" rendered="{!thisEditItem.componentType == 'richtextarea'}">                     
+                    <hr/>
+                    <apex:inputTextArea richText="false" styleClass="ckeditor" value="{!thisEditItem.richtextarea}" rendered="{!showHTMLEditor}"/>
+                    <apex:outputText escape="false" value="{!thisEditItem.richtextarea}" rendered="{!!showHTMLEditor}"/>
+                    <hr/>     
+                    <apex:commandButton value="Edit Text" action="{!toggleHTMLEditor}" rendered="{!!showHTMLEditor}"/>                                            
+                    <apex:commandButton value="Finish Editing" action="{!toggleHTMLEditor}" rendered="{!showHTMLEditor}"/>
+                </apex:outputPanel>
+                <apex:outputPanel id="addcalcpanel" rendered="{!thisEditItem.componentType == 'calcfield' || thisEditItem.isOLICalc}">
+                <hr/>
+                <apex:outputText escape="false" value="<b>Calculation Edit</b>" style="font-size:15px;color:orange"/>&nbsp;&nbsp;
+                <br/><br/>                                
+                <table>
+                <tr>
+                    <td><apex:outputText escape="false" value="<b>Add field:</b>"/></td>
+                    <td><apex:selectList size="1" value="{!selectedCalcItem}">
+                       <apex:selectOptions value="{!pageItemList}"/>
+                    </apex:selectList>&nbsp;&nbsp;     
+                    <apex:commandLink title="Add field to calculation" action="{!addComponent}"  status="calcstatus" rerender="itempeditopup">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="15px" width="15px" style="vertical-align:text-bottom;"/>
+                        <apex:param name="component" value="calcfield"/>
+                    </apex:commandLink></td>
+                </tr><tr>                    
+                    <td><apex:outputText escape="false" value="<b>Add number value:</b>"/>&nbsp;&nbsp;</td>
+                    <td><apex:inputText value="{!tempCalcInput}" style="width:100px"/>&nbsp;&nbsp;     
+                    <apex:commandLink title="Add number to calculation" action="{!addComponent}"  status="calcstatus" rerender="itempeditopup">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="15px" width="15px" style="vertical-align:text-bottom;"/>
+                        <apex:param name="component" value="calcnumber"/>
+                    </apex:commandLink></td>
+                </tr><tr>    
+                    <td><apex:outputText escape="false" value="<b>Add operator:</b>"/></td>  
+                    <td><apex:commandButton style="width:20px" styleClass="cssbutton" status="calcstatus" rerender="itempeditopup"  value="+" action="{!addComponent}">
+                        <apex:param name="component" value="calcplus"/>&nbsp;
+                    </apex:commandButton>
+                    <apex:commandButton style="width:20px" styleClass="cssbutton" status="calcstatus" rerender="itempeditopup" value="-" action="{!addComponent}">
+                        <apex:param name="component" value="calcminus"/>&nbsp;
+                    </apex:commandButton>
+                    <apex:commandButton style="width:20px" styleClass="cssbutton" status="calcstatus" rerender="itempeditopup" value="*" action="{!addComponent}">
+                        <apex:param name="component" value="calcmultiply"/>&nbsp;
+                    </apex:commandButton>
+                    <apex:commandButton style="width:20px" styleClass="cssbutton" status="calcstatus" rerender="itempeditopup" value="/" action="{!addComponent}">
+                        <apex:param name="component" value="calcdivide"/>&nbsp;
+                    </apex:commandButton></td>   
+                </tr>
+                </table>
+                <br/>                            
+                <b>Calculation:</b>&nbsp;&nbsp;&nbsp;[&nbsp;
+                <apex:repeat value="{!thisEditItem.calculations}" var="tc">
+                    <apex:outputText escape="false" value="<b> {!tc} </b>" style="color:orange"/>
+                    &nbsp;
+                </apex:repeat>
+                ]&nbsp;&nbsp;
+                <apex:commandButton styleClass="cssbutton" style="height:18px;vertical-align:text-bottom" status="calcstatus"  value=" ← " action="{!calcBackspace}"  rerender="itempeditopup"/> 
+                <br/><br/>
+                <apex:actionStatus id="calcstatus">
+                    <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/>
+                    </apex:facet>
+                </apex:actionStatus>                
+                </apex:outputPanel> <!-- addcalcpanel -->
+
+                <apex:outputPanel id="outputlookup"  rendered="{!thisEditItem.componentType == 'outputfield'}">
+                    <hr/>
+                    <apex:outputText escape="false" value="<b>Output Field Details</b>" style="font-size:15px;color:orange"/>&nbsp;&nbsp;
+                    <table>
+                    <tr>
+                        <td><apex:outputText value="Selected Object:" style="font-weight:bold"/></td>
+                        <td><apex:outputText value="{!outputObject}"/></td>
+                    </tr><tr>
+                        <td><apex:outputText value="Selected Field:" style="font-weight:bold"/></td>
+                        <td><apex:outputText value="{!outputField}"/></td>        
+                    </tr><tr>
+                        <td><apex:outputText value="Selected Record:" style="font-weight:bold"/></td>
+                        <td><apex:outputText value="{!thisEditItem.outputRecordId}" rendered="{!thisEditItem.outputRecordId != null}"/>
+                            <apex:outputText value="<not set>" rendered="{!thisEditItem.outputRecordId == null}"/>&nbsp;&nbsp;
+                            <apex:commandLink value="[Change]" action="{!toggleChangeOutputfield}" rerender="outputlookup"/></td>
+                    </tr>
+                    <tr>
+                        <td><apex:outputText value="Is Date Field:" style="font-weight:bold"/></td>
+                        <td><apex:inputCheckbox value="{!thisEditItem.isDate}"/></td>
+                    </tr>                    
+                    </table>         
+                    <apex:outputPanel id="changeoutputpanel" rendered="{!changeOutputField}">  
+                    <hr/>
+                    <apex:outputText escape="false" value="<b>Step 1:</b> Select Record(s)" style="font-size:15px;color:orange"/>&nbsp;&nbsp;
+                    <apex:outputpanel rendered="{!!outputFieldstep2}">
+                        <br/><br/>
+                        <apex:outputText escape="false" value="<b>Select object:</b>"/>&nbsp;&nbsp;
+                        <apex:selectList size="1" value="{!outputObject}" onchange="checkFieldsout();">
+                            <apex:selectOptions value="{!availableObjects}"/>
+                        </apex:selectList>
+                        &nbsp;&nbsp;    
+                        <apex:actionStatus id="chkfieldstatusout">
+                              <apex:facet name="start">
+                                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                              </apex:facet>
+                        </apex:actionStatus>           
+                        <apex:actionFunction name="checkFieldsout" action="{!reloadAllFields}" status="chkfieldstatusout" reRender="outputlookup">   
+                            <apex:param name="inorout" value="output"/>
+                        </apex:actionFunction> 
+
+                        <br/><br/><apex:outputText value="Where: " style="font-weight:bold"/>
+                        <apex:selectList size="1" value="{!outputField}" onchange="changeOutputField();">
+                           <apex:selectOptions value="{!availableOutputFields}"/>
+                        </apex:selectList>&nbsp;&nbsp;
+                        <apex:actionFunction name="changeOutputField" action="{!changeOutputField}" status="changeFieldStatus" reRender="outputlookup"/>   
+                        <apex:outputText value="Equals: " style="font-weight:bold"/>
+                        <apex:inputField value="{!inputOpportunity[inputOpportunityField]}" required="false" />
+                        <apex:actionStatus id="changeFieldStatus">
+                          <apex:facet name="start">
+                          <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                          </apex:facet>
+                        </apex:actionStatus>             
+                        &nbsp;&nbsp;
+                        <apex:commandButton styleClass="cssbutton"  value="Search" action="{!searchOutputField}" rerender="outputlookup,step2panel, errorpanel" status="lookupstatus1"/>
+                        &nbsp;&nbsp;<apex:actionStatus id="lookupstatus1">
+                          <apex:facet name="start">
+                          <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                          </apex:facet>
+                        </apex:actionStatus>  
+                    </apex:outputpanel>   
+                    <br/><br/>
+                    <apex:pageBlockTable value="{!searchEntries}" var="g" id="searchtable"  rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;box-shadow: 5px 5px 5px #888;">
+                        <apex:column headerValue="Record Name" value="{!g.name}" width="200px"/> 
+                        <apex:column headerValue="Record ID" value="{!g.idString}" width="200px"/> 
+                        <apex:column headerValue="Select">
+                            <apex:inputCheckbox value="{!g.selected}">
+                                <apex:actionSupport event="onchange" rerender="outputlookup" action="{!selectEntry}" status="componentstatus" disabled="{!g.selected}"/>
+                            </apex:inputCheckbox>
+                        </apex:column>
+                    </apex:pageBlockTable> 
+                    <apex:outputPanel id="step2panel" rendered="{!outputFieldstep2}">
+                        <hr/>
+                        <apex:outputText escape="false" value="<b>Step 2:</b> Select Field to Display on Form" style="font-size:15px;color:orange"/>&nbsp;&nbsp;
+                        <br/><br/>       
+                        <apex:selectList size="1" value="{!outputField}" onchange="changeOutputField();">
+                            <apex:selectOptions value="{!availableOutputFields}"/>
+                        </apex:selectList>&nbsp;&nbsp;     
+
+                        <apex:commandLink title="Add output field" action="{!addOutputField}" rerender="step2panel" status="componentstatus">
+                            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/add.png')}" height="15px" width="15px"/>
+                        </apex:commandLink>    
+                        <apex:outputPanel rendered="{!enableAddtoFormButton}">
+                            <br/><br/>
+                            <apex:pageBlockTable value="{!outputFieldItems}" var="g" id="outputtable"  rowClasses="oddRow, evenRow" styleClass="tableClass" style="width: auto;box-shadow: 5px 5px 5px #888;" >
+                                <apex:column headerValue="Field" value="{!g.destField}" width="200px"/> 
+                                <apex:column headerValue="Field Label">
+                                    <apex:inputText value="{!g.fieldLabel}"/>
+                                </apex:column>
+                                <apex:column headerValue="HTML">
+                                    <apex:inputCheckbox value="{!g.isHTML}"/>
+                                </apex:column>                
+                            </apex:pageBlockTable>
+                            <br/>
+                        </apex:outputPanel> 
+                    </apex:outputPanel>  <!-- step2 -->
+                    <br/>                             
+                    <apex:outputText value="  {!searchOffSet+1} - {!searchMaxRange} / {!searchResultSize}" style="vertical-align:text-bottom;font-size:10px;font-weight:bold;" rendered="{!searchOffSet > 0}"/>
+                    <apex:commandButton rendered="{!searchOffSet > 0}" styleClass="cssbutton" status="componentstatus"  value="Next" action="{!nextOutput}" rerender="outputlookup" style="float:right;height:21px"/>&nbsp;&nbsp;            
+                    <apex:commandButton rendered="{!searchOffSet > 0}" styleClass="cssbutton" status="componentstatus"  value="Prev" action="{!prevOutput}" rerender="outputlookup" style="float:right;height:21px"/>&nbsp;&nbsp;  
+                </apex:outputPanel>  <!-- changeoutputpanel -->    
+                </apex:outputPanel>  <!-- outputlookup -->
+            <apex:outputPanel rendered="{!!showHTMLEditor}">
+                <div class="boxshadow roundbox" style="padding:10px;width:550px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7; ">
+                <apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;<apex:outputText escape="false" value="{!itemEditHelpTip}" />
+                </div>
+                <hr/>
+                <apex:commandButton styleClass="cssbutton" status="edititemstatus" value="Save" action="{!saveEditItem}" rerender="inputpanel, itempeditopup" style="height:21px"/>&nbsp;&nbsp;|&nbsp;&nbsp; <!--  -->
+                <apex:commandButton styleClass="cssbutton" status="edititemstatus" value="Close" action="{!saveCloseEditItem}" rerender="inputpanel, itempeditopup" style="height:21px"/>&nbsp;&nbsp;
+                <!--<apex:commandButton immediate="true" styleClass="cssbutton" status="edititemstatus" value="Close" action="{!toggleEditItem}" rerender="inputpanel, itempeditopup" style="height:21px"/>&nbsp;&nbsp;-->
+                <apex:actionStatus id="edititemstatus">
+                    <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loading.gif')}"/>
+                    </apex:facet>
+                </apex:actionStatus> 
+            </apex:outputPanel>
+        </apex:outputPanel>   <!-- inner panel for component edit panel -->
+    </apex:outputPanel>      <!-- outer panel for component edit panel -->
+
+<!-- #################################    End of Component Selector Pop-Up ################################# -->               
+
+   <!--     <apex:commandLink title="Save page" action="{!savePage}" rerender="inputpanelwrapper, form2,errorpanel,sections, previewpanel" status="addref" rendered="{!!showEditItem}"> 
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" height="30px" width="30px"  />      
+        </apex:commandLink>   -->
+        &nbsp;&nbsp;               
+            <apex:actionStatus id="addref">
+                  <apex:facet name="start">
+                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                  </apex:facet>
+        </apex:actionStatus>                   
+    </apex:outputPanel>
+   <!-- </apex:PageBlock> -->
+    </apex:outputPanel>
+    </apex:outputPanel>
+    
+</apex:form>
+</apex:tab>
+<apex:tab label="Form Settings">
+<apex:form id="looknfeel">
+<br/><b>
+<apex:outputPanel id="looknfeelpanel">
+<div style="width:500px">
+<apex:variable value="{!thisForm.formSettings}" var="fs"/>
+<table>
+    <tr><td>Form Code Version</td>
+        <td><apex:outputText value="{!thisForm.formVersion}"/></td>
+    </tr><tr>
+        <td>Button Background Colour 1</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonBackgroundColour1}"/></td>
+    </tr><tr>
+        <td>Button Background Colour 2</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonBackgroundColour2}"/></td>
+    </tr><tr>        
+        <td>Button Border Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonBorderColour}"/></td>
+    </tr><tr>
+        <td>Button Hover Background Colour 1</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonBackgroundHoverColour1}"/></td>
+    </tr><tr>
+        <td>Button Hover Background Colour 2</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonBackgroundHoverColour2}"/></td>
+    </tr><tr>    
+        <td>Button Font Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.buttonFontColour}"/></td>
+    </tr><tr>        
+        <td>Button Font Size</td>
+        <td><apex:inputText value="{!fs.buttonFontSize}"/></td>
+    </tr><tr>
+        <td>Page Heading Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.pageHeadingColour}"/></td>
+    </tr><tr>
+        <td>Page Background Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.pageBackgroundColour}"/></td>        
+    </tr><tr>
+        <td>Output Field Text Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.outputTextColour}"/></td>        
+    </tr><tr>    
+        <td>Legend Font Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.legendFontColour}"/></td>        
+    </tr><tr>
+        <td>Label Font Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.labelFontColour}"/></td>        
+    </tr><tr>
+        <td>Error Font / Border Colour</td>
+        <td><apex:inputText styleClass="color" value="{!fs.errorColour}"/></td>        
+    </tr><tr>
+        <td>Form Width</td>
+        <td><apex:inputText value="{!fs.formWidth}"/></td>
+    </tr><tr>
+        <td>Form Top Margin</td>
+        <td><apex:inputText value="{!fs.formTopMargin}"/></td>
+    </tr><tr>
+        <td>Background Image URL</td>
+        <td><apex:inputText style="width:200px" value="{!fs.backgroundImageURL}"/></td>
+    </tr>
+<tr><td><hr/></td><td><hr/></td></tr>  
+    <tr>
+        <td>Show Cancel</td>
+        <td><apex:inputCheckbox value="{!fs.showCancel}"/></td>
+    </tr><tr>
+        <td>Cancel Button Text</td>
+        <td><apex:inputText value="{!fs.cancelText}"/></td>
+    </tr><tr>
+        <td>Cancel URL</td>
+        <td><apex:inputText style="width:200px" value="{!fs.cancelURL}"/></td>
+    </tr><tr>    
+        <td>Next Page Button Text</td>
+        <td><apex:inputText value="{!fs.nextText}"/></td>
+    </tr><tr>    
+        <td>Previous Page Button Text</td>
+        <td><apex:inputText value="{!fs.previousText}"/></td>
+    </tr><tr>    
+        <td>Submit Button Text</td>
+        <td><apex:inputText value="{!fs.submitText}"/></td>
+    </tr><tr>
+        <td>Submit Action</td>
+        <td><apex:selectList onchange="submitrender();" size="1" value="{!fs.submitAction}">
+                <apex:selectOptions value="{!submitActions}"/>
+            </apex:selectList>
+        </td>
+    </tr><tr>
+        <td>Submit URL</td>
+        <td><apex:inputText style="width:200px" value="{!fs.submitURL}"/></td>      
+    </tr><tr>
+        <td>Form Completion Text</td>
+        <td><apex:inputText style="width:200px" value="{!fs.formCompleteText}"/></td>      
+    </tr>     
+<tr><td><hr/></td><td><hr/></td></tr>  
+    <tr>
+        <td>Opportunity Pricebook</td>
+        <td><apex:selectList size="1" value="{!fs.selectedPricebook}">
+                <apex:selectOptions value="{!pricebookSelectOptions}"/> 
+            </apex:selectList>
+        </td>
+    </tr>
+    <tr>
+        <td>Opportunity Record Type</td>
+        <td><apex:selectList size="1" value="{!fs.selectedOpportunityRecordType}">
+                <apex:selectOptions value="{!opportunityRecordTypeSelectOptions}"/>
+            </apex:selectList>
+        </td>
+    </tr><tr>
+        <td>Link Opportunity to Form Page</td>
+        <td><apex:inputCheckbox value="{!fs.linkOpptoForm}"/></td>      
+    </tr><tr>
+        <td>Currency Symbol</td>
+        <td><apex:inputText style="width:15px" value="{!fs.currencySymbol}"/></td>      
+    </tr>         
+<tr><td><hr/></td><td><hr/></td></tr>                         
+    <tr>
+        <td>Duplicate Contact Checking</td>
+        <td><apex:inputCheckbox value="{!fs.doDupeCheck}" onchange="refreshdupes();"/></td>
+    </tr>
+    <tr>
+        <td>Dupe-Match on First Name</td>
+        <td><apex:inputCheckbox value="{!fs.dupeFirst}" disabled="{!!fs.doDupeCheck}" onchange="refreshdupes();"/></td>
+    </tr><tr>
+        <td>Dupe-Match on Last Name</td>
+        <td><apex:inputCheckbox value="{!fs.dupeLast}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr><tr>
+        <td>Dupe-Match on Email</td>
+        <td><apex:inputCheckbox value="{!fs.dupeEmail}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr><tr>
+        <td>Dupe-Match on Mobile Phone</td>
+        <td><apex:inputCheckbox value="{!fs.dupeMobile}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr><tr>
+        <td>Dupe-Match on Supporter Id</td>
+        <td><apex:inputCheckbox value="{!fs.dupeSupporterId}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr><tr>
+        <td>Supporter Id Field API Name</td>
+        <td><apex:inputText value="{!fs.dupeIdAPIName}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr><tr>
+        <td>Supporter Id Form Feild Id</td>
+        <td><apex:inputText value="{!fs.dupeIdFieldId}" disabled="{!!fs.doDupeCheck}"/></td>      
+    </tr>         
+<tr><td><hr/></td><td><hr/></td></tr> 
+</table> 
+<apex:outputText value="Dupe contacts will NOT be checked when created." rendered="{!!fs.doDupeCheck}"/>
+<apex:outputText value="Dupe contacts will be checked when created on a match for:" rendered="{!fs.doDupeCheck}"/><br/>
+<apex:outputText value=" FirstName " rendered="{!fs.doDupeCheck && fs.dupeFirst}"/>
+<apex:outputText value="AND" rendered="{!fs.doDupeCheck && fs.dupeFirst && (fs.dupeLast || fs.dupeEmail || fs.dupeMobile || fs.dupeSupporterId)}"/>
+<apex:outputText value=" LastName " rendered="{!fs.doDupeCheck && fs.dupeLast}"/>
+<apex:outputText value="AND" rendered="{!fs.doDupeCheck && fs.dupeLast && (fs.dupeEmail || fs.dupeMobile || fs.dupeSupporterId)}"/>
+<apex:outputText value=" Email " rendered="{!fs.doDupeCheck && fs.dupeEmail}"/>
+<apex:outputText value="AND" rendered="{!fs.doDupeCheck && fs.dupeEmail && (fs.dupeMobile || fs.dupeSupporterId)}"/>
+<apex:outputText value=" Mobile " rendered="{!fs.doDupeCheck && fs.dupeMobile}"/>
+<apex:outputText value="AND" rendered="{!fs.doDupeCheck && fs.dupeMobile && (fs.dupeSupporterId)}"/>
+<apex:outputText value=" Supporter Id " rendered="{!fs.doDupeCheck && fs.dupeSupporterId}"/>
+&nbsp;&nbsp;<apex:commandLink title="Refresh text version" rerender="looknfeelpanel">
+<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/refresh.png')}" height="20px" width="20px"  />
+</apex:commandLink>  
+<br/>
+<div class="boxshadow roundbox" style="padding:10px;width:550px;margin:15px;border: solid 2px grey;vertical-align: top;background-color:#D1ECF7;font-weight:normal ">
+<apex:image value="/img/icon/ideabubble16.png" height="13px" />&nbsp;
+For a match to be found, all of the options you select will need a value in them. Empty fields will not be checked and a new contact will be assumed. We recommend you have at least FirstName and Email to confirm a matched contact, especially if you have automatic reciepting or other comms.
+</div>
+<hr/>
+
+</div>
+</apex:outputpanel>
+<apex:actionFunction reRender="looknfeelpanel" name="refreshdupes"/>
+<apex:actionFunction reRender="submitpanel" name="submitrender"/>
+</b>
+        <apex:commandLink title="Save page" action="{!savePage}" rerender="form2,errorpanel,sections, previewpanel" status="formsettingstatus">
+            <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/save.png')}" height="30px" width="30px"  />      
+        </apex:commandLink>   
+            <apex:actionStatus id="formsettingstatus">
+                  <apex:facet name="start">
+                  <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                  </apex:facet>
+        </apex:actionStatus>  
+        <br/><br/>        
+        <apex:commandButton action="{!thisForm.formSettings.reset}" value="Reset to Defaults"/>                   
+</apex:form>
+</apex:tab>
+<apex:tab label="Preview Panel">    
+    <b>Note:</b> some elements may not display in the preview 100% the same as in the final page.<br/><br/> 
+    We would recommend viewing the form in its own window before making final changes.<br/><br/>
+    Click on the icon to open a new window &nbsp; <apex:outputLink style="vertical-align:text-top"  value="/apex/s360a__formpage360?id={!inputOpp.s360a__PaymentPage__c}" target="_blank"><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" height="30px" width="30px" /></apex:outputLink><br/>    
+        <apex:outputPanel id="previewpanel">  
+                <apex:iframe frameborder="false" height="800px" src="/apex/s360a__formpage360?id={!inputOpp.s360a__PaymentPage__c}" width="{!thisForm.formSettings.formWidth}"/>
+        </apex:outputPanel>      
+</apex:tab>
+</apex:tabPanel>
+</apex:pageBlock>
+        <apex:actionStatus id="generalpagestatus">
+            <apex:facet name="start">
+                <apex:outputPanel styleClass="popupBackground" layout="block" />        
+                <apex:outputPanel styleClass="customPopup" layout="block" style="opacity:0.85;background-color:#FCFCFC;width:350px;padding:2px;left:57%" >        <!-- style="bottom: 250px;left: 54%;right: 54%;" -->
+                    <br/>
+                    <table width="100%">
+                        <tr><td align="center"><apex:outputText style="font-size:20px;font-weight:bold;color:grey;" value="Working - please wait."/></td></tr>
+                        <tr><td><br/></td></tr>
+                        <tr><td align="center"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/loadingbar.gif')}"/></td>
+                        </tr>
+                    </table>
+                    <br/>                              
+                 </apex:outputPanel> 
+             </apex:facet>
+             <apex:facet name="stop">
+             </apex:facet>                           
+         </apex:actionStatus>  
+</apex:page>

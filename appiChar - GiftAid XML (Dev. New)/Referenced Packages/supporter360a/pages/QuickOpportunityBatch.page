@@ -1,0 +1,242 @@
+<apex:page controller="s360a.QuickOpportunityBatch" id="pg" sidebar="false">
+    <script type='text/javascript' >
+        function setHidden()
+        {
+            var hiddenRep = document.getElementById('pg:pb:tf:hiddenId1');
+            hiddenRep.value = document.getElementById('hiddenId').value;
+        }
+    </script>
+    <style type="text/css">
+    .customPopup{
+         background-color: white;
+         border-style: solid;
+         border-width: 2px;
+         left: 50%;
+         padding:10px;
+         position: absolute;
+         z-index: 9999;
+         /* These are the 3 css properties you will need to tweak so the pop 
+         up displays in the center of the screen. First set the width. Then set 
+         margin-left to negative half of what the width is. You can also add 
+         the height property for a fixed size pop up.*/
+         width: 500px;
+         margin-left: -250px;
+         top:0px;
+     }
+.popupBackground{
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 20);
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+}        
+            </style>    
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>     
+    <apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" />        
+    <apex:pageblock title="Process Quick Opportunities" id="pb"> 
+    <apex:outputText style="color:grey;" value="Click 'Create New' or type in a contact name or unique id, click on the matching contact and click 'Get Details' to verify you have the right person before creating an opportunity."/><br/><br/>   
+    <apex:form id="tf" >    
+        <c:QuickOppAutoComplete AutoComplete_textbox="lookup" selectedvalue_textbox="hiddenId" />
+            <b>Opportunity for: </b>
+            <input type="text" id="lookup"/>
+            <input type="hidden" id="hiddenId" />
+            <apex:inputHidden id="hiddenId1" value="{!thisContact121ID}">               
+                <apex:actionSupport event="oncomplete" action="{!getDetails}" rerender="detailsCheck" immediate="true" />
+            </apex:inputHidden>
+            <apex:commandButton styleClass="cssbutton"  id="gd" value="Get Details" onclick="setHidden();" action="{!getDetails}" reRender="detailsCheck, testy,inputcamp"/>&nbsp;                        
+            <apex:commandButton styleClass="cssbutton"  value="Create New" action="{!togglePopup}" rerender="tf,popup"/>
+            &nbsp;&nbsp;&nbsp;
+            <b>Campaign:</b>&nbsp;&nbsp;
+            <apex:inputfield id="inputcamp" value="{!inputOpp.CampaignId}">
+                <apex:actionSupport event="onchange" action="{!doNothing}" reRender="inputcamp"/>
+            </apex:inputfield>   
+            <apex:inputCheckbox value="{!useLatestCamp}" title="Check to use latest campaign on Contact record"/>      
+            <apex:outputLink target="_blank" value="http://www.supporter360.net/how-to-quick-opportunities" style="float:right;"><apex:image url="{!URLFOR($Resource.s360a__s360Images,'/s360Help.png')}"/></apex:outputLink>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <b>Payment Method:</b>&nbsp;&nbsp;
+            <apex:selectList id="methselect" value="{!pickedMethod}" size="1">
+                <apex:selectOptions value="{!paymentMethods}"/> 
+                <apex:actionSupport event="onchange" action="{!doNothing}" reRender="methselect"/>                
+            </apex:selectList>
+        <BR/>
+        <apex:pageBlockSection columns="1" id="detailsCheck" rendered="true" >
+
+                <apex:pageBlockTable id="theTable" var="c" value="{!thisContact}" width="90%" >                                      
+                    <apex:column headerValue="First Name">
+                        <apex:outputField value="{!c.FirstName}" ></apex:outputField>
+                    </apex:column>
+                    <apex:column headerValue="Last Name">
+                        <apex:outputField value="{!c.LastName}" ></apex:outputField>
+                    </apex:column>   
+                    <apex:column headerValue="Gender">
+                        <apex:outputField value="{!c.s360a__Gender__c}" ></apex:outputField>
+                    </apex:column>                                             
+                    <apex:column headerValue="Phone">
+                        <apex:outputField value="{!c.s360a__PhoneNumberPreferredPhoneNumber__c}" ></apex:outputField>
+                    </apex:column>      
+                    <apex:column headerValue="Address">
+                        <apex:outputField value="{!c.s360a__AddressPreferredMailingAddressSingleLine__c}" ></apex:outputField>
+                    </apex:column>      
+                    <apex:column headerValue="Email">
+                        <apex:outputField value="{!c.s360a__EmailAddressPreferredEmailAddress__c}" ></apex:outputField>
+                    </apex:column>      
+                    <apex:column headerValue="Contact Codes">
+                        <apex:outputField value="{!c.s360a__ContactCodes__c}" ></apex:outputField>
+                    </apex:column>     
+                    <apex:column headerValue="Link to Record">
+                        <apex:outputLink value="/{!c.Id}" target="_blank">Click</apex:outputLink>
+                    </apex:column>                                                                                                    
+                </apex:pageBlockTable> 
+                    
+            <apex:commandButton styleClass="cssbutton"  id="createOppButton" onclick="setHidden();" rendered="{!thisContact.Id != Null}" value="Create Quick Opp for {!thisContact.FirstName}" action="{!doQuickOpp}" reRender="theiframe, tifBlock, testy"/>                    
+            </apex:pageBlockSection>
+
+        <apex:pageBlockSection id="tifBlock" columns="1">              
+            <apex:iframe id="theiframe" height="850" rendered="{!showQuickOpp}" frameborder="false" src="{!QuickURL}" /> 
+            <apex:commandButton styleClass="cssbutton"  style="margin:auto" id="startButton" rendered="{!showQuickOpp}" value="Reset Form and Start Again" immediate="true" action="{!startAgain}" reRender="theiframe, tifBlock, createOppButton, startButton1, theTable"/>                         
+        </apex:pageBlockSection>   
+        </apex:form>
+        <apex:Form id="f2">        
+            <apex:outputPanel id="popup">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopup}"/>
+            <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!displayPopUp}">                     
+            <apex:tabPanel switchType="client" value="{!selectedTab}" inactiveTabClass="inactiveTab">
+                <apex:tab label="Contact Details" name="Contact Details" id="cd">
+                 <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/>        
+                 <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/>                 
+                 <br/>   
+                    <table>                  
+                        <tr>
+                            <td width="130px"><apex:outputText style="font-size:12px" value="Record Type:"/></td>
+                            <td><apex:SelectList value="{!thisConType}" size="1">
+                                <apex:selectOptions value="{!contactTypes}"/>
+                                </apex:SelectList></td>
+                        </tr>                                   
+                        <tr>
+                            <td><apex:outputPanel >Salutation:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.Salutation}"/></td>
+                        </tr>
+                        <tr>
+                            <td><apex:outputPanel >First Name:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.FirstName}"/></td>
+                        </tr>
+                        <tr>
+                            <td><apex:outputPanel >Last Name:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.LastName}"/></td>  
+                        </tr>
+                        <tr>
+                            <td><apex:outputPanel >Gender:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.s360a__Gender__c}"/></td>  
+                        </tr>           
+                        <tr>
+                            <td><apex:outputPanel >Initial Source:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.s360a__InitialContactSource__c}"/></td>  
+                        </tr>                                      
+                        <tr>
+                            <td><apex:outputPanel >Campaign:</apex:outputPanel></td>
+                            <td><apex:inputfield id="inputcamp1" value="{!inputOpp.CampaignId}"/></td>
+                        </tr>
+                        <tr>
+                            <td><apex:outputPanel >Record Owner:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.OwnerId}"/></td>  
+                        </tr>                                                          
+                        <tr>
+                            <td><apex:outputPanel >Contact Codes:</apex:outputPanel></td>
+                            <td><apex:inputField value="{!newContact.s360a__ContactCodes__c}"/></td>  
+                        </tr> 
+                     </table> 
+                     <br/>  
+                     <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/> 
+                     <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/>              
+                     </apex:tab>
+                     <apex:tab label="Address, Phone, Email" name="Address, Phone, Email" id="ape" >              
+             <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/>   
+             <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/>                 
+                <table>                         
+                    <tr>
+                        <td width="130px"><apex:outputPanel >Address Type:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__AddressPrimaryAddressType__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Street Address:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__AddressPrimaryStreet__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Town / City:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__AddressPrimaryCity__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Postal Code:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__AddressPrimaryPostalCode__c}"/></td>  
+                    </tr>                                                                                 
+                     <tr>
+                        <td><apex:outputPanel >Country:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__AddressPrimaryCountry__c}"/></td>  
+                    </tr>                                                                
+                    <hr/>
+                    <tr>
+                        <td><apex:outputPanel >Home Phone:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__PhoneNumberHomePhoneNumber__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Work Phone:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__PhoneNumberWorkPhoneNumber__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Mobile Phone:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__PhoneNumberMobilePhoneNumber__c}"/></td>  
+                    </tr>                                                                                 
+                     <tr>
+                        <td><apex:outputPanel >Preferred Phone:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__PhoneNumberPreferredType__c}"/></td>  
+                    </tr>        
+                    <hr/>
+                    <tr>
+                        <td><apex:outputPanel >Personal Email:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__EmailAddressPersonalEmailAddress__c}"/></td>  
+                    </tr> 
+                    <tr>
+                        <td><apex:outputPanel >Work Email:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__EmailAddressWorkEmailAddress__c}"/></td>  
+                    </tr>                                                                               
+                    <tr>
+                        <td><apex:outputPanel >Preferred Email:</apex:outputPanel></td>
+                        <td><apex:inputField value="{!newContact.s360a__EmailAddressPreferredType__c}"/></td>  
+                    </tr>         
+                </table>  
+                <br/>
+                             <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/>  
+                <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/>  
+            </apex:tab>
+            <apex:tab label="Custom Fields" name="Custom Fields" id="cf" >
+                     <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/> 
+                     <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/> 
+                    <apex:pageBlockSection title="Custom Fields" columns="1">
+       <!--               <apex:repeat value="{!CustomFields}" var="f">
+                       <apex:pageBlockSectionItem >
+                          <apex:outputLabel value="{!f.Label}" /> 
+                          <apex:inputField value="{!newContact [f.fieldPath]}"  required="{!OR(f.required, f.dbrequired)}"/>
+                        </apex:pageBlockSectionItem>   
+                      </apex:repeat>  -->
+                    </apex:pageBlockSection>
+
+             <apex:commandButton styleClass="cssbutton"  value="<Prev Tab" action="{!swtichTabBack}" rerender="popup" immediate="true"/>   
+             <apex:commandButton styleClass="cssbutton"  value="Next Tab>" action="{!swtichTab}" rerender="popup" immediate="true" style="float:right;"/> 
+            </apex:tab>  
+            </apex:tabPanel>
+        
+                    <apex:commandButton styleClass="cssbutton"  value="Cancel" action="{!togglePopup}" rerender="popup, tf" immediate="true"/>
+                    <apex:commandButton styleClass="cssbutton"  value="Save" action="{!saveContact}" rerender="popup, tf"/>         
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <apex:inputCheckbox value="{!justContact}" title="Do not create Opportunity and stay in the contact creation form."/>           
+                    <apex:outputText value="No Quick Opportunity" style="font-weight:bold;font-size:11px;"/>
+               </apex:outputPanel>  
+            </apex:outputPanel>
+
+        </apex:form>
+        </apex:pageBlock>       
+</apex:page>

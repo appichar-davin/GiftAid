@@ -1,0 +1,124 @@
+<apex:page Controller="s360a.ConactCodeClass" tabstyle="Contact" >
+<apex:form >
+
+<apex:sectionheader title="Code" >
+ </apex:sectionheader>
+ <apex:pageMessages />
+ <apex:pageBlock title="Code Detail" mode="maindetail" rendered="{!isview}">
+  <apex:pageBlockButtons >
+                <apex:commandButton value="Edit" action="{!editbttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Delete" onclick="if(confirm('Are you sure you want to delete?')) return deletecall(); else return false;" />&nbsp;&nbsp;
+                <apex:commandButton value="Clone" action="{!clonebttn}"/>
+                <apex:actionfunction name="deletecall" action="{!Deletefunction}" >
+                <apex:param name="deleteno" value="{!sno}" /></apex:actionFunction>
+            </apex:pageBlockButtons>                        
+            
+            <apex:pageblocksection columns="2">    
+                    
+            <apex:pageblocksectionitem >                        
+             <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink>            
+             </apex:pageblocksectionitem>
+              <apex:pageblocksectionitem > 
+            <apex:outputLabel value="Record Type"></apex:outputLabel>
+            <apex:outputLabel ></apex:outputLabel>
+            </apex:pageblocksectionitem>
+             
+             
+                      
+            
+                           
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+   			 <apex:param value="{!inview.fromdate}" /> 
+			</apex:outputText>            
+            </apex:pageblocksectionitem> <apex:pageblocksectionitem > 
+           <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:outputText value="{0,date,dd'/'MM'/'yyyy}">
+   			 <apex:param value="{!inview.todate}" /> 
+			</apex:outputText>            
+            </apex:pageblocksectionitem>
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Type"></apex:outputLabel>
+            <apex:outputLabel value="">{!inview.ctype}</apex:outputLabel>
+            </apex:pageblocksectionitem>                     
+                      <apex:pageblocksectionitem >             
+            <apex:outputtext value="Comments"></apex:outputtext>
+            <apex:outputLabel value="{!inview.comment}" />
+            </apex:pageblocksectionitem>  
+             
+            <!--   <apex:pageblocksectionitem >               
+            <apex:outputLabel value=""></apex:outputLabel>
+            <apex:outputLabel value=""></apex:outputLabel>
+            </apex:pageblocksectionitem>-->
+            
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Created By"></apex:outputLabel>
+            <apex:outputlink value="/{!uid}">{!uname}</apex:outputlink>
+            </apex:pageblocksectionitem> <apex:pageblocksectionitem > 
+            <apex:outputLabel value="Last Modified By"></apex:outputLabel>
+            <apex:outputlink value="/{!uid}">{!uname}</apex:outputlink>
+            
+            </apex:pageblocksectionitem>
+               
+            </apex:pageblocksection>
+           
+ </apex:pageBlock>
+ <apex:pageBlock title="Code Edit" mode="edit" rendered="{!isedit}">
+  <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!savebuttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Save & New" action="{!SavenNewbuttn}"/>&nbsp;&nbsp;
+                <apex:commandButton value="Cancel" action="{!cancelbttn}"/>
+            </apex:pageBlockButtons>                        
+            
+            <apex:pageblocksection columns="2" title="Information">    
+                    
+            <apex:pageblocksectionitem >                        
+            <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink>
+            </apex:pageblocksectionitem>  
+                     
+              <apex:pageblocksectionitem > 
+            <apex:outputLabel value="Record Type"></apex:outputLabel>
+            <apex:outputLabel ></apex:outputLabel>
+            </apex:pageblocksectionitem>       
+                                 
+            <!--  <apex:pageblocksectionitem >   
+           <apex:outputtext value="Code ID" ></apex:outputtext>          
+              <apex:outputLabel value="" >{!inview.unno}</apex:outputLabel>           
+             </apex:pageblocksectionitem> -->   
+                      
+                                                        
+                           
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateFrom__c}" /> 
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateTo__c}" /> 
+            </apex:pageblocksectionitem>
+              <apex:pageblocksectionitem >
+            <apex:outputLabel value="Type"></apex:outputLabel>
+           <apex:selectList value="{!typeval}" size="1">
+			<apex:selectOptions value="{!typeopt}"/>
+			</apex:selectList>             
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Comments"></apex:outputtext>
+            <apex:inputTextarea rows="3" value="{!inview.comment}" />
+            </apex:pageblocksectionitem>  
+            
+         <!--   <apex:pageblocksectionitem >               
+            <apex:outputLabel value=""></apex:outputLabel>
+            <apex:outputLabel value=""></apex:outputLabel>
+            </apex:pageblocksectionitem>  --> 
+            
+            </apex:pageblocksection> 
+           
+ </apex:pageBlock>
+  </apex:form>
+  </apex:page>

@@ -1,0 +1,13 @@
+<!-- 
+/*****************************************************************
+ *                                                               *
+ *   Product: supporter360                                       *
+ *      File: OrganisationManagementOverride.page                *
+ *   Version: 1.0                                                *
+ * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+ *                                                               *
+ *****************************************************************/
+ -->
+
+<apex:page standardcontroller="s360a__Organisation__c" extensions="s360a.OrganisationManagementOverride" action="{!autoForward}">
+</apex:page>

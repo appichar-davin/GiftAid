@@ -1,0 +1,3 @@
+<apex:page id="page" standardController="Product2" >
+    <c:GLCodeComponent passedRecord="{!Product2}" /> 
+</apex:page>

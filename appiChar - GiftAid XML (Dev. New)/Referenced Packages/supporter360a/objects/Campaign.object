@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <recordTypes>
+        <fullName>Event_Complex</fullName>
+        <active>true</active>
+        <description>Event Management (e.g. multiple sessions, multiple streams &amp; conferences)</description>
+        <label>Event - Complex</label>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Event_Simple</fullName>
+        <active>true</active>
+        <description>Simple Event Management (e.g. single session seminars &amp; workshops)</description>
+        <label>Event - Simple</label>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Fundraising_Appeal</fullName>
+        <active>true</active>
+        <description>Fundraising Appeal Management</description>
+        <label>Fundraising - Appeal</label>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Fundraising_P2P</fullName>
+        <active>true</active>
+        <description>Peer to Peer Fundraising</description>
+        <label>Fundraising - P2P</label>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Fundraising_Segment</fullName>
+        <active>true</active>
+        <description>Fundraising Segment within Appeal</description>
+        <label>Fundraising - Segment</label>
+    </recordTypes>
+    <recordTypes>
+        <fullName>Marketing_Communications</fullName>
+        <active>true</active>
+        <description>Marketing &amp; Communications Campaign</description>
+        <label>Marketing &amp; Communications</label>
+    </recordTypes>
+    <validationRules>
+        <fullName>Start_End_Date_on_Calendar_Events</fullName>
+        <active>true</active>
+        <description>Must have both fields filled in if this is an event for the organisation-wide event calendar.</description>
+        <errorConditionFormula>AND(00Nb00000064tCu = TRUE, OR( ISNULL(EndDate), ISNULL(StartDate)))</errorConditionFormula>
+        <errorMessage>If you are setting a calendar event you must set a valid start and end date</errorMessage>
+    </validationRules>
+</CustomObject>

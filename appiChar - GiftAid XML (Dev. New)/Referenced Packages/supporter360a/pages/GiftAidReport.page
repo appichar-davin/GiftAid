@@ -1,0 +1,39 @@
+<!--
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: GiftAidReport.page                                 *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page controller="s360a.GiftAidReport" action="{!processReport}" contentType="application/vnd.ms-excel#GiftAidReport.xls" cache="true">
+<apex:messages />
+    <apex:pageBlock title="Gift Aid Claim Report for {!giftAidClaim.name}" > 
+    <apex:pageblockSection >
+        <apex:outputText value="{!giftAidClaim.s360a__ClaimStage__c}" />
+    </apex:pageblockSection>
+        <apex:pageBlockSection >             
+             <apex:outputText value="Earliest Donation Date {!earliestDonationDate }" /> 
+        </apex:pageBlockSection>
+        <apex:pageBlockSection >
+            <apex:outputText value="Total Donations: {0, number, #,##0.00}"><apex:param value="{!totalDonation}"/></apex:outputText>
+        </apex:pageBlockSection>              
+        <apex:pageBlockSection />        
+            <apex:pageBlockTable value="{!claimSchedule.tableRows}" var="tableRow">
+                <apex:column headerValue="" value="{!null}" /> <!-- placeholder - for formatting only  --> 
+                <apex:column headerValue="Title" value="{!tableRow.title}" />
+                <apex:column headerValue="First Name" value="{!tableRow.FirstName}" />
+                <apex:column headerValue="Last Name" value="{!tableRow.LastName}" />
+                <apex:column headerValue="Address" value="{!tableRow.address}" />   
+                <apex:column headerValue="Postcode" value="{!tableRow.postcode}" />
+                <apex:column headerValue="Aggregated Donations" value="{!null}" /> <!-- placeholder only - this is not in use --> 
+                <apex:column headerValue="Sponsored Event" value="{!null}" /> <!-- placeholder only - this is not in use -->                                                
+                <apex:column headerValue="Last Donation Date"><apex:outputText value="{0, date, dd/MM/yyyy}"><apex:param value="{!tableRow.lastDonationDate}" /></apex:outputText></apex:column>            
+                <apex:column headerValue="Amount" ><apex:outputText value="{0,number,#,###.00}"><apex:param value="{!tableRow.total}" /> </apex:outputText> </apex:column>
+            </apex:pageBlockTable>
+
+    </apex:pageBlock>
+</apex:page>

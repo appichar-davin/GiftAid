@@ -1,0 +1,14 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: RegularGivingControlCentre.page                    *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page id="page" standardController="s360a__RegularGiving__c">
+    <c:RegularGiving record="{!s360a__RegularGiving__c}" />
+</apex:page>

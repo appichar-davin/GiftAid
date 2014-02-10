@@ -1,0 +1,3 @@
+<apex:page id="page" standardController="s360a__RegularGiving__c" >
+    <c:GLCodeComponent passedRecord="{!s360a__RegularGiving__c}" /> 
+</apex:page>

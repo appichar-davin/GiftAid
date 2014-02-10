@@ -1,0 +1,418 @@
+<apex:page id="page" standardController="s360a__Schedule__c" extensions="s360a.ScheduleManagementOverride">
+    <script type="text/javascript">
+        String.prototype.ordinalize = function()
+        {   return this + ["th", "st", "nd", "rd"][!(this % 10 > 3 || Math.floor(this % 100 / 10) == 1) * this % 10];
+        }
+        
+        function continuesChanged(value)
+        {   var element1 = document.getElementById("page:form:pageBlock:pageBlockSection:pageBlockSectionItemContinue:continueFor");
+            var element2 = document.getElementById("page:form:pageBlock:pageBlockSection:pageBlockSectionItemContinue:continueUntil");
+            if (value == "Until The")
+            {   element1.style.display = 'none';
+                element2.style.display = 'block';
+            }
+            else if (value == "For The Next")
+            {   element1.style.display = 'block';
+                element2.style.display = 'none';
+            }
+            else if (value == "Indefinitely")
+            {   element1.style.display = 'none';
+                element2.style.display = 'none';
+            }
+        }
+        
+        function daysSelectChanged(value)
+        {   var element = document.getElementById('page:form:pageBlock:pageBlockSection2:selectDays');
+            if (value == 'Particular Days')
+            {   element.style.display = 'block';
+            }
+            else
+            {   element.style.display = 'none';
+            }
+            updateDefinition();
+        }
+        
+        function datesSelectChanged(value)
+        {   var element1 = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem2:selectFirstOrLast');
+            var element2 = document.getElementById('page:form:pageBlock:pageBlockSection2:selectDates');
+            if (value == 'The First' || value == 'The Last')
+            {   element1.style.display = 'block';
+                element2.style.display = 'none';
+            }
+            else if (value == 'Particular Dates')
+            {   element1.style.display = 'none';
+                element2.style.display = 'block';
+            }
+            else
+            {   element1.style.display = 'none';
+                element2.style.display = 'none';
+            }
+            updateDefinition();
+        }
+        
+        function monthsSelectChanged(value)
+        {   var element = document.getElementById('page:form:pageBlock:pageBlockSection2:selectMonths');
+            if (value == 'Every Month')
+            {   element.style.display = 'none';
+            }
+            else
+            {   element.style.display = 'block';
+            }
+            updateDefinition();
+        }
+        
+        function updateDefinition()
+        {   
+            // Day String
+            var dayString = '';
+            var days = new Array('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday');
+            var daysSelect = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem1:daysSelect');
+            if(daysSelect.options[daysSelect.selectedIndex].value == 'Particular Days')
+            {   for(var dayIndex = 0; dayIndex < days.length; dayIndex++)
+                {   var element = document.getElementById('page:form:pageBlock:pageBlockSection2:' + days[dayIndex]);
+                    if(element.checked == true)
+                    {   if (dayString != '')
+                        {   dayString += ', ';
+                        }
+                        dayString += days[dayIndex];
+                    }
+                }
+                dayString = dayString.replace(/,\s([^,]+)$/, ' and $1');
+            }
+            // Date String
+            var dateString = '';
+            var datesSelect = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem2:datesSelect');
+            
+            if(datesSelect.options[datesSelect.selectedIndex].value == 'Particular Dates')
+            {   for(var dateIndex = 1; dateIndex <= 31; dateIndex++)
+                {   var element = document.getElementById('page:form:pageBlock:pageBlockSection2:date' + dateIndex);
+                    if(element.checked == true)
+                    {   if (dateString != '')
+                        {   dateString += ', ';
+                        }
+                        dateString += dateIndex.toString().ordinalize();
+                    }
+                }
+                dateString = dateString.replace(/,\s([^,]+)$/, ' and $1');
+            }
+            else if (datesSelect.options[datesSelect.selectedIndex].value == 'The First' || datesSelect.options[datesSelect.selectedIndex].value == 'The Last')
+            {   if (datesSelect.options[datesSelect.selectedIndex].value == 'The First')
+                {   dateString = 'first ';
+                }
+                else if (datesSelect.options[datesSelect.selectedIndex].value == 'The Last')
+                {   dateString = 'last ';
+                }
+                var datesQuantity = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem2:datesQuantity');
+                var datesPeriod = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem2:datesPeriod');
+                if (datesQuantity.options[datesQuantity.selectedIndex].value == '1')
+                {   if (datesPeriod.options[datesPeriod.selectedIndex].value == 'Day(s)')
+                    {   dateString += ' day';
+                    }
+                    else if (datesPeriod.options[datesPeriod.selectedIndex].value == 'Week(s)')
+                    {   dateString += ' week';
+                    }
+                }
+                else
+                {   dateString += datesQuantity.options[datesQuantity.selectedIndex].value;
+                    if (datesPeriod.options[datesPeriod.selectedIndex].value == 'Day(s)')
+                    {   dateString += ' days';
+                    }
+                    else if (datesPeriod.options[datesPeriod.selectedIndex].value == 'Week(s)')
+                    {   dateString += ' weeks';
+                    }
+                }
+            }
+            
+            // Month String //
+            var monthString = '';
+            var months = new Array('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December');
+            var monthsSelect = document.getElementById('page:form:pageBlock:pageBlockSection2:pageBlockSectionItem3:monthsSelect');
+            var selectedMonths = 0;
+            if(monthsSelect.options[monthsSelect.selectedIndex].value == 'Particular Months')
+            {   for(var monthIndex = 0; monthIndex < months.length; monthIndex++)
+                {   var element = document.getElementById('page:form:pageBlock:pageBlockSection2:' + months[monthIndex]);
+                    if(element.checked == true)
+                    {   selectedMonths++;
+                        if (monthString != '')
+                        {   monthString += ', ';
+                        }
+                        monthString += months[monthIndex];
+                    }
+                }
+                if (selectedMonths == 1)
+                {   monthString = 'for the month of ' + monthString;
+                }
+                else if(selectedMonths > 1)
+                {   monthString = 'for the months of ' + monthString;
+                }
+                monthString = monthString.replace(/,\s([^,]+)$/, ' and $1');
+            }
+            
+            // Final String //
+            var finalString = '';
+            if (dayString == '' && dateString == '' && monthString == '')
+            {   finalString = 'On every day.';
+            }
+            if (dayString != '' && dateString == '' && monthString == '')
+            {   finalString = 'On every ' + dayString + '.';
+            }
+            if (dayString == '' && dateString != '' && monthString == '')
+            {   finalString = 'On the ' + dateString + ' of every month.';
+            }
+            if (dayString == '' && dateString == '' && monthString != '')
+            {   finalString = 'On every day ' + monthString + '.';
+            }
+            if (dayString != '' && dateString != '' && monthString == '')
+            {   finalString = 'On the ' + dayString + ' of the ' + dateString + ' of every month.';
+            }
+            if (dayString != '' && dateString == '' && monthString != '')
+            {   finalString = 'On every ' + dayString + ' ' + monthString + '.';
+            }
+            if (dayString == '' && dateString != '' && monthString != '')
+            {   finalString = 'On the ' + dateString + ' ' + monthString + '.';
+            }
+            if (dayString != '' && dateString != '' && monthString != '')
+            {   finalString = 'On the ' + dayString + ' of the ' + dateString + ' ' + monthString + '.';
+            }
+            document.getElementById('recurringDefinition').innerHTML = finalString;
+            document.getElementById('page:form:recurringDescription').value = finalString;
+        }
+    </script>
+    <apex:form id="form">
+      	<c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+        <apex:inputField id="recurringDescription" value="{!schedule.s360a__RecurringDescription__c}" rendered="FALSE"/> <!-- //CRUD/FLS -->
+        <apex:sectionHeader title="Schedule Edit" subtitle="Schedule Configuration" />
+        <apex:pageBlock id="pageBlock" mode="edit" tabStyle="Group__c">
+            <apex:pageBlockSection title="Schedule Information" id="pageBlockSection" columns="1">
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Active:</apex:outputPanel>
+                    <apex:inputField value="{!schedule.s360a__Active__c}" />
+                </apex:pageBlockSectionItem>
+                <!--
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Schedule Type</apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:outputPanel rendered="{!schedule.ScheduleFor__c == 'Volunteer Availability'}">
+                            <apex:selectList size="1" value="{!schedule.ScheduleType__c}">
+                                <apex:selectOption itemLabel="Available" itemValue="Available" />
+                                <apex:selectOption itemLabel="Unavailable" itemValue="Unavailable" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                        <apex:outputPanel rendered="{!schedule.ScheduleFor__c == 'Regular Giving'}">
+                            <apex:selectList size="1" value="{!schedule.ScheduleType__c}">
+                                <apex:selectOption itemLabel="Committed" itemValue="Committed" />
+                                <apex:selectOption itemLabel="Uncommitted" itemValue="Uncommitted" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                -->
+                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Schedule Starts On</apex:outputPanel>
+                    <apex:inputField value="{!schedule.s360a__StartsOn__c}" required="true" style="width: 100px;" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="pageBlockSectionItemContinue">
+                    <apex:outputPanel >And Continues</apex:outputPanel>
+                    <apex:outputPanel >
+                        <apex:outputPanel style="float: left;">
+                            <apex:selectList size="1" value="{!schedule.s360a__Continues__c}" onchange="continuesChanged(this.value);">
+                                <apex:selectOption itemLabel="Until The" itemValue="Until The" />
+                                <apex:selectOption itemLabel="For The Next" itemValue="For The Next" />
+                                <apex:selectOption itemLabel="Indefinitely" itemValue="Indefinitely" />
+                            </apex:selectList>&nbsp;
+                        </apex:outputPanel>
+                        <apex:outputPanel id="continueUntil" style="float: left; display: {!IF(schedule.s360a__Continues__c == 'Until The', 'block', 'none')};">
+                            <apex:inputField value="{!schedule.s360a__UntilThe__c}" style="width: 100px;" />
+                        </apex:outputPanel>
+                        <apex:outputPanel id="continueFor"  style="float: left; display: {!IF(schedule.s360a__Continues__c == 'For The Next', 'block', 'none')};">
+                            <apex:selectList size="1" value="{!schedule.s360a__ForTheNextQuantity__c}">
+                                <apex:selectOption itemLabel="1" itemValue="1" />
+                                <apex:selectOption itemLabel="2" itemValue="2" />
+                                <apex:selectOption itemLabel="3" itemValue="3" />
+                                <apex:selectOption itemLabel="4" itemValue="4" />
+                                <apex:selectOption itemLabel="5" itemValue="5" />
+                                <apex:selectOption itemLabel="6" itemValue="6" />
+                                <apex:selectOption itemLabel="7" itemValue="7" />
+                                <apex:selectOption itemLabel="8" itemValue="8" />
+                                <apex:selectOption itemLabel="9" itemValue="9" />
+                                <apex:selectOption itemLabel="10" itemValue="10" />
+                                <apex:selectOption itemLabel="11" itemValue="11" />
+                                <apex:selectOption itemLabel="12" itemValue="12" />
+                            </apex:selectList>&nbsp;
+                            <apex:selectList size="1" value="{!schedule.s360a__ForTheNextUnit__c}" >
+                                <apex:selectOption itemLabel="Days" itemValue="Days" />
+                                <apex:selectOption itemLabel="Weeks" itemValue="Weeks" />
+                                <apex:selectOption itemLabel="Months" itemValue="Months" />
+                                <apex:selectOption itemLabel="Years" itemValue="Years" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                        <apex:outputPanel style="clear:both;" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem id="recurringDefinition">
+                    <apex:outputText >And occurs</apex:outputText>
+                    <div id="recurringDefinition" style="width: 500px; height: 60px; border: 1px solid #97999E; background-color: #FFFFFF; padding: 2px;">
+                        {!schedule.s360a__RecurringDescription__c}
+                    </div>
+                </apex:pageBlockSectionItem>
+<!--                <apex:pageBlockSectionItem >
+                    <apex:outputPanel >Add Tomorrow</apex:outputPanel>
+                    <apex:inputField value="{!schedule.AddTomorrow__c}"/>
+                </apex:pageBlockSectionItem>       -->         
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Recurring Information" id="pageBlockSection2" columns="1">
+                <apex:pageBlockSectionItem id="pageBlockSectionItem1">
+                    <apex:outputLabel value="Days Of The Week" />
+                    <apex:selectList value="{!schedule.s360a__DaysOfTheWeek__c}" id="daysSelect" size="1" style="width: 150px;" onchange="daysSelectChanged(this.value);">
+                        <apex:selectOption itemLabel="Every Day" itemValue="Every Day" />
+                        <apex:selectOption itemLabel="Particular Days" itemValue="Particular Days" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel id="selectDays" style="margin-left: 250px; margin-bottom: 10px; display: {!IF(schedule.s360a__DaysOfTheWeek__c == 'Particular Days', 'block', 'none')};">
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Monday__c}" id="Monday" onclick="updateDefinition();" styleClass="days" /> Monday<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Tuesday__c}" id="Tuesday" onclick="updateDefinition();" styleClass="days" /> Tuesday<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Wednesday__c}" id="Wednesday" onclick="updateDefinition();" styleClass="days" /> Wednesday<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Thursday__c}" id="Thursday" onclick="updateDefinition();" styleClass="days" /> Thursday<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Friday__c}" id="Friday" onclick="updateDefinition();" styleClass="days" /> Friday<br />
+                    </div>
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Saturday__c}" id="Saturday" onclick="updateDefinition();" styleClass="days" /> Saturday<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Sunday__c}" id="Sunday" onclick="updateDefinition();" styleClass="days" /> Sunday<br />
+                    </div>
+                    <div style="clear: both;" />
+                </apex:outputPanel>
+                <apex:pageBlockSectionItem id="pageBlockSectionItem2">
+                    <apex:outputLabel value="Dates of The Month" />
+                    <apex:outputPanel >
+                        <apex:outputPanel style="float: left;">
+                            <apex:selectList value="{!schedule.s360a__DatesOfTheMonth__c}" id="datesSelect" size="1" style="width: 150px;" onchange="datesSelectChanged(this.value);" >
+                                <apex:selectOption itemLabel="Every Date" itemValue="Every Date" />
+                                <apex:selectOption itemLabel="Particular Dates" itemValue="Particular Dates" />
+                                <apex:selectOption itemLabel="The First" itemValue="The First" />
+                                <apex:selectOption itemLabel="The Last" itemValue="The Last" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                        <apex:outputPanel id="selectFirstOrLast" style="float: left; display: {!IF(OR(schedule.s360a__DatesOfTheMonth__c == 'The First', schedule.s360a__DatesOfTheMonth__c == 'The Last'), 'block', 'none')};">
+                            <apex:selectList value="{!schedule.s360a__FirstLastQuantity__c}" size="1" id="datesQuantity" onchange="updateDefinition();">
+                                <apex:selectOption itemLabel="1" itemValue="1" />
+                                <apex:selectOption itemLabel="2" itemValue="2" />
+                                <apex:selectOption itemLabel="3" itemValue="3" />
+                                <apex:selectOption itemLabel="4" itemValue="4" />
+                                <apex:selectOption itemLabel="5" itemValue="5" />
+                                <apex:selectOption itemLabel="6" itemValue="6" />
+                                <apex:selectOption itemLabel="7" itemValue="7" />
+                                <apex:selectOption itemLabel="8" itemValue="8" />
+                                <apex:selectOption itemLabel="9" itemValue="9" />
+                                <apex:selectOption itemLabel="10" itemValue="10" />
+                                <apex:selectOption itemLabel="11" itemValue="11" />
+                                <apex:selectOption itemLabel="12" itemValue="12" />
+                                <apex:selectOption itemLabel="13" itemValue="13" />
+                                <apex:selectOption itemLabel="14" itemValue="14" />
+                                <apex:selectOption itemLabel="15" itemValue="15" />
+                                <apex:selectOption itemLabel="16" itemValue="16" />
+                                <apex:selectOption itemLabel="17" itemValue="17" />
+                                <apex:selectOption itemLabel="18" itemValue="18" />
+                                <apex:selectOption itemLabel="19" itemValue="19" />
+                                <apex:selectOption itemLabel="20" itemValue="20" />
+                                <apex:selectOption itemLabel="21" itemValue="21" />
+                                <apex:selectOption itemLabel="22" itemValue="22" />
+                                <apex:selectOption itemLabel="23" itemValue="23" />
+                                <apex:selectOption itemLabel="24" itemValue="24" />
+                                <apex:selectOption itemLabel="25" itemValue="25" />
+                                <apex:selectOption itemLabel="26" itemValue="26" />
+                                <apex:selectOption itemLabel="27" itemValue="27" />
+                                <apex:selectOption itemLabel="28" itemValue="28" />
+                                <apex:selectOption itemLabel="29" itemValue="29" />
+                                <apex:selectOption itemLabel="30" itemValue="30" />
+                                <apex:selectOption itemLabel="31" itemValue="31" />
+                            </apex:selectList>
+                            <apex:selectList value="{!schedule.s360a__FirstLastUnit__c}" size="1" id="datesPeriod" onchange="updateDefinition();">
+                                <apex:selectOption itemLabel="Day(s)" itemValue="Day(s)" />
+                                <apex:selectOption itemLabel="Week(s)" itemValue="Week(s)" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                        <apex:outputPanel style="clear: both;" />
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel id="selectDates" style="margin-left: 250px; margin-bottom: 10px; display: {!IF(schedule.s360a__DatesOfTheMonth__c == 'Particular Dates', 'block', 'none')};">
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Date1__c}" id="date1" onclick="updateDefinition();" /> 1<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date2__c}" id="date2" onclick="updateDefinition();" /> 2<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date3__c}" id="date3" onclick="updateDefinition();" /> 3<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date4__c}" id="date4" onclick="updateDefinition();" /> 4<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date5__c}" id="date5" onclick="updateDefinition();" /> 5<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date6__c}" id="date6" onclick="updateDefinition();" /> 6<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date7__c}" id="date7" onclick="updateDefinition();" /> 7<br />
+                    </div>
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Date8__c}" id="date8" onclick="updateDefinition();" /> 8<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date9__c}" id="date9" onclick="updateDefinition();" /> 9<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date10__c}" id="date10" onclick="updateDefinition();" /> 10<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date11__c}" id="date11" onclick="updateDefinition();" /> 11<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date12__c}" id="date12" onclick="updateDefinition();" /> 12<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date13__c}" id="date13" onclick="updateDefinition();" /> 13<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date14__c}" id="date14" onclick="updateDefinition();" /> 14<br />
+                    </div>
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Date15__c}" id="date15" onclick="updateDefinition();" /> 15<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date16__c}" id="date16" onclick="updateDefinition();" /> 16<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date17__c}" id="date17" onclick="updateDefinition();" /> 17<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date18__c}" id="date18" onclick="updateDefinition();" /> 18<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date19__c}" id="date19" onclick="updateDefinition();" /> 19<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date20__c}" id="date20" onclick="updateDefinition();" /> 20<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date21__c}" id="date21" onclick="updateDefinition();" /> 21<br />
+                    </div>
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Date22__c}" id="date22" onclick="updateDefinition();" /> 22<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date23__c}" id="date23" onclick="updateDefinition();" /> 23<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date24__c}" id="date24" onclick="updateDefinition();" /> 24<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date25__c}" id="date25" onclick="updateDefinition();" /> 25<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date26__c}" id="date26" onclick="updateDefinition();" /> 26<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date27__c}" id="date27" onclick="updateDefinition();" /> 27<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date28__c}" id="date28" onclick="updateDefinition();" /> 28<br />
+                    </div>
+                    <div style="width: 150px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__Date29__c}" id="date29" onclick="updateDefinition();" /> 29<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date30__c}" id="date30" onclick="updateDefinition();" /> 30<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__Date31__c}" id="date31" onclick="updateDefinition();" /> 31<br />
+                    </div>
+                    <div style="clear: both;" />
+                </apex:outputPanel>
+                <apex:pageBlockSectionItem id="pageBlockSectionItem3">
+                    <apex:outputLabel value="Months Of The Year" />
+                    <apex:selectList value="{!schedule.s360a__MonthsOfTheYear__c}" id="monthsSelect" size="1" style="width: 150px;" onchange="monthsSelectChanged(this.value);">
+                        <apex:selectOption itemLabel="Every Month" itemValue="Every Month" />
+                        <apex:selectOption itemLabel="Particular Months" itemValue="Particular Months" />
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel id="selectMonths" style="margin-left: 250px; margin-bottom: 10px; display: {!IF(schedule.s360a__MonthsOfTheYear__c == 'Particular Months', 'block', 'none')};;">
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__January__c}" id="January" onclick="updateDefinition();" />January<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__February__c}" id="February" onclick="updateDefinition();" />February<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__March__c}" id="March" onclick="updateDefinition();" />March<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__April__c}" id="April" onclick="updateDefinition();" />April<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__May__c}" id="May" onclick="updateDefinition();" />May<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__June__c}" id="June" onclick="updateDefinition();" />June<br />
+                    </div>
+                    <div style="width: 100px; float: left;">
+                        <apex:inputCheckbox value="{!schedule.s360a__July__c}" id="July" onclick="updateDefinition();" />July<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__August__c}" id="August" onclick="updateDefinition();" />August<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__September__c}" id="September" onclick="updateDefinition();" />September<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__October__c}" id="October" onclick="updateDefinition();" />October<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__November__c}" id="November" onclick="updateDefinition();" />November<br />
+                        <apex:inputCheckbox value="{!schedule.s360a__December__c}" id="December" onclick="updateDefinition();" />December<br />
+                    </div>
+                    <div style="clear: both;" />
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!save}" />
+                <apex:commandButton value="Cancel" action="{!cancel}" />
+            </apex:pageBlockButtons>
+        </apex:pageBlock>
+    </apex:form>
+    <script type="text/javascript">
+        beenFocused = true;
+    </script>
+</apex:page>

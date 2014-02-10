@@ -1,0 +1,74 @@
+<apex:page id="page" standardController="s360a__CreditCard__c" extensions="s360a.CreditCardManagementOverride" >
+	<apex:form id="form">
+		<apex:sectionHeader title="{!IF(renderMode == 'edit', 'Credit Card Edit', 'Credit Card')}" subtitle="{!IF(OR(renderMode == 'new', renderMode == 'disabled'), 'New Credit Card', creditCard.Name)}" />		
+		<c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+		<apex:pageBlock mode="edit" title="Credit Card Edit" rendered="{!renderMode == 'new'}">
+			<apex:pageBlockSection id="blockSection" columns="1" collapsible="false" title="Credit Card Information">
+				<apex:inputField value="{!creditCard.s360a__Account__c}" />
+				<apex:inputField required="true" value="{!creditCard.s360a__CardType__c}" />
+				<apex:inputField required="true" value="{!creditCard.s360a__CardHolderName__c}" />
+				<apex:inputField required="true" value="{!creditCard.s360a__CreditCardNumber__c}" />
+				<apex:inputField required="true" value="{!creditCard.s360a__ExpiryMonth__c}" style="width: 140px;" />
+				<apex:pageBlockSectionItem rendered="{!expiryYearError == false}">
+					<apex:outputLabel value="Expiry Year" />
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+						<apex:outputPanel styleClass="requiredBlock" layout="block" />
+						<apex:selectList size="1" value="{!creditCard.s360a__ExpiryYear__c}">
+							<apex:selectOptions value="{!expiryYearSelectOptions}" />
+						</apex:selectList>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:pageBlockSectionItem rendered="{!expiryYearError == true}">
+					<apex:outputLabel value="Expiry Year" />
+					<apex:outputPanel styleClass="requiredInput" layout="block">
+						<apex:outputPanel styleClass="requiredBlock" layout="block" />
+						<apex:selectList size="1" value="{!creditCard.s360a__ExpiryYear__c}" styleClass="error">
+							<apex:selectOptions value="{!expiryYearSelectOptions}" />
+						</apex:selectList>
+						<div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+					</apex:outputPanel>
+				</apex:pageBlockSectionItem>
+				<apex:inputField value="{!creditCard.s360a__CVV__c}" />
+				<apex:inputField value="{!creditCard.s360a__Active__c}" />
+			</apex:pageBlockSection>
+			<apex:pageBlockButtons >
+				<apex:commandButton value="Tokenise" action="{!tokeniseAction}" />
+				<apex:commandButton value="Cancel" action="{!cancelAction}" immediate="true" />
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+		<apex:pageBlock mode="edit" title="Credit Card Edit" rendered="{!renderMode == 'edit'}" >
+			<apex:pageBlockSection id="blockSection3" columns="1" title="Credit Card Information">
+				<apex:outputField value="{!creditCard.s360a__Account__c}" />
+				<apex:outputField value="{!creditCard.s360a__CardType__c}" />
+				<apex:outputField value="{!creditCard.s360a__CardHolderName__c}" />
+				<apex:outputField value="{!creditCard.s360a__CreditCardNumber__c}" />
+				<apex:outputField value="{!creditCard.s360a__ExpiryDate__c}" />
+				<apex:outputField value="{!creditCard.s360a__Token__c}" />
+				<apex:inputField value="{!creditCard.s360a__Active__c}" />
+			</apex:pageBlockSection>
+			<apex:pageBlockButtons >
+				<apex:commandButton value="Save" action="{!saveAction}" />
+				<apex:commandButton value="Cancel" action="{!cancelAction}" immediate="true" />
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+		<apex:pageBlock mode="maindetail" title="Credit Card Detail" rendered="{!renderMode == 'view'}" >
+			<apex:pageBlockSection id="blockSection2" columns="1" title="Credit Card Information">
+				<apex:outputField value="{!creditCard.s360a__Account__c}" />
+				<apex:outputField value="{!creditCard.s360a__CardType__c}" />
+				<apex:outputField value="{!creditCard.s360a__CardHolderName__c}" />
+				<apex:outputField value="{!creditCard.s360a__CreditCardNumber__c}" />
+				<apex:outputField value="{!creditCard.s360a__ExpiryDate__c}" />
+				<apex:outputField value="{!creditCard.s360a__Token__c}" />
+				<apex:outputField value="{!creditCard.s360a__Active__c}" />
+				<apex:outputField value="{!creditCard.s360a__Status__c}" />
+			</apex:pageBlockSection>
+			<apex:pageBlockButtons >
+				<apex:commandButton value="Edit" action="{!edit}" />
+				<apex:commandButton value="Delete" action="{!delete}" />
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+		<apex:outputPanel rendered="{!IF(renderMode == 'disabled', true, false)}" >
+		</apex:outputPanel>
+	</apex:form>
+	<apex:relatedList list="Transactions__r" rendered="{!renderMode == 'view'}" />
+</apex:page>

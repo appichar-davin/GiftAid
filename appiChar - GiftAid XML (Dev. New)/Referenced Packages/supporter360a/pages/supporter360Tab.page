@@ -1,0 +1,296 @@
+<apex:page sidebar="false" controller="s360a.supporter360Tab">
+
+<style>
+#maintable a:link{
+    color: #666;
+    font-weight: bold;
+    text-decoration:none;
+}
+#maintable a:visited {
+    color: #999999;
+    font-weight:bold;
+    text-decoration:none;
+}
+#maintable a:active,
+#maintable a:hover {
+    color: #bd5a35;
+    text-decoration:underline;
+}
+#maintable {
+    font-family:Arial, Helvetica, sans-serif;
+    color:#666;
+    font-size:12px;
+    text-shadow: 1px 1px 0px #fff;
+    background:#eaebec;
+    margin:20px;
+    border:#ccc 1px solid;
+    vertical-align: middle; 
+    display: block; 
+
+    -moz-border-radius:3px;
+    -webkit-border-radius:3px;
+    border-radius:3px;
+
+    -moz-box-shadow: 0 1px 2px #d1d1d1;
+    -webkit-box-shadow: 0 1px 2px #d1d1d1;
+    box-shadow: 0 1px 2px #d1d1d1;
+}
+#maintable th {
+    padding:5px 17px 5px 17px;
+    border-top:1px solid #fafafa;
+    border-bottom:1px solid #e0e0e0;
+
+    background: #ededed;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
+    background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
+}
+#maintable th:first-child {
+    text-align: left;
+    padding-left:10px;
+}
+#maintable tr:first-child th:first-child {
+    -moz-border-radius-topleft:3px;
+    -webkit-border-top-left-radius:3px;
+    border-top-left-radius:3px;
+}
+#maintable tr:first-child th:last-child {
+    -moz-border-radius-topright:3px;
+    -webkit-border-top-right-radius:3px;
+    border-top-right-radius:3px;
+}
+#maintable tr {
+    text-align: left;
+    padding-left:10px;
+}
+#maintable td:first-child {
+    text-align: left;
+    padding-left:10px;
+    border-left: 0;
+}
+#maintable td {
+    padding:5px;
+    border-top: 1px solid #ffffff;
+    border-bottom:1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+
+    background: #fafafa;
+    background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb), to(#fafafa));
+    background: -moz-linear-gradient(top,  #fbfbfb,  #fafafa);
+}
+#maintable tr.even td {
+    background: #f6f6f6;
+    background: -webkit-gradient(linear, left top, left bottom, from(#f8f8f8), to(#f6f6f6));
+    background: -moz-linear-gradient(top,  #f8f8f8,  #f6f6f6);
+}
+#maintable tr:last-child td {
+    border-bottom:0;
+}
+#maintable tr:last-child td:first-child {
+    -moz-border-radius-bottomleft:3px;
+    -webkit-border-bottom-left-radius:3px;
+    border-bottom-left-radius:3px;
+}
+#maintable tr:last-child td:last-child {
+    -moz-border-radius-bottomright:3px;
+    -webkit-border-bottom-right-radius:3px;
+    border-bottom-right-radius:3px;
+}
+#maintable tr:hover td {
+    background: #f2f2f2;
+    background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2), to(#f0f0f0));
+    background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);  
+}
+.headertext
+{
+text-shadow:1px 2px 0 rgba(199,199,199,1);font-weight:bold;color:#424242;letter-spacing:1pt;word-spacing:2pt;font-size:15px;text-align:left;font-family:helvetica, sans-serif;line-height:1;
+}
+.icontext
+{
+    color:grey;    
+    text-align:center;
+    text-shadow: 1px 1px 0px #fff;    
+}
+.icontextheader
+{
+    color:black;  
+    font-size:28px;      
+    text-align:center;
+    text-shadow: 1px 1px 0px #fff;    
+}
+#icontable {
+    font-family:Arial, Helvetica, sans-serif;
+    color:#666;
+    font-size:11px;
+    text-shadow: 1px 1px 0px #fff;
+    display: block;
+    text-align: center;
+} 
+.uberbox {
+background: #f5f5f5; 
+background: -moz-linear-gradient(top,  #f5f5f5 0%, #efefef 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f5f5f5), color-stop(100%,#efefef)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #f5f5f5 0%,#efefef 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #f5f5f5 0%,#efefef 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #f5f5f5 0%,#efefef 100%); /* IE10+ */
+background: linear-gradient(top,  #f5f5f5 0%,#efefef 100%); /* W3C */
+-pie-background: linear-gradient(top,  #f5f5f5 0%,#efefef 100%); 
+box-shadow: 0px 0px 1px 1px white inset;
+box-shadow: 0px 0px 1px 1px white inset, 0px 23px 21px -33px #000;
+
+border-radius: 7px;
+border:1px solid #d8d8d8;
+}
+
+.customPopup{
+     background-color: white; 
+     border-style: solid;
+     border-width: 2px;
+     left: 50%;
+     padding:10px;
+     position: absolute;
+     z-index: 9999;
+     /* These are the 3 css properties you will need to tweak so the pop 
+     up displays in the center of the screen. First set the width. Then set 
+     margin-left to negative half of what the width is. You can also add 
+     the height property for a fixed size pop up.*/
+     width: 500px;
+     margin-left: -250px;
+     top:100px;
+}
+.popupBackground{
+     background-color:black;
+     opacity: 0.20;
+     filter: alpha(opacity = 20);
+     position: absolute;
+     width: 100%;
+     height: 100%;
+     top: 0;
+     left: 0;
+     z-index: 9998;
+}
+</style>
+    <apex:stylesheet value="/sCSS/21.0/sprites/1297816277000/Theme3/default/gc/versioning.css" />      
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>     
+    <apex:form >
+    <apex:outputPanel id="mainpanel">
+            <apex:outputPanel id="missingapp">
+            <apex:outputPanel styleClass="popupBackground" layout="block" rendered="{!displayPopup}"/>
+                <apex:outputPanel styleClass="customPopup" layout="block" rendered="{!displayPopup}">
+                    <apex:outputText escape="false" style="color:orange;" value="<b><u>{!popTitle}</u></b><br/><br/>"/>
+                    <apex:image url="{!URLFOR($Resource.s360a__s360Images, popImage)}" width="496"/>
+                    <br/>
+                    <apex:outputText escape="false" value="{!popMsg}<br/>"/>
+                    <br/><apex:outputLink target="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" value="http://www.supporter360.net/{!targetPage}">Find out more here</apex:outputLink>
+                    <br/><br/>
+                    <apex:commandButton styleClass="cssbutton" value="Close" action="{!closePopup}" rerender="missingapp" status="messagepop"/>
+                    <apex:actionStatus id="messagepop">
+                        <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                        </apex:facet>
+                    </apex:actionStatus>                     
+                </apex:outputPanel>
+            </apex:outputPanel>
+        <apex:outputPanel id="tabpanelpanel">       
+        <apex:tabPanel switchType="client" value="{!selectedTab}" id="s360panel" inactiveTabClass="inactiveTab">
+            <apex:tab style="background-color:white" label="supporter360 Quick access" name="qa" id="qa"> 
+                <table>
+                    <tr>
+                        <td width="70px"></td>
+                        <td width="415px"><apex:outputText styleclass="icontextheader" escape="false" value="<b>Get started with supporter360</b>"/></td>
+                        <td><apex:image url="{!URLFOR($Resource.s360a__s360Images, '/360CloudStripMed.png')}" height="40"/>&nbsp;&nbsp;<apex:actionStatus id="mainstatus">
+                        <apex:facet name="start">
+                        <apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" />
+                        </apex:facet>
+                </apex:actionStatus></td>                        
+                    </tr>
+                </table>             
+                <table>
+                    <td width="70px"/>
+                    <td width="540px"><hr/></td>
+                </table>
+                <br/>          
+                <apex:outputPanel id="startpanel">    
+                <table id="icontable">
+                    <tr>
+                        <td width="50px"/>
+                        <td width="135px"><apex:commandButton status="mainstatus" reRender="startpanel, missingapp" action="{!processIncome}" image="{!URLFOR($Resource.s360a__s360Images, '/fundAus.png')}"  style="height:75px" title="Quick entry screen to process income or create new contacts."/> </td>
+                        <td width="135px"><apex:commandButton status="mainstatus" reRender="startpanel, missingapp" action="{!reports}" image="{!URLFOR($Resource.s360a__s360Images, '/report.png')}"  style="height:75px" title="Open up the Salesforce report builder."/></td>
+                        <td width="135px"><apex:commandButton status="mainstatus" reRender="startpanel, missingapp" action="{!ruolfi}" image="{!URLFOR($Resource.s360a__s360Images, '/promotion.png')}" style="height:75px" title="The Reasonably Universal Online Fundraising Integration (if installed)."/></td>
+                        <td width="135px"><apex:commandButton status="mainstatus" reRender="startpanel, missingapp" action="{!events}" image="{!URLFOR($Resource.s360a__s360Images, '/event.png')}" style="height:75px" title="The organisation events calendar, controlled via campaigns"/></td>                        
+                        <td> 
+                            <table id="maintable">
+                                <tr><td width="197px"><apex:image value="/img/icon/ideabubble16.png" />Hover over any of the buttons to get a quick summary of what it does.</td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>     
+                        <td><apex:outputText styleclass="icontext"  value="Process Income"/></td>
+                        <td><apex:outputText styleclass="icontext"  value="Reports"/></td>
+                        <td><apex:outputText styleclass="icontext" value="RUOLFi"/></td>   
+                        <td><apex:outputText styleclass="icontext"  value="Events Calendar"/></td>                                                                            
+                    </tr>  
+                    <tr><td><br/></td></tr>         
+                    <tr>
+                        <td></td>                    
+                        <td><apex:commandButton action="{!directDebits}" status="mainstatus" reRender="startpanel, missingapp"  image="{!URLFOR($Resource.s360a__s360Images, '/Bank128.png')}"  style="height:75px" title="Process Direct Debits (Australia) - create an ABA file to upload or reconcile received payments."/></td>
+                        <td><apex:commandButton action="{!regularGiving}" status="mainstatus" reRender="startpanel, missingapp"  image="{!URLFOR($Resource.s360a__s360Images, '/regular.png')}"  style="height:75px" title="Work with your regular giving records - create new, edit or change existing records."/></td>
+                        <td><apex:commandButton status="mainstatus" action="{!segment360}" reRender="startpanel, missingapp" image="{!URLFOR($Resource.s360a__s360Images, '/chart_pie.png')}" style="height:75px" title="The supporter360 Segment Builder - create complex queries across segments and create campaign members deduped across queries (if installed)."/></td>
+                        <td><apex:commandButton status="mainstatus" action="{!campaigns}" reRender="startpanel, missingapp" image="{!URLFOR($Resource.s360a__s360Images, '/campaigns.png')}"  style="height:75px" title=""/></td>                    
+                    </tr>                   
+                    <tr>
+                        <td></td>    
+                        <td><apex:outputText styleclass="icontext"  value="Direct Debits"/></td>
+                        <td><apex:outputText styleclass="icontext"  value="Regular Giving"/></td>                         
+                        <td><apex:outputText styleclass="icontext"  value="Segment Builder"/></td>
+                        <td><apex:outputText styleclass="icontext" value="Campaigns"/></td>                                                       
+                    </tr>  
+                    <tr><td><br/></td></tr>                                 
+                    <tr>
+                        <td></td>                    
+
+                        <td><apex:commandButton action="{!paymentPages}" status="mainstatus" reRender="startpanel, missingapp"  image="{!URLFOR($Resource.s360a__s360Images, '/pound_coin.png')}"  style="height:75px" title="Manage your supporter360 payment / donation pages from here."/></td>
+                        <td><apex:commandButton action="{!s360Settings}" status="mainstatus" reRender="startpanel, missingapp"  image="{!URLFOR($Resource.s360a__s360Images, '/tools.png')}"  style="height:75px" title="Reivew or edit your supporter360 settings. You can also access system tasks like mass updating statistics."/></td>
+                        <td><apex:commandButton onClick="window.open('http://www.supporter360.net/support');" status="mainstatus"  image="{!URLFOR($Resource.s360a__s360Images, '/support.png')}"  style="height:75px" title="Need help? Check out our online help or log a call if you can't find what you're looking for."/></td>
+                        <td><apex:commandButton action="{!askSearchString}" status="mainstatus" reRender="startpanel, missingapp"  image="{!URLFOR($Resource.s360a__s360Images, '/search_image.png')}"  style="height:75px" title="Search across your supporter360 & Salesforce database using the standard Salesforce search function."/></td>                                                                      
+                        <td><apex:outputPanel rendered="{!displaySearch}">
+                            <table id="maintable">
+                                <tr><td><apex:inputText value="{!searchString}" style="width:153px" />&nbsp;<apex:commandButton styleClass="cssbutton" action="{!doSearch}" value="Search"/></td></tr>
+                            </table>
+                            </apex:outputPanel>
+                        </td>                        
+                    </tr>
+                    <tr>
+                        <td></td>     
+
+                        <td><apex:outputText styleclass="icontext" value="Payment Pages"/></td>    
+                        <td><apex:outputText styleclass="icontext" value="supporter360 Settings"/></td>
+                        <td><apex:outputText styleclass="icontext" value="Get Help"/></td>
+                        <td><apex:outputText styleclass="icontext" value="Search"/></td>                                                                            
+                    </tr>                          
+                    <tr><td><br/></td></tr>  
+                    <tr>
+                        <td></td>                    
+                    </tr>
+                    <tr>
+                        <td></td>                                                           
+                    </tr>                                                
+                </table> 
+            </apex:outputPanel>  
+            </apex:tab>    
+           <apex:tab label="What's new" name="wn" id="wn">
+                <apex:iframe frameborder="false" scrolling="false" src="http://appichar.secure.force.com/s360a/s360whatsnew"/> 
+            </apex:tab>                                           
+            <apex:tab style="background:white" label="Getting help" name="gh" id="gh">
+                <b>Note:</b> This is the <b><a href="http://www.supporter360.net/" target="_blank">www.supporter360.net</a></b> site - you can open up in a completely new browser window any time.<br/>
+                <apex:iframe frameborder="false" scrolling="true" src="http://www.supporter360.net/support"/>    
+            </apex:tab>                            
+<!--            <apex:tab label="Got an idea for '360?" name="ideas" id="ideas"/>  -->
+            <apex:tab label="Talk '360" name="ta" id="ta">
+                <apex:iframe frameborder="false" scrolling="true" src="http://www.linkedin.com/groups/supporter360-3679026"/>
+            </apex:tab>
+        </apex:tabpanel>
+       </apex:outputPanel>   
+    </apex:outputPanel>    
+    </apex:form>        
+</apex:page>

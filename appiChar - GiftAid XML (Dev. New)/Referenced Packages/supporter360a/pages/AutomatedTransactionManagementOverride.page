@@ -1,0 +1,263 @@
+<!-- 
+  *****************************************************************
+  *                                                               *
+  *   Product: supporter360                                       *
+  *      File: AutomatedTransactionManagementOverride.page        *
+  *   Version: 1.0                                                *
+  * Copyright: ©2011 appiChar Pty. Ltd. All rights reserved       *
+  *                                                               *
+  *****************************************************************
+ -->
+
+<apex:page id="page" standardcontroller="s360a__AutomatedTransaction__c" extensions="s360a.AutomatedTransactionManagementOverride" action="{!init}">
+    <style type="text/css">
+         body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+    </style>
+    <apex:sectionHeader rendered="{!renderMode == 'New'}" title="Automated Transaction Edit" subtitle="New Automated Transaction" />
+    <apex:sectionHeader rendered="{!renderMode == 'Edit'}" title="Automated Transaction Edit" subtitle="Automated Transaction: {!automatedTransaction.Name}" />
+    <apex:sectionHeader rendered="{!renderMode == 'Detail'}" title="Automated Transaction" subtitle="Automated Transaction: {!automatedTransaction.Name}" />
+    <apex:sectionHeader rendered="{!renderMode == 'Error'}" title="Automated Transaction" subtitle="New Automated Transaction" />
+    <c:PageMessage icon="{!pageMessageIcon}" header="{!pageMessageHeader}" body="{!pageMessageBody}" rendered="{!pageMessageRendered}" />
+    <apex:form id="hiddenForm" style="display: none;">
+        <script type="text/javascript">
+            function updateValue(id, value)
+            {   document.getElementById('page:hiddenForm:' + id).value = value;
+                if (typeof window[id + 'ActionFunction'] === 'function')
+                {   eval(id + 'ActionFunction();');
+                }
+            }
+        </script>
+        <apex:actionFunction name="paymentMethodActionFunction" status="paymentMethodActionStatus" rerender="pageBlockButtonsTop, paymentMethodDetails, pageBlockButtonsBottom" />
+        <apex:actionFunction name="paymentGatewayProcessTypeActionFunction" status="paymentGatewayProcessTypeActionStatus" rerender="paymentMethodDetails" />
+        <apex:selectList size="1" value="{!automatedTransaction.s360a__PaymentMethod__c}" id="paymentMethod">
+            <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+        </apex:selectList>
+        <apex:selectList value="{!paymentGatewayProcessType}" size="1" id="paymentGatewayProcessType">
+            <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+            <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" />
+        </apex:selectList>
+    </apex:form>
+    <apex:form id="form">
+        <apex:pageBlock id="transactionPageBlock" mode="edit" rendered="{!OR(renderMode == 'New', renderMode == 'Edit')}" >
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!saveAction}" value="Save" />
+                <apex:commandButton action="{!cancelAction}" value="Cancel" immediate="true" />
+            </apex:pageBlockButtons>
+            <apex:outputPanel >
+                <apex:pageBlockSection title="Automated Transaction Details" columns="1">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Account" />    
+                        <apex:outputPanel styleClass="requiredInput" layout="block">  
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <input type="text" value="{!regularGiving.Account__r.Name}" style="width: 300px;" disabled="disabled" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Regular Giving" /> 
+                        <apex:outputPanel styleClass="requiredInput" layout="block">  
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <input type="text" value="{!regularGiving.Name}" style="width: 300px;" disabled="disabled" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Payment Method" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">  
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:selectList size="1" value="{!automatedTransaction.s360a__PaymentMethod__c}" required="true" style="width: 300px;" id="paymentMethod" onchange="updateValue('paymentMethod', this.value);" >
+                                <apex:selectOptions value="{!paymentMethodSelectOptions}" />
+                            </apex:selectList>
+                            <apex:actionStatus id="paymentMethodActionStatus" >
+                                <apex:facet name="start">
+                                    <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField value="{!automatedTransaction.s360a__Notes__c}" style="width: 700px;" />
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Processing Details" columns="1">
+                    <apex:inputField value="{!automatedTransaction.s360a__Active__c}" />
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Process From" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">  
+                            <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+                            <apex:inputField value="{!automatedTransaction.s360a__ProcessFrom__c}" style="width: 300px;" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField value="{!automatedTransaction.s360a__ProcessUntil__c}" style="width: 300px;" />
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+            <apex:outputPanel id="paymentMethodDetails">
+                <apex:pageBlockSection title="Direct Debit Details" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Direct Debit'}">
+                  <apex:repeat value="{!DirectDebitFields}" var="f">
+                   <apex:pageBlockSectionItem >
+                      <apex:outputLabel value="{!f.Label}" /> 
+                      <apex:inputField value="{!automatedTransaction[f.fieldPath]}"  required="{!OR(f.required, f.dbrequired)}"/>
+                    </apex:pageBlockSectionItem>   
+                  </apex:repeat>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Credit Card Details" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Credit Card'}">
+                    <apex:inputField value="{!automatedTransaction.s360a__CardType__c}" style="width: 300px;" />
+                    <apex:inputField value="{!automatedTransaction.s360a__CardNumberLastFourDigitsOnly__c}" style="width: 300px;" />
+                    <apex:inputField value="{!automatedTransaction.s360a__NameOnCard__c}" style="width: 300px;" />
+                    <apex:inputField value="{!automatedTransaction.s360a__ExpiryMonth__c}" style="width: 300px;" />
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Expiry Year" />
+                        <apex:selectList size="1" value="{!creditCard.s360a__ExpiryYear__c}" style="width: 300px;">
+                            <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                        </apex:selectList>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+                <apex:pageBlockSection title="Credit Card Details" collapsible="false" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="Process" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:selectList value="{!paymentGatewayProcessType}" size="1" style="width: 300px;" onchange="updateValue('paymentGatewayProcessType', this.value)">
+                                <apex:selectOption itemLabel="New Credit Card" itemValue="New Credit Card" />
+                                <apex:selectOption itemLabel="Existing Credit Card" itemValue="Existing Credit Card" rendered="{!hasActiveCreditCards}" />
+                            </apex:selectList>
+                            <apex:actionStatus id="paymentGatewayProcessTypeActionStatus">
+                                <apex:facet name="start">
+                                    <img src="/img/loading.gif" width="16" height="16" style="padding-left: 5px; padding-right: 5px;" />Please Wait...
+                                </apex:facet>
+                            </apex:actionStatus>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem />
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card'}">
+                        <apex:outputLabel value="Card Type" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:inputField value="{!creditCard.s360a__CardType__c}" style="width: 300px;" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card'}">
+                        <apex:outputLabel value="Name On Card" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:inputField value="{!creditCard.s360a__CardHolderName__c}" style="width: 300px;" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card'}">
+                        <apex:outputLabel value="Credit Card Number" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:inputField value="{!creditCard.s360a__CreditCardNumber__c}" style="width: 300px;" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card'}">
+                        <apex:outputLabel value="Expiry Month" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:inputField value="{!creditCard.s360a__ExpiryMonth__c}" style="width: 300px;" />
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card' && paymentGatewayExpiryYearError == false}">
+                        <apex:outputLabel value="Expiry Year" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:selectList size="1" value="{!creditCard.s360a__ExpiryYear__c}" style="width: 300px;">
+                                <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'New Credit Card' && paymentGatewayExpiryYearError == true}">
+                        <apex:outputLabel value="Expiry Year" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="requiredBlock" layout="block" />
+                            <apex:selectList size="1" value="{!creditCard.s360a__ExpiryYear__c}" styleClass="error" style="width: 300px;">
+                                <apex:selectOptions value="{!expiryYearSelectOptions}" />
+                            </apex:selectList>
+                            <div class="errorMsg"><strong>Error:</strong> You must enter a value</div>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                    <apex:inputField value="{!creditCard.s360a__CVV__c}" rendered="{!paymentGatewayProcessType == 'New Credit Card'}" style="width: 300px;" />
+                    <apex:pageBlockSectionItem rendered="{!paymentGatewayProcessType == 'Existing Credit Card'}">
+                        <apex:outputLabel value="Credit Card" />
+                        <apex:outputPanel >
+                            <apex:inputField value="{!automatedTransaction.s360a__CreditCard__c}" id="selectedCreditCard" rendered="FALSE"/> <!-- //CRUD/FLS -->
+                            <apex:pageBlockTable id="table" value="{!activeCreditCardList}" var="creditCard" rowClasses="odd, even" styleClass="tableClass" style="width: auto;" >
+                                <apex:column width="20" headerValue="" rendered="{!automatedTransaction.s360a__CreditCard__c == creditCard.Id}">
+                                    <input id="radioId" type="radio" name="creditcard" value="{!creditCard.Id}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" checked="checked" />
+                                </apex:column>
+                                <apex:column width="20" headerValue="" rendered="{!automatedTransaction.s360a__CreditCard__c != creditCard.Id}">
+                                    <input id="radioId" type="radio" name="creditcard" value="{!creditCard.Id}" onchange="document.getElementById('{!$Component.selectedCreditCard}').value = this.value;" />
+                                </apex:column>
+                                <apex:column width="180" headerValue="Card Type" >
+                                    <apex:outputText value="{!creditCard.s360a__CardType__c}" />
+                                </apex:column>
+                                <apex:column width="250" headerValue="Name On Card" >
+                                    <apex:outputText value="{!creditCard.s360a__CardHolderName__c}" />
+                                </apex:column> 
+                                <apex:column width="200" headerValue="Credit Card Number" >
+                                    <apex:outputText value="{!creditCard.s360a__CreditCardNumber__c}" />
+                                </apex:column> 
+                                <apex:column width="100" headerValue="Expiry Date" >
+                                    <apex:outputText value="{!creditCard.s360a__ExpiryDate__c}" />
+                                </apex:column> 
+                            </apex:pageBlockTable>
+                        </apex:outputPanel>
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:outputPanel>
+        </apex:pageBlock>
+        <apex:pageBlock rendered="{!renderMode == 'Detail'}" title="Automated Transaction Detail" mode="maindetail">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!editAction}" value="Edit" />
+                <apex:commandButton action="{!deleteAction}" value="Delete" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="Automated Transaction Details" columns="1" id="transactionDetailsSection">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Account" />
+                    <apex:outputField value="{!regularGiving.s360a__Account__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Regular Giving" />
+                    <apex:outputField value="{!automatedTransaction.s360a__RegularGiving__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!automatedTransaction.s360a__PaymentMethod__c}" />
+                <apex:outputField value="{!automatedTransaction.s360a__Notes__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Processing Details" columns="1">
+                <apex:outputField value="{!automatedTransaction.s360a__Active__c}" />
+                <apex:outputField value="{!automatedTransaction.s360a__ProcessFrom__c}" />
+                <apex:outputField value="{!automatedTransaction.s360a__ProcessUntil__c}" />
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Credit Card Details" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Payment Gateway'}">
+                <apex:outputField value="{!automatedTransaction.s360a__CreditCard__c}" />
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Card Type" />
+                    <apex:outputField value="{!automatedTransaction.s360a__CreditCardType__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Card Number" />
+                    <apex:outputField value="{!automatedTransaction.s360a__CreditCardNumber__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Name On Card" />
+                    <apex:outputField value="{!automatedTransaction.s360a__CreditCardNameOnCard__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Expiry Date" />
+                    <apex:outputField value="{!automatedTransaction.s360a__CreditCardExpiryDate__c}" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Status" />
+                    <apex:outputField value="{!automatedTransaction.s360a__CreditCardStatus__c}" />
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="Direct Debit Details" columns="1" rendered="{!automatedTransaction.s360a__PaymentMethod__c == 'Direct Debit'}">
+              <apex:repeat value="{!DirectDebitFields}" var="f">
+               <apex:pageBlockSectionItem >
+                  <apex:outputLabel value="{!f.Label}" /> 
+                  <apex:outputField value="{!automatedTransaction[f.fieldPath]}" />
+                </apex:pageBlockSectionItem>   
+              </apex:repeat>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+    <script type="text/javascript">
+        beenFocused = true;
+    </script>
+</apex:page>

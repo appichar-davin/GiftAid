@@ -1,0 +1,90 @@
+<apex:page Controller="s360a.PhoneNew" showHeader="true" sidebar="true">
+
+<script type="text/javascript">
+function validateNo(){
+        var num = document.getElementById('j_id0:j_id2:j_id31:j_id39:j_id50:amt').value;                
+        if (isNaN(num) == true) 
+        {
+            callplease();
+            return false;
+        }
+
+        return true;
+
+}
+</script>
+
+<apex:form >
+<apex:sectionheader title="Phone Number Edit" subtitle="New Phone Number" >
+ </apex:sectionheader>
+ <apex:pageMessages />
+<apex:pageBlock title="Phone Number Edit" mode="edit">
+<apex:actionFunction action="{!Error}" name="callplease"/>
+  <apex:pageBlockButtons >
+                <apex:commandButton value="Save" action="{!savebttn}" onclick="return validateNo();"/>&nbsp;&nbsp;
+                <apex:commandButton value="Save & New" action="{!SavenNewbuttn}" />&nbsp;&nbsp; <!--onclick="return validateNo();"-->
+                <apex:commandButton value="Cancel" action="{!cancelbttn}" immediate="true"/>
+            </apex:pageBlockButtons>                        
+            
+            <apex:pageblocksection columns="1" title="Information">    
+                    
+            <apex:pageblocksectionitem >       
+            <apex:Outputtext value="Account"></apex:Outputtext>                                          
+             <apex:outputLink value="/{!obid}">{!obname}</apex:outputLink>                        
+            </apex:pageblocksectionitem>  
+                                 
+            <apex:pageblocksectionitem >   
+             <apex:outputtext value="Phone Number Type" ></apex:outputtext>   
+             <apex:outputPanel styleClass="requiredInput" layout="block" >
+            <apex:outputPanel styleClass="requiredBlock" layout="block"/>        
+             <apex:selectList value="{!numbertype}" size="1" required="true" id="amt" label="Phone Number Type">
+            <apex:selectOptions value="{!number}"/>                       
+            </apex:selectList>
+            <apex:message for="amt" style="color: #cc0000"/></apex:outputPanel>              
+             </apex:pageblocksectionitem>
+                      
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Phone Number" ></apex:outputtext>
+            <apex:outputPanel styleClass="requiredInput" layout="block" >
+            <apex:outputPanel styleClass="requiredBlock" layout="block"/>   
+<!--  Ian - 18/9 - changed from input text to phone field for input
+             <apex:inputtext value="{!phinput.oValue}" required="true" id="amt" label="Phone Number"/>
+             <apex:message for="amt" style="color: #cc0000"/>
+-->        
+            <apex:inputfield value="{!inputContact.Phone}"/> 
+            </apex:outputPanel>             
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Active"></apex:outputtext>
+            <apex:inputcheckbox value="{!phinput.isActive}" />
+            </apex:pageblocksectionitem>                         
+           
+            <apex:pageblocksectionitem >
+            <apex:outputtext value="Show On Account Record"></apex:outputtext>
+           <apex:inputcheckbox value="{!phinput.showOnAccountRecord}" />
+           </apex:pageblocksectionitem>
+           
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Preferred Phone Number"></apex:outputLabel>
+            <apex:inputcheckbox value="{!phinput.isPreferred}" />
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem ><apex:outputLabel value="Description"></apex:outputLabel>
+              <apex:inputField value="{!ut.s360a__Type__c}" /><!-- //CRUD/FLS -->
+              </apex:pageblocksectionitem>
+                           
+             <apex:pageblocksectionitem >               
+            <apex:outputLabel value="Date From"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateFrom__c}" /> 
+            </apex:pageblocksectionitem>
+            
+            <apex:pageblocksectionitem >
+            <apex:outputLabel value="Date To"></apex:outputLabel>
+            <apex:inputfield value="{!ut.s360a__DateTo__c}" /> 
+            </apex:pageblocksectionitem>
+            </apex:pageblocksection>
+           
+ </apex:pageBlock>
+  </apex:form>
+</apex:page>

@@ -1,0 +1,326 @@
+<apex:page controller="s360a.RefundManagement" sidebar="false" id="thepage">
+<style>
+.mouseOverInfo {
+    background-color: #F8FBFF;
+    text-align: left;
+    left: 0px;
+    box-shadow: 3px 3px 3px #888;    
+}   
+.title {
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+}
+.titlebig {
+    font-family: 'Open Sans', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+}
+.textfontBold {
+    vertical-align:text-bottom;font-weight:bold;font-size:11px;
+}    
+.textfontNormal {
+    vertical-align:text-bottom;font-size:11px;
+}
+
+.bar {
+    display: inline-block;
+    line-height: 1;
+    padding: 7px 10px;
+    text-decoration: none;
+    font-weight: bold;
+    color: #fff;
+    height: 14px;
+    background-color: #39c;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 2px #888;
+}
+body .bEditBlock .pbBody .pbSubheader.first { margin-top: 15px; border-top: 1px solid #FFFFFF; }
+.oddRow { background-color: #FFFFFF; }
+.evenRow { background-color: #EEEEEE; }
+
+.centered { text-align: center; }
+.centeredOrange { text-align: center; color: orange; }
+.normalOrange { color: orange; }
+.centered-table 
+{
+    margin-left: auto;
+    margin-right: auto;
+}
+.roundbox
+{
+    padding: 5px;
+    background: #eeeeee;
+    border: 1px solid #bbbbbb;
+    box-shadow: 6px 6px 5px #888;
+    
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+.roundboxsmallshadow
+{
+    padding: 5px;
+    background: #eeeeee;
+    border: 1px solid #bbbbbb;
+    box-shadow: 3px 3px 2px #888;
+    
+    border-radius: 4px;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+}
+    .customPopup{
+        background-color: white;
+        border-style: solid;
+        border-width: 2px;
+        padding:10px;
+        position: fixed; 
+        z-index: 9999;  
+        width: 400px;
+        box-shadow: 10px 10px 5px #888;
+   
+/* get the pop up in the middle of the screen */
+        top: 50%;
+        left: 54%;
+        margin-top: -10px;
+        margin-left: -250px;      
+
+        /* smooth corners */
+        -moz-border-radius: 6px;
+        -webkit-border-radius: 6px;
+        border-radius: 6px;        
+    }
+    .popupBackground{
+        background-color:black;
+        opacity: 0.20;
+        filter: alpha(opacity = 20);
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+    }   
+</style>
+    <apex:stylesheet value="{!$Resource.s360a__supporter360Style}"/>  
+    <div style="min-width:1000px">
+    <apex:form id="theform">
+        <apex:pageMessages ></apex:pageMessages>
+        <apex:pageBlock rendered="{!thisOpportunity != null}">
+            <div class="bar" style="width:98%;margin-top:10px">Process Refunds and Adjustments</div><br/>                  
+            <br/>            
+            <div style="float:left" class="textfontNormal">
+                <table style="border: 1px solid #C5CDCD;padding:5px">
+                    <tr>
+                    <td><apex:outputText styleClass="textfontBold" value="Opportunity"/></td>
+                    <td style="padding-left:12px"><apex:outputText styleClass="textfontBold" value="Account"/></td>
+                    <td style="padding-left:12px"><apex:outputText styleClass="textfontBold" value="Close Date"/></td>
+                    <td style="padding-left:12px"><apex:outputText styleClass="textfontBold" value="Stage"/></td>                    
+                    <td style="padding-left:12px"><apex:outputText styleClass="textfontBold" value="Record Type"/></td>                                                                                                   
+                    
+                    </tr><tr>
+                    
+                    <td style="vertical-align:top"><apex:outputLink target="blank" value="/{!thisOpportunity.Id}">{!thisOpportunity.Name}</apex:outputLink></td>                    
+                    <td style="vertical-align:top;padding-left:12px">
+                        <apex:outputLink target="blank" value="/{!thisAccount.Id}">{!thisAccount.Name}</apex:outputLink><br/>
+                        <apex:outputField value="{!thisAccount.s360a__AddressPrimaryMultiLine__c}"/>
+                    </td>
+                    <td style="vertical-align:top;padding-left:12px"><apex:outputField value="{!thisOpportunity.CloseDate}"/></td>
+                    <td style="vertical-align:top;padding-left:12px"><apex:outputField value="{!thisOpportunity.StageName}" /></td>
+                    <td style="vertical-align:top;padding-left:12px"><apex:outputField value="{!thisOpportunity.RecordTypeId}" /></td>                                                      
+                    </tr>
+                </table>
+            </div> 
+            <div style="float:right;margin-right:30px">
+                <table>
+                    <tr>                  
+                    <td class="roundboxsmallshadow" style="padding-right:30px;background-color:white;"><apex:outputText styleClass="textfontBold" value="Total"/></td>                      
+                    <td class="roundboxsmallshadow" style="background-color:white;"><apex:outputText styleClass="textfontBold" value="Balance Due"/></td>                
+                    <td class="roundboxsmallshadow" style="background-color:#FFCD82;"><apex:outputText styleClass="textfontBold" value="Refundable"/>
+                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="18px" style="vertical-align:middle" />                                                                                               
+                        <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                            This the maximum amount that can be refunded against this Opportunity. It is a sum of payments received minus any other refunds that have been applied.
+                        </div>
+                    </div>                       
+                    </td>                                                                               
+                    </tr><tr>
+                    <td class="roundboxsmallshadow" style=";background-color:white;font-weight:bold"><apex:outputField value="{!thisOpportunity.Amount}" /></td>                                   
+                    <td class="roundboxsmallshadow" style=";background-color:white;font-weight:bold;"><apex:outputField value="{!thisOpportunity.s360a__BalanceDue__c}" /></td>                                             
+                    <td class="roundboxsmallshadow" style=";background-color:#FFCD82;font-weight:bold;"><apex:outputField value="{!displayRefundAvailable.Amount}" /></td>                                             
+                    </tr>
+                </table>
+            </div>                     
+            <div style="clear:both;height:0;line-height:0;display:block;"/>         
+            <br/>
+            <div class="roundbox" style="background:white;box-shadow: 0px 0px 0px #888">
+                <div style="width:49%;float:left" class="textfontNormal">
+                    <apex:outputText value="Existing Opportunity Line Item(s)" styleClass="title" style="color:orange"/>
+                    <apex:pageBlockTable value="{!olis}" var="o" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:4px;margin-left:0px;box-shadow: 3px 3px 3px #888;"> 
+                        <apex:column headerClass="headerclass" headerValue="Product" style="vertical-align:middle;">
+                            <apex:outputField value="{!o.thisOli.s360a__HelperProductName__c}"/>
+                        </apex:column>
+                        <apex:column headerClass="headerclass" headerValue="Description" style="vertical-align:middle;">
+                            <apex:outputField value="{!o.thisOli.Description}"/>
+                        </apex:column>                             
+                        <apex:column headerClass="headerclass" headerValue="Quantity" style="vertical-align:middle;">
+                            <apex:outputField value="{!o.thisOli.Quantity}"/>
+                        </apex:column>        
+                        <apex:column headerClass="headerclass" headerValue="Item Price" style="vertical-align:middle;">
+                            <apex:outputField value="{!o.thisOli.UnitPrice}"/>
+                        </apex:column>
+                        <apex:column headerClass="headerclass" headerValue="Line Total" style="vertical-align:middle;">
+                            <apex:outputField value="{!o.thisOli.TotalPrice}"/>
+                        </apex:column> 
+                        <apex:column headerClass="headerclass" headerValue="Select" style="vertical-align:middle;text-align:center" rendered="{!selectedAction == 'Partial Refund' || selectedAction == 'Adjustment'}">
+                            <apex:inputCheckbox value="{!o.selected}"/>
+                        </apex:column>                                                                                     
+                    </apex:pageBlockTable>                                    
+                </div>
+                <div style="width:49%;float:right" class="textfontNormal">
+                    <apex:outputText value="Existing Transaction(s)" styleClass="title" style="color:orange"/>
+                    <apex:pageBlockTable value="{!trans}" var="t" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:4px;margin-left:0px;box-shadow: 3px 3px 3px #888;"> 
+                        <apex:column headerClass="headerclass" headerValue="Type" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__TransactionType__c}"/>
+                        </apex:column>
+                        <apex:column headerClass="headerclass" headerValue="Payment Method" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__PaymentMethod__c}"/>
+                        </apex:column>                             
+                        <apex:column headerClass="headerclass" headerValue="Amount" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__Amount__c}"/>
+                        </apex:column>        
+                        <apex:column headerClass="headerclass" headerValue="Status" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__Status2__c}"/>
+                        </apex:column>
+                        <apex:column headerClass="headerclass" headerValue="Processed" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__Processed__c}"/>
+                        </apex:column> 
+                        <apex:column headerClass="headerclass" headerValue="Amount Refunded" style="vertical-align:middle;">
+                            <apex:outputField value="{!t.thisTran.s360a__AmountRefunded__c}"/>
+                        </apex:column>                         
+                        <apex:column headerClass="headerclass" headerValue="Select" style="vertical-align:middle;text-align:center" rendered="{!selectedAction == 'Partial Refund' || selectedAction == 'Adjustment'}">
+                            <apex:inputCheckbox value="{!t.selected}"/>
+                        </apex:column>                                                                                   
+                    </apex:pageBlockTable>                           
+                </div>
+                <div style="clear:both;height:0;line-height:0;display:block;"/>
+                <br/>
+            </div>
+<!-- Command section --> 
+            <apex:outputPanel rendered="{!totalRefundAvailable > 0}">         
+                <br/>
+                <apex:outputText value="Wizard Stage:"  styleClass="title" />
+                <apex:outputText value=" {!wizardStage}" styleClass="title" style="color:grey"/><br/><br/>
+                <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/back.png')}" title="Back" action="{!backButton}" rendered="{!showBackButton}" style="height:15px;vertical-align:middle;margin-right:5px;box-shadow: 1px 1px 1px #888;"/>                
+<!-- Start -->               
+                <apex:outputPanel rendered="{!wizardStage == 'Start'}">
+                    <apex:outputText value="I would like to create a:" style="vertical-align:middle" styleClass="textfontBold"/>
+                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                        <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="18px" style="vertical-align:middle" />                                                                                               
+                        <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                            Select the action you want to perform then click the next (<apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" title="Next" action="{!nextButton}" style="height:10px;vertical-align:middle;margin-left:3px;box-shadow: 1px 1px 1px #888;"/>) button. You will use the next button to move through the various stages of the refund / adjustment. Nothing will be committed to the database until you hit the <b>Submit</b> button once you have completed all of the necessary steps.
+                        </div>
+                    </div>                      
+                    <apex:selectList size="1" value="{!selectedAction}" style="vertical-align:middle"> 
+                        <apex:selectOptions value="{!actions}"/>                
+                    </apex:selectList>
+                </apex:outputPanel>
+<!-- Partial Refund Step 1 of 3 -->                
+                <apex:outputPanel rendered="{!wizardStage == 'Partial Refund Step 1 of 3'}">
+                    <apex:outputText value="Select Line Item(s) OR Transaction(s) above to refund" style="vertical-align:middle" styleClass="textfontBold"/>
+                    <div onmouseover="addMouseOver(this)" onfocus="addMouseOver(this)" class="mouseOverInfoOuter" style="vertical-align:middle">                                    
+                       <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="18px" style="vertical-align:middle" />                                                                                                                        
+                       <div style="display: none; opacity: 0;width:250px;" class="mouseOverInfo">
+                            <apex:image value="{!URLFOR($Resource.s360a__s360Images, '/info.png')}" height="13px" style="float:right" />                                          
+                            Note that you can choose to refund line items OR individual transactions but not both at the same time as line itmes may spread across multiple transactions if part payments have been made against an opportunity.
+                       </div>
+                    </div>                   
+                </apex:outputPanel>        
+<!-- Full Refund Step 1 of 2 -->                
+                <apex:outputPanel rendered="{!wizardStage == 'Full Refund Step 1 of 2' || wizardStage == 'Partial Refund Step 2 of 3'}">
+                    <apex:outputText value="Check over the details and click the 'Next' arrow to continue -->" style="vertical-align:middle" styleClass="textfontBold"/>            
+                </apex:outputPanel>
+<!-- Full Refund Step 2 of 2 -->                
+                <apex:outputPanel rendered="{!wizardStage == 'Full Refund Step 2 of 2'  || wizardStage == 'Partial Refund Step 3 of 3'}">
+                    <apex:outputText value="Click Submit to complete the process and be returned to the Opportunity record." style="vertical-align:middle" styleClass="textfontBold"/>            
+                </apex:outputPanel>
+                                            
+            <apex:commandButton image="{!URLFOR($Resource.s360a__s360Images, '/next.png')}" value="Next" action="{!nextButton}" rendered="{!showNextButton}" style="height:15px;vertical-align:middle;margin-left:3px;box-shadow: 1px 1px 1px #888;"/>                
+            <br/>
+        </apex:outputPanel>              
+<!-- End Command section -->                          
+        <apex:outputPanel rendered="{!showRefundOlis && wizardStage != 'Start'}">               
+                <div class="roundbox" style="margin-top:15px;background:#F7FFFF;box-shadow: 0px 0px 0px #888">
+                    <div style="width:55%;float:left" class="textfontNormal">
+                        <apex:outputText value="Refund Opportunity Line Item(s) To Be Created" styleClass="title" style="color:orange"/>
+                        <apex:pageBlockTable value="{!refundOLis}" var="o" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:4px;margin-left:0px;box-shadow: 3px 3px 3px #888;"> 
+                                <apex:column headerClass="headerclass" headerValue="Product" style="vertical-align:middle;">
+                                    <!-- LastPaymentMethod__c used to temporarily hold the product name to save a lookup -->
+                                    <apex:outputField value="{!o.s360a__LastPaymentMethod__c}"/>
+                                </apex:column>
+                                <apex:column headerClass="headerclass" headerValue="Description" style="vertical-align:middle;">
+                                    <apex:inputField value="{!o.Description}"/>
+                                </apex:column>                             
+                                <apex:column headerClass="headerclass" headerValue="Quantity" style="vertical-align:middle;">
+                                    <apex:outputField value="{!o.Quantity}" rendered="{!selectedAction == 'Full Refund'}"/>
+                                    <apex:inputField value="{!o.Quantity}" rendered="{!selectedAction == 'Partial Refund'}" style="width:75px"/>
+                                </apex:column>        
+                                <apex:column headerClass="headerclass" headerValue="Item Price" style="vertical-align:middle;">
+                                    <apex:outputField value="{!o.UnitPrice}" rendered="{!selectedAction == 'Full Refund'}"/>
+                                    <apex:inputField value="{!o.UnitPrice}" rendered="{!selectedAction == 'Partial Refund'}" style="width:75px"/>                                    
+                                </apex:column>
+                                <apex:column headerClass="headerclass" headerValue="Line Total" style="vertical-align:middle;">
+                                    <apex:outputField value="{!o.TotalPrice}"/>
+                                </apex:column> 
+                                <apex:column headerClass="headerclass" headerValue="Action" style="vertical-align:middle;text-align:center">
+                                   <apex:commandButton action="{!recalculateButton}" style="height:13px;vertical-align:middle;" title="Recalculate" image="{!URLFOR($Resource.s360a__s360Images, '/refresh.png')}" />
+                                </apex:column>                                                                                     
+                            </apex:pageBlockTable>                                    
+                        </div>
+                        <div style="width:43%;float:right" class="textfontNormal">
+                            <apex:outputPanel rendered="{!showRefundButton}">
+                            <apex:outputText value="Refund Transaction To Be Created" styleClass="title" style="color:orange"/>
+                            <apex:pageBlockTable value="{!dummyList}" var="t" rowClasses="oddRow, evenRow" styleClass="tableClass" style="margin-top:4px;margin-left:0px;box-shadow: 3px 3px 3px #888;"> 
+                                <apex:column headerClass="headerclass" headerValue="Type" style="vertical-align:middle;">
+                                    <apex:outputField value="{!refundTransaction.s360a__TransactionType__c}"/>
+                                </apex:column>
+                                <apex:column headerClass="headerclass" headerValue="Payment Method" style="vertical-align:middle;">
+                                    <apex:inputField value="{!refundTransaction.s360a__PaymentMethod__c}"/>
+                                </apex:column>                             
+                                <apex:column headerClass="headerclass" headerValue="Amount" style="vertical-align:middle;">
+                                    <apex:outputField value="{!refundTransaction.s360a__Amount__c}"/>
+                                </apex:column>    
+                                <apex:column headerClass="headerclass" headerValue="Refund Reason" style="vertical-align:middle;">
+                                    <apex:inputField value="{!refundTransaction.s360a__RefundReason__c}" required="true" style="padding-top:2px;padding-bottom:2px"/>
+                                </apex:column>                                                                                                                                                    
+                            </apex:pageBlockTable> 
+                            <div style="float:right;margin-top:10px;margin-right:25px"> 
+                            <apex:actionStatus id="submitstatus" >
+                                <apex:facet name="start">
+                                    <apex:outputPanel >
+                                        Processing..<apex:image url="{!URLFOR($Resource.s360a__s360Images, '/loading.gif')}" style="padding-left: 5px; padding-right: 5px;"/>
+                                    </apex:outputPanel>
+                                </apex:facet>
+                                <apex:facet name="stop">  
+                                    <apex:outputPanel >                   
+                                        <apex:commandButton action="{!submitRefundButton}" styleclass="cssbutton" value="Submit Refund" style=";vertical-align:middle;" reRender="theform" status="submitstatus"/>                                                      
+                                    </apex:outputPanel>
+                                </apex:facet>
+                           </apex:actionStatus> 
+                           </div> 
+                           </apex:outputPanel>                                                   
+                        </div>
+                        <div style="clear:both;height:0;line-height:0;display:block;"/>                        
+                    </div>
+                </apex:outputPanel>
+    
+        </apex:pageBlock>
+      
+    </apex:form>
+    </div>
+</apex:page>
